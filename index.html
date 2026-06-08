@@ -170,7 +170,7 @@
     /* Header */
     .app-header {
       display: flex; align-items: center; justify-content: space-between;
-      padding: calc(var(--safe-top) + 44px) 18px 12px;
+      padding: calc(var(--safe-top) + 56px) 18px 12px;
       background: rgba(13,13,24,0.92); backdrop-filter: blur(20px);
       border-bottom: 1px solid var(--border); position: relative; z-index: 400;
       flex-shrink: 0;
@@ -610,7 +610,7 @@
     <div id="map-container">
       <div id="map"></div>
       <div class="map-fab">
-        <button class="fab-btn roulette" onclick="spinRoulette()">🎰 Double רולטה</button>
+        <button class="fab-btn" onclick="openEventModal()" style="background:linear-gradient(135deg,#1dd1a1,#00b894);box-shadow:0 4px 24px rgba(29,209,161,0.35)">➕ אירוע</button><button class="fab-btn roulette" onclick="spinRoulette()">🎰 Double רולטה</button>
         <button class="fab-btn" onclick="openMyStatus()">📍 הסטטוס שלי</button>
       </div>
     </div>
@@ -634,6 +634,53 @@
     <button class="btn-primary" style="margin-top:16px" onclick="saveMyStatus()">עדכון סטטוס 🚀</button>
     <button class="btn-secondary" style="margin-top:10px" onclick="clearMyStatus()">🔕 כיבוי סטטוס</button>
     <p class="auth-err" id="status-err"></p>
+  </div>
+
+
+  <!-- ══ PROFILE ══ -->
+  <div id="screen-profile" class="screen" style="overflow-y:auto; padding: calc(var(--safe-top) + 20px) 20px calc(var(--safe-bot) + 80px);">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
+      <button class="icon-btn" onclick="navTo('main')" style="flex-shrink:0">←</button>
+      <div style="font-family:'Syne';font-size:22px;font-weight:800">הפרופיל שלנו 👫</div>
+    </div>
+    <div style="background:linear-gradient(135deg,rgba(255,75,110,0.12),rgba(255,159,67,0.08));border:1px solid rgba(255,75,110,0.2);border-radius:20px;padding:24px;text-align:center;margin-bottom:20px">
+      <div style="font-size:48px;margin-bottom:10px">💞</div>
+      <div style="font-family:'Syne';font-size:22px;font-weight:800" id="profile-couple-name">טוען...</div>
+      <div style="color:var(--text2);font-size:13px;margin-top:4px" id="profile-couple-city"></div>
+    </div>
+    <div style="margin-bottom:14px">
+      <label class="field-label">השם שלך</label>
+      <input class="field-input" id="profile-name" placeholder="השם שלך" />
+    </div>
+    <div style="margin-bottom:14px">
+      <label class="field-label">שם בן/בת הזוג</label>
+      <input class="field-input" id="profile-partner" placeholder="שם בן/בת הזוג" />
+    </div>
+    <div style="margin-bottom:14px">
+      <label class="field-label">עיסוק שלך</label>
+      <input class="field-input" id="profile-role-him" placeholder="מפתח, מורה..." />
+    </div>
+    <div style="margin-bottom:14px">
+      <label class="field-label">עיסוק בן/בת הזוג</label>
+      <input class="field-input" id="profile-role-her" placeholder="רופאה, סטודנטית..." />
+    </div>
+    <div style="margin-bottom:14px">
+      <label class="field-label">עיר מגורים</label>
+      <input class="field-input" id="profile-city-input" placeholder="תל אביב, חיפה..." />
+    </div>
+    <div style="margin-bottom:16px">
+      <label class="field-label" style="margin-bottom:10px;display:block">מה אתם אוהבים לעשות יחד?</label>
+      <div class="vibes-grid" id="profile-vibes-grid"></div>
+    </div>
+    <div class="partner-invite-box" style="margin-bottom:20px">
+      <p>שתפו קישור זה עם בן/בת הזוג להצטרפות לפרופיל המשותף</p>
+      <div class="invite-link-row">
+        <input class="invite-link-input" id="profile-invite-link" readonly />
+        <button class="btn-copy" onclick="copyProfileInvite()">העתק</button>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="saveProfile()">שמור שינויים ✅</button>
+    <p class="auth-err" id="profile-err"></p>
   </div>
 
 </div><!-- /#app -->
@@ -679,6 +726,34 @@
   <div class="chat-input-row">
     <input class="chat-input" id="chat-input" placeholder="כתבו הודעה..." onkeydown="if(event.key==='Enter')sendMsg()" />
     <button class="chat-send" onclick="sendMsg()">↑</button>
+  </div>
+</div>
+
+
+<!-- Add Event Modal -->
+<div class="modal-overlay" id="event-modal" onclick="closeEventModal()">
+  <div class="modal-box" onclick="event.stopPropagation()" style="text-align:right">
+    <div style="font-family:'Syne';font-size:20px;font-weight:800;margin-bottom:16px">➕ הוספת אירוע</div>
+    <div style="margin-bottom:12px">
+      <label class="field-label">כותרת האירוע</label>
+      <input class="field-input" id="event-title" placeholder='לדוגמה: "BBQ בפארק הירקון"' />
+    </div>
+    <div style="margin-bottom:12px">
+      <label class="field-label">תיאור קצר</label>
+      <input class="field-input" id="event-desc" placeholder='פרטים נוספים...' />
+    </div>
+    <div style="margin-bottom:16px">
+      <label class="field-label">ויב</label>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px" id="event-vibes"></div>
+    </div>
+    <div style="margin-bottom:20px">
+      <label class="field-label">מיקום (ישתמש במיקום הנוכחי שלכם)</label>
+      <div style="background:rgba(255,75,110,0.08);border:1px solid rgba(255,75,110,0.2);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--text2)">
+        📍 המיקום יזוהה אוטומטית ויוצג במפה עם טשטוש לפרטיות
+      </div>
+    </div>
+    <button class="btn-primary" onclick="saveEvent()">פרסם על המפה 🗺️</button>
+    <button class="btn-secondary" style="margin-top:8px" onclick="closeEventModal()">ביטול</button>
   </div>
 </div>
 
@@ -1246,7 +1321,8 @@ function initNav() {
 }
 
 function navTo(name) {
-  showScreen(name === 'profile' ? 'main' : name); // profile TBD
+  if (name === 'profile') { openProfile(); return; }
+  showScreen(name);
   document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.nav === name));
   if (name === 'main' && mapInstance) setTimeout(() => mapInstance.invalidateSize(), 100);
 }
@@ -1266,6 +1342,132 @@ function showToast(msg) {
   t.textContent = msg; t.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+
+// ═══════════════════════════════════════════
+// PROFILE SCREEN
+// ═══════════════════════════════════════════
+let profileSelectedVibes = [];
+
+function openProfile() {
+  showScreen('profile');
+  navTo('profile');
+  profileSelectedVibes = [...(myProfile?.vibes || [])];
+
+  document.getElementById('profile-name').value        = myProfile?.name || '';
+  document.getElementById('profile-partner').value     = myProfile?.partner_name || '';
+  document.getElementById('profile-role-him').value    = myProfile?.role_him || '';
+  document.getElementById('profile-role-her').value    = myProfile?.role_her || '';
+  document.getElementById('profile-city-input').value  = myProfile?.city || '';
+  document.getElementById('profile-couple-name').textContent =
+    `${myProfile?.name || '?'} & ${myProfile?.partner_name || '?'}`;
+  document.getElementById('profile-couple-city').textContent = myProfile?.city || '';
+  document.getElementById('profile-invite-link').value =
+    window.location.origin + '?invite=' + currentUser.id;
+
+  // Vibes grid
+  const grid = document.getElementById('profile-vibes-grid');
+  grid.innerHTML = '';
+  VIBES_LIST.forEach(v => {
+    const chip = document.createElement('div');
+    chip.className = 'vibe-chip' + (profileSelectedVibes.includes(v.id) ? ' selected' : '');
+    chip.textContent = v.label;
+    chip.onclick = () => {
+      const idx = profileSelectedVibes.indexOf(v.id);
+      if (idx > -1) profileSelectedVibes.splice(idx, 1); else profileSelectedVibes.push(v.id);
+      chip.classList.toggle('selected', profileSelectedVibes.includes(v.id));
+    };
+    grid.appendChild(chip);
+  });
+}
+
+async function saveProfile() {
+  const err = document.getElementById('profile-err');
+  const name        = document.getElementById('profile-name').value.trim();
+  const partnerName = document.getElementById('profile-partner').value.trim();
+  const roleHim     = document.getElementById('profile-role-him').value.trim();
+  const roleHer     = document.getElementById('profile-role-her').value.trim();
+  const city        = document.getElementById('profile-city-input').value.trim();
+
+  if (!name) { err.textContent = 'נא להזין שם'; return; }
+
+  const { error } = await sb.from('profiles').update({
+    name, partner_name: partnerName,
+    role_him: roleHim, role_her: roleHer,
+    city, vibes: profileSelectedVibes,
+  }).eq('id', currentUser.id);
+
+  if (error) { err.textContent = error.message; return; }
+  myProfile = { ...myProfile, name, partner_name: partnerName, role_him: roleHim, role_her: roleHer, city, vibes: profileSelectedVibes };
+  err.textContent = '';
+  showToast('פרופיל עודכן! ✅');
+  navTo('main');
+}
+
+function copyProfileInvite() {
+  const val = document.getElementById('profile-invite-link').value;
+  navigator.clipboard.writeText(val).then(() => showToast('קישור הועתק! 📋'));
+}
+
+// ═══════════════════════════════════════════
+// EVENT MODAL
+// ═══════════════════════════════════════════
+let eventSelectedVibe = '';
+
+function openEventModal() {
+  document.getElementById('event-modal').classList.add('open');
+  document.getElementById('event-title').value = '';
+  document.getElementById('event-desc').value  = '';
+  eventSelectedVibe = '';
+
+  const grid = document.getElementById('event-vibes');
+  grid.innerHTML = '';
+  VIBES_LIST.forEach(v => {
+    const chip = document.createElement('div');
+    chip.className = 'vibe-chip';
+    chip.textContent = v.label;
+    chip.onclick = () => {
+      eventSelectedVibe = v.id;
+      grid.querySelectorAll('.vibe-chip').forEach(c => c.classList.remove('selected'));
+      chip.classList.add('selected');
+    };
+    grid.appendChild(chip);
+  });
+}
+
+function closeEventModal() {
+  document.getElementById('event-modal').classList.remove('open');
+}
+
+async function saveEvent() {
+  const title = document.getElementById('event-title').value.trim();
+  if (!title) { showToast('נא להזין כותרת לאירוע'); return; }
+
+  let lat = myProfile?.lat || 32.08;
+  let lng = myProfile?.lng || 34.78;
+  if (navigator.geolocation) {
+    try {
+      const pos = await new Promise((res, rej) =>
+        navigator.geolocation.getCurrentPosition(res, rej, { timeout: 4000 }));
+      lat = pos.coords.latitude  + (Math.random() - 0.5) * 0.006;
+      lng = pos.coords.longitude + (Math.random() - 0.5) * 0.006;
+    } catch {}
+  }
+
+  const statusText = document.getElementById('event-desc').value.trim() || title;
+  const { error } = await sb.from('profiles').update({
+    status: 'hot',
+    status_text: statusText,
+    vibes: eventSelectedVibe ? [eventSelectedVibe, ...(myProfile?.vibes||[]).filter(v=>v!==eventSelectedVibe)] : myProfile?.vibes,
+    lat, lng,
+  }).eq('id', currentUser.id);
+
+  if (error) { showToast('שגיאה: ' + error.message); return; }
+  myProfile = { ...myProfile, status: 'hot', status_text: statusText, lat, lng };
+  closeEventModal();
+  showToast('האירוע פורסם על המפה! 🗺️');
+  await loadCouples();
 }
 
 // ═══════════════════════════════════════════
