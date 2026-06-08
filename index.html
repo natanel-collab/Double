@@ -699,8 +699,8 @@
 // ═══════════════════════════════════════════
 // CONFIG — החליפו עם פרטי Supabase שלכם
 // ═══════════════════════════════════════════
-const SUPABASE_URL  = 'YOUR_SUPABASE_URL';
-const SUPABASE_ANON = 'YOUR_SUPABASE_ANON_KEY';
+const SUPABASE_URL  = 'https://qctphnkpdbhsufmmdkiz.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFjdHBobmtwZGJoc3VmbW1ka2l6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5MzU5ODcsImV4cCI6MjA5NjUxMTk4N30.iNEiIeRxiwPiZ6Yx5kLDKV1bl3TFjtIiDsVgHBlISuM';
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
@@ -745,7 +745,10 @@ const ICEBREAKERS = [
 // INIT
 // ═══════════════════════════════════════════
 async function init() {
+  // Timeout safety — אם Supabase לא מגיב תוך 6 שניות
+  const safetyTimer = setTimeout(() => { hideLoading(); showScreen("auth"); }, 6000);
   const { data: { session } } = await sb.auth.getSession();
+  clearTimeout(safetyTimer);
   if (session) {
     currentUser = session.user;
     await loadMyProfile();
