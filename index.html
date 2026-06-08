@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Double 💞</title>
+  <meta name="description" content="מצאו זוגות לדאבל דייט" />
+  <meta name="theme-color" content="#0d0d18" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    /* ─── RESET & BASE ─── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:        #0d0d18;
+      --bg2:       #13131f;
+      --bg3:       #1a1a2e;
+      --border:    rgba(255,255,255,0.08);
+      --border2:   rgba(255,255,255,0.14);
+      --text:      #f0f0ff;
+      --text2:     #aaaacc;
+      --text3:     #666688;
+      --pink:      #ff4b6e;
+      --pink2:     #ff6b9d;
+      --orange:    #ff9f43;
+      --blue:      #54a0ff;
+      --green:     #1dd1a1;
+      --radius:    16px;
+      --safe-top:  env(safe-area-inset-top, 0px);
+      --safe-bot:  env(safe-area-inset-bottom, 0px);
+    }
+
+    html, body { height: 100%; overflow: hidden; }
+    body {
+      font-family: 'Heebo', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      direction: rtl;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─── SCROLLBAR ─── */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-thumb { background: var(--pink); border-radius: 2px; }
+
+    /* ─── APP SHELL ─── */
+    #app { display: flex; flex-direction: column; height: 100dvh; }
+
+    /* ─── SCREENS ─── */
+    .screen { display: none; flex-direction: column; flex: 1; overflow: hidden; }
+    .screen.active { display: flex; }
+
+    /* ════════════════════════════════
+       AUTH SCREEN
+    ════════════════════════════════ */
+    #screen-auth {
+      align-items: center; justify-content: center;
+      background: radial-gradient(ellipse at 60% 20%, rgba(255,75,110,0.18) 0%, transparent 60%),
+                  radial-gradient(ellipse at 10% 80%, rgba(84,160,255,0.12) 0%, transparent 50%),
+                  var(--bg);
+      padding: 24px;
+    }
+    .auth-logo {
+      font-family: 'Syne', sans-serif; font-size: 48px; font-weight: 800;
+      background: linear-gradient(135deg, var(--pink), var(--orange));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      letter-spacing: -2px; margin-bottom: 6px;
+    }
+    .auth-tagline { color: var(--text2); font-size: 15px; margin-bottom: 40px; text-align: center; }
+    .auth-box {
+      background: rgba(255,255,255,0.04); border: 1px solid var(--border2);
+      border-radius: 20px; padding: 28px; width: 100%; max-width: 380px;
+    }
+    .auth-tabs { display: flex; gap: 4px; margin-bottom: 24px; background: var(--bg3); border-radius: 10px; padding: 4px; }
+    .auth-tab {
+      flex: 1; padding: 9px; border: none; background: none; color: var(--text3);
+      border-radius: 8px; cursor: pointer; font-family: 'Heebo'; font-size: 14px; font-weight: 600;
+      transition: all 0.18s;
+    }
+    .auth-tab.active { background: var(--pink); color: white; }
+
+    .field-group { margin-bottom: 14px; }
+    .field-label { font-size: 12px; color: var(--text3); margin-bottom: 6px; display: block; text-transform: uppercase; letter-spacing: 0.5px; }
+    .field-input {
+      width: 100%; background: var(--bg3); border: 1px solid var(--border);
+      color: var(--text); padding: 12px 14px; border-radius: 10px;
+      font-family: 'Heebo'; font-size: 15px; outline: none; transition: border 0.15s;
+      direction: rtl;
+    }
+    .field-input:focus { border-color: var(--pink); }
+    .field-input::placeholder { color: var(--text3); }
+
+    .btn-primary {
+      width: 100%; padding: 14px; border: none; border-radius: 12px;
+      background: linear-gradient(135deg, var(--pink), var(--pink2));
+      color: white; font-family: 'Heebo'; font-size: 16px; font-weight: 700;
+      cursor: pointer; transition: all 0.2s; margin-top: 6px;
+      box-shadow: 0 4px 20px rgba(255,75,110,0.35);
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(255,75,110,0.5); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.06); border: 1px solid var(--border2);
+      color: var(--text2); padding: 12px; border-radius: 12px;
+      font-family: 'Heebo'; font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: all 0.15s; width: 100%;
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.1); }
+
+    .auth-divider { text-align: center; color: var(--text3); font-size: 13px; margin: 14px 0; }
+    .auth-err { color: var(--pink); font-size: 13px; margin-top: 10px; text-align: center; min-height: 20px; }
+
+    /* ════════════════════════════════
+       SETUP COUPLE SCREEN
+    ════════════════════════════════ */
+    #screen-setup {
+      overflow-y: auto; padding: 24px;
+      background: var(--bg);
+      padding-top: calc(var(--safe-top) + 24px);
+    }
+    .setup-title { font-family: 'Syne'; font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+    .setup-sub { color: var(--text2); font-size: 14px; margin-bottom: 28px; line-height: 1.5; }
+    .setup-section { margin-bottom: 22px; }
+    .setup-section-title { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+
+    .partner-invite-box {
+      background: rgba(255,159,67,0.1); border: 1px solid rgba(255,159,67,0.25);
+      border-radius: 14px; padding: 16px;
+    }
+    .partner-invite-box p { font-size: 13px; color: var(--text2); margin-bottom: 12px; line-height: 1.5; }
+    .invite-link-row { display: flex; gap: 8px; }
+    .invite-link-input {
+      flex: 1; background: var(--bg3); border: 1px solid var(--border);
+      color: var(--text2); padding: 10px 12px; border-radius: 10px;
+      font-size: 12px; font-family: 'Heebo'; direction: ltr; outline: none;
+    }
+    .btn-copy {
+      background: var(--orange); color: white; border: none; padding: 10px 16px;
+      border-radius: 10px; cursor: pointer; font-family: 'Heebo'; font-weight: 700; font-size: 13px;
+      white-space: nowrap; transition: all 0.15s;
+    }
+    .btn-copy:hover { background: #e08c3a; }
+
+    .vibes-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+    .vibe-chip {
+      background: var(--bg3); border: 1px solid var(--border);
+      color: var(--text2); padding: 8px 14px; border-radius: 100px;
+      cursor: pointer; font-size: 13px; transition: all 0.15s; user-select: none;
+    }
+    .vibe-chip.selected { background: rgba(255,75,110,0.2); border-color: rgba(255,75,110,0.5); color: var(--pink); }
+
+    /* ════════════════════════════════
+       MAIN APP
+    ════════════════════════════════ */
+    #screen-main { position: relative; }
+
+    /* Header */
+    .app-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: calc(var(--safe-top) + 14px) 18px 12px;
+      background: rgba(13,13,24,0.92); backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border); position: relative; z-index: 400;
+      flex-shrink: 0;
+    }
+    .header-logo { font-family: 'Syne'; font-weight: 800; font-size: 22px; letter-spacing: -0.5px; }
+    .header-logo span { background: linear-gradient(135deg, var(--pink), var(--orange)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .header-live { font-size: 11px; color: var(--text3); margin-top: -2px; }
+    .live-dot { display: inline-block; width: 6px; height: 6px; background: var(--pink); border-radius: 50%; margin-left: 5px; animation: blink 1.4s infinite; }
+    @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.2; } }
+
+    .header-actions { display: flex; gap: 8px; align-items: center; }
+    .icon-btn {
+      background: rgba(255,255,255,0.07); border: 1px solid var(--border);
+      color: var(--text2); width: 36px; height: 36px; border-radius: 10px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 16px; transition: all 0.15s;
+    }
+    .icon-btn:hover { background: rgba(255,75,110,0.15); color: var(--pink); }
+    .icon-btn.active { background: var(--pink); color: white; border-color: var(--pink); }
+
+    /* Filter bar */
+    .filter-bar {
+      display: flex; gap: 7px; padding: 10px 16px;
+      overflow-x: auto; border-bottom: 1px solid var(--border);
+      background: rgba(13,13,24,0.85); backdrop-filter: blur(12px);
+      flex-shrink: 0; z-index: 399;
+      scrollbar-width: none;
+    }
+    .filter-bar::-webkit-scrollbar { display: none; }
+    .filter-chip {
+      background: var(--bg3); border: 1px solid var(--border);
+      color: var(--text3); padding: 6px 14px; border-radius: 100px;
+      cursor: pointer; font-size: 12px; font-family: 'Heebo'; font-weight: 600;
+      white-space: nowrap; transition: all 0.15s;
+    }
+    .filter-chip:hover { border-color: rgba(255,75,110,0.4); color: var(--pink); }
+    .filter-chip.active { background: var(--pink); color: white; border-color: var(--pink); }
+
+    /* Map */
+    #map-container { flex: 1; position: relative; overflow: hidden; }
+    #map { width: 100%; height: 100%; }
+
+    /* Override Leaflet for dark theme */
+    .leaflet-tile { filter: brightness(0.55) saturate(0.5) hue-rotate(180deg) invert(1); }
+    .leaflet-container { background: var(--bg2) !important; }
+
+    /* Custom marker */
+    .double-marker {
+      width: 46px; height: 46px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; cursor: pointer; position: relative;
+      border: 2px solid;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.5);
+      transition: transform 0.2s cubic-bezier(.34,1.56,.64,1);
+    }
+    .double-marker:hover { transform: scale(1.2); }
+    .double-marker.hot { background: rgba(255,75,110,0.25); border-color: #ff4b6e; box-shadow: 0 0 20px rgba(255,75,110,0.5); }
+    .double-marker.warm { background: rgba(255,159,67,0.2); border-color: #ff9f43; }
+    .double-marker.cold { background: rgba(84,160,255,0.15); border-color: #54a0ff; }
+    .pulse-ring {
+      position: absolute; inset: -6px; border-radius: 50%;
+      border: 2px solid var(--pink); animation: pulseRing 1.8s infinite;
+    }
+    @keyframes pulseRing { 0%{transform:scale(1);opacity:0.8} 100%{transform:scale(2.2);opacity:0} }
+
+    /* Map FAB */
+    .map-fab {
+      position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%);
+      z-index: 500; display: flex; gap: 10px;
+    }
+    .fab-btn {
+      background: linear-gradient(135deg, var(--pink), var(--pink2));
+      border: none; color: white; padding: 13px 22px; border-radius: 100px;
+      cursor: pointer; font-family: 'Heebo'; font-weight: 700; font-size: 14px;
+      box-shadow: 0 4px 24px rgba(255,75,110,0.45);
+      transition: all 0.2s; white-space: nowrap;
+    }
+    .fab-btn:hover { transform: scale(1.05); }
+    .fab-btn.roulette {
+      background: linear-gradient(135deg, var(--orange), #ffbe76);
+      box-shadow: 0 4px 24px rgba(255,159,67,0.35);
+    }
+
+    /* ════════════════════════════════
+       SIDE PANEL / DRAWER
+    ════════════════════════════════ */
+    .panel-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(4px); z-index: 600; display: none;
+    }
+    .panel-overlay.open { display: block; }
+
+    .panel {
+      position: fixed; top: 0; left: 0; bottom: 0; /* RTL: left = the side */
+      width: min(360px, 95vw);
+      background: var(--bg2); border-right: 1px solid var(--border);
+      z-index: 700; display: flex; flex-direction: column;
+      transform: translateX(-100%); transition: transform 0.3s cubic-bezier(.4,0,.2,1);
+      padding-top: var(--safe-top);
+    }
+    .panel.open { transform: translateX(0); }
+
+    .panel-header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 16px 18px; border-bottom: 1px solid var(--border);
+    }
+    .panel-close {
+      background: none; border: none; color: var(--text3); cursor: pointer; font-size: 22px;
+      width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+      border-radius: 8px; transition: all 0.15s;
+    }
+    .panel-close:hover { background: rgba(255,255,255,0.07); color: var(--text); }
+
+    .panel-body { flex: 1; overflow-y: auto; padding: 20px 18px; }
+
+    /* Couple card in panel */
+    .couple-hero {
+      background: linear-gradient(135deg, rgba(255,75,110,0.12), rgba(255,159,67,0.08));
+      border: 1px solid rgba(255,75,110,0.2); border-radius: 18px;
+      padding: 24px 20px; text-align: center; margin-bottom: 18px;
+    }
+    .couple-emoji { font-size: 48px; margin-bottom: 10px; }
+    .couple-name { font-family: 'Syne'; font-size: 22px; font-weight: 800; }
+    .couple-city { color: var(--text2); font-size: 13px; margin-top: 4px; }
+    .status-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 14px; border-radius: 100px; font-size: 12px; font-weight: 700;
+      margin-top: 10px;
+    }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; }
+
+    .info-card {
+      background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+      border-radius: 14px; padding: 14px 16px; margin-bottom: 12px;
+    }
+    .info-card-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+    .info-card-text { font-size: 14px; color: var(--text2); line-height: 1.5; }
+
+    .people-row { display: flex; gap: 8px; margin-bottom: 12px; }
+    .person-card {
+      flex: 1; background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+      border-radius: 12px; padding: 12px;
+    }
+    .person-name { font-size: 15px; font-weight: 700; }
+    .person-role { font-size: 12px; color: var(--text3); margin-top: 3px; }
+
+    .tags-row { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag {
+      background: rgba(255,75,110,0.12); color: #ff8fa8;
+      padding: 4px 12px; border-radius: 100px; font-size: 12px;
+      border: 1px solid rgba(255,75,110,0.2);
+    }
+
+    .panel-footer {
+      padding: 16px 18px; border-top: 1px solid var(--border);
+      padding-bottom: calc(var(--safe-bot) + 16px);
+    }
+    .shake-btn {
+      width: 100%; padding: 15px; border: none; border-radius: 14px;
+      background: linear-gradient(135deg, var(--pink), var(--pink2));
+      color: white; font-family: 'Heebo'; font-weight: 700; font-size: 16px;
+      cursor: pointer; transition: all 0.2s;
+      box-shadow: 0 4px 20px rgba(255,75,110,0.4);
+    }
+    .shake-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(255,75,110,0.6); }
+    .shake-hint { text-align: center; color: var(--text3); font-size: 12px; margin-top: 8px; }
+
+    /* ════════════════════════════════
+       CHAT PANEL
+    ════════════════════════════════ */
+    .chat-panel {
+      position: fixed; inset: 0; background: var(--bg2);
+      z-index: 800; display: flex; flex-direction: column;
+      transform: translateY(100%); transition: transform 0.3s cubic-bezier(.4,0,.2,1);
+      padding-top: var(--safe-top);
+    }
+    .chat-panel.open { transform: translateY(0); }
+
+    .chat-header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 18px; border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .chat-couple-info { flex: 1; }
+    .chat-couple-name { font-family: 'Syne'; font-size: 17px; font-weight: 700; }
+    .chat-status { font-size: 12px; color: var(--pink); }
+
+    .chat-messages {
+      flex: 1; overflow-y: auto; padding: 16px;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .msg-wrapper { display: flex; flex-direction: column; }
+    .msg-wrapper.self { align-items: flex-start; }
+    .msg-wrapper.other { align-items: flex-end; }
+    .msg-from { font-size: 11px; color: var(--text3); margin-bottom: 3px; }
+    .msg-bubble {
+      padding: 10px 14px; border-radius: 14px; max-width: 80%;
+      font-size: 14px; line-height: 1.4;
+    }
+    .msg-bubble.self { background: rgba(255,255,255,0.08); color: var(--text); border-radius: 14px 14px 4px 14px; }
+    .msg-bubble.other { background: linear-gradient(135deg, var(--pink), var(--pink2)); color: white; border-radius: 14px 14px 14px 4px; }
+
+    .icebreaker-card {
+      background: rgba(255,159,67,0.1); border: 1px solid rgba(255,159,67,0.25);
+      border-radius: 14px; padding: 12px 14px; margin-bottom: 4px;
+    }
+    .icebreaker-label { font-size: 11px; color: var(--orange); font-weight: 700; margin-bottom: 4px; }
+    .icebreaker-text { font-size: 13px; color: var(--text2); }
+
+    .chat-input-row {
+      display: flex; gap: 8px; padding: 12px 16px;
+      border-top: 1px solid var(--border);
+      padding-bottom: calc(var(--safe-bot) + 12px);
+      flex-shrink: 0;
+    }
+    .chat-input {
+      flex: 1; background: var(--bg3); border: 1px solid var(--border);
+      color: var(--text); padding: 11px 14px; border-radius: 100px;
+      font-family: 'Heebo'; font-size: 14px; outline: none; transition: border 0.15s;
+      direction: rtl;
+    }
+    .chat-input:focus { border-color: var(--pink); }
+    .chat-input::placeholder { color: var(--text3); }
+    .chat-send {
+      width: 42px; height: 42px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--pink), var(--pink2));
+      border: none; color: white; cursor: pointer; font-size: 17px;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s; flex-shrink: 0;
+    }
+    .chat-send:hover { transform: scale(1.1); }
+
+    /* ════════════════════════════════
+       MY STATUS SCREEN
+    ════════════════════════════════ */
+    #screen-status {
+      overflow-y: auto;
+      padding: calc(var(--safe-top) + 16px) 20px calc(var(--safe-bot) + 80px);
+    }
+    .status-title { font-family: 'Syne'; font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+    .status-sub { color: var(--text2); font-size: 13px; margin-bottom: 24px; }
+
+    .status-option {
+      background: var(--bg3); border: 2px solid var(--border);
+      border-radius: 16px; padding: 18px; margin-bottom: 10px;
+      cursor: pointer; transition: all 0.18s; display: flex; align-items: center; gap: 14px;
+    }
+    .status-option:hover { border-color: rgba(255,75,110,0.4); }
+    .status-option.selected { border-color: var(--pink); background: rgba(255,75,110,0.1); }
+    .status-option-icon { font-size: 28px; flex-shrink: 0; }
+    .status-option-title { font-size: 15px; font-weight: 700; }
+    .status-option-desc { font-size: 12px; color: var(--text3); margin-top: 3px; }
+
+    .custom-status-input {
+      width: 100%; background: var(--bg3); border: 1px solid var(--border);
+      color: var(--text); padding: 13px 16px; border-radius: 12px;
+      font-family: 'Heebo'; font-size: 14px; outline: none; margin-top: 16px;
+      direction: rtl; transition: border 0.15s; resize: none;
+    }
+    .custom-status-input:focus { border-color: var(--pink); }
+
+    /* ════════════════════════════════
+       BOTTOM NAV
+    ════════════════════════════════ */
+    .bottom-nav {
+      display: flex; background: rgba(13,13,24,0.95); backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border);
+      padding-bottom: var(--safe-bot);
+      flex-shrink: 0; z-index: 350;
+    }
+    .nav-item {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      padding: 10px 4px; cursor: pointer; transition: all 0.15s;
+      border: none; background: none; color: var(--text3); gap: 4px;
+    }
+    .nav-item:hover { color: var(--text2); }
+    .nav-item.active { color: var(--pink); }
+    .nav-icon { font-size: 22px; line-height: 1; }
+    .nav-label { font-size: 10px; font-weight: 600; font-family: 'Heebo'; }
+
+    /* ════════════════════════════════
+       ROULETTE MODAL
+    ════════════════════════════════ */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(8px); z-index: 900;
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px; display: none;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: var(--bg2); border: 1px solid rgba(255,75,110,0.3);
+      border-radius: 24px; padding: 32px 24px; max-width: 340px; width: 100%;
+      text-align: center;
+    }
+    .modal-emoji { font-size: 56px; margin-bottom: 14px; }
+    .modal-title { font-family: 'Syne'; font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+    .modal-sub { color: var(--text2); font-size: 14px; margin-bottom: 6px; }
+    .modal-quote {
+      background: rgba(255,75,110,0.1); border: 1px solid rgba(255,75,110,0.25);
+      border-radius: 12px; padding: 12px 16px; font-size: 14px; color: #ffb3c1;
+      margin: 14px 0 20px; text-align: right;
+    }
+    .modal-actions { display: flex; flex-direction: column; gap: 8px; }
+
+    /* ─── TOAST ─── */
+    #toast {
+      position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(10px);
+      background: var(--bg3); border: 1px solid var(--border2);
+      color: var(--text); padding: 11px 20px; border-radius: 100px;
+      font-size: 14px; font-family: 'Heebo'; z-index: 9999;
+      opacity: 0; transition: all 0.3s; white-space: nowrap;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ─── LOADING ─── */
+    #loading {
+      position: fixed; inset: 0; background: var(--bg);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 9999; gap: 16px;
+    }
+    .loading-logo { font-family: 'Syne'; font-size: 42px; font-weight: 800;
+      background: linear-gradient(135deg, var(--pink), var(--orange));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .loading-spinner {
+      width: 32px; height: 32px; border: 3px solid var(--border);
+      border-top-color: var(--pink); border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ─── LEAFLET popup override ─── */
+    .leaflet-popup-content-wrapper {
+      background: var(--bg2) !important; color: var(--text) !important;
+      border: 1px solid var(--border2) !important; border-radius: 14px !important;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.6) !important;
+    }
+    .leaflet-popup-tip { background: var(--bg2) !important; }
+    .leaflet-popup-content { margin: 12px 16px !important; font-family: 'Heebo' !important; }
+  </style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="loading-logo">Double</div>
+  <div class="loading-spinner"></div>
+</div>
+
+<div id="app">
+
+  <!-- ══ AUTH ══ -->
+  <div id="screen-auth" class="screen">
+    <div class="auth-logo">Double 💞</div>
+    <p class="auth-tagline">מצאו זוגות לדאבל דייט • צרו חברויות</p>
+    <div class="auth-box">
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="switchAuthTab('login')">כניסה</button>
+        <button class="auth-tab" onclick="switchAuthTab('register')">הרשמה</button>
+      </div>
+      <div id="auth-login">
+        <div class="field-group">
+          <label class="field-label">אימייל</label>
+          <input class="field-input" type="email" id="login-email" placeholder="your@email.com" dir="ltr" />
+        </div>
+        <div class="field-group">
+          <label class="field-label">סיסמה</label>
+          <input class="field-input" type="password" id="login-pass" placeholder="••••••••" dir="ltr" />
+        </div>
+        <button class="btn-primary" onclick="doLogin()">כניסה</button>
+        <p class="auth-err" id="login-err"></p>
+      </div>
+      <div id="auth-register" style="display:none">
+        <div class="field-group">
+          <label class="field-label">שם פרטי</label>
+          <input class="field-input" type="text" id="reg-name" placeholder="השם שלך" />
+        </div>
+        <div class="field-group">
+          <label class="field-label">אימייל</label>
+          <input class="field-input" type="email" id="reg-email" placeholder="your@email.com" dir="ltr" />
+        </div>
+        <div class="field-group">
+          <label class="field-label">סיסמה</label>
+          <input class="field-input" type="password" id="reg-pass" placeholder="לפחות 6 תווים" dir="ltr" />
+        </div>
+        <button class="btn-primary" onclick="doRegister()">יצירת חשבון</button>
+        <p class="auth-err" id="reg-err"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SETUP ══ -->
+  <div id="screen-setup" class="screen">
+    <div class="setup-title">בואו נכיר אתכם 👋</div>
+    <p class="setup-sub">מלאו כמה פרטים כדי שזוגות אחרים יוכלו להכיר אתכם</p>
+
+    <div class="setup-section">
+      <div class="setup-section-title">שם בן/בת הזוג שלך</div>
+      <input class="field-input" type="text" id="setup-partner" placeholder="שם בן/בת הזוג" />
+    </div>
+
+    <div class="setup-section">
+      <div class="setup-section-title">מה אתם אוהבים לעשות יחד?</div>
+      <div class="vibes-grid" id="vibes-grid"></div>
+    </div>
+
+    <div class="setup-section">
+      <div class="setup-section-title">הזמינו את בן/בת הזוג</div>
+      <div class="partner-invite-box">
+        <p>שלחו לבן/בת הזוג את הקישור הבא. ברגע שיירשמו תתחברו אוטומטית לפרופיל משותף!</p>
+        <div class="invite-link-row">
+          <input class="invite-link-input" id="invite-link" readonly value="ייווצר לאחר שמירה..." />
+          <button class="btn-copy" onclick="copyInviteLink()">העתק</button>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="saveSetup()" style="margin-top:8px">שמור והמשך למפה 🗺️</button>
+    <p class="auth-err" id="setup-err"></p>
+    <div style="height:40px"></div>
+  </div>
+
+  <!-- ══ MAIN ══ -->
+  <div id="screen-main" class="screen">
+    <div class="app-header">
+      <div>
+        <div class="header-logo"><span>Double</span> 💞</div>
+        <div class="header-live"><span class="live-dot"></span><span id="live-count">0</span> זוגות חמים עכשיו</div>
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn" onclick="openMyStatus()" title="הסטטוס שלי">📍</button>
+        <button class="icon-btn" onclick="signOut()" title="יציאה">🚪</button>
+      </div>
+    </div>
+
+    <div class="filter-bar" id="filter-bar"></div>
+
+    <div id="map-container">
+      <div id="map"></div>
+      <div class="map-fab">
+        <button class="fab-btn roulette" onclick="spinRoulette()">🎰 Double רולטה</button>
+        <button class="fab-btn" onclick="openMyStatus()">📍 הסטטוס שלי</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ MY STATUS ══ -->
+  <div id="screen-status" class="screen">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+      <button class="icon-btn" onclick="showScreen('main')" style="flex-shrink:0">←</button>
+      <div>
+        <div class="status-title">הסטטוס שלנו</div>
+        <div class="status-sub">ספרו לזוגות אחרים מה אתם מחפשים</div>
+      </div>
+    </div>
+
+    <div id="status-options"></div>
+
+    <textarea class="custom-status-input" id="status-text" rows="3"
+      placeholder='לדוגמה: "אנחנו בפאב ברוטשילד, מי מצטרף?" או "מתכננים פיקניק בשבת"'></textarea>
+
+    <button class="btn-primary" style="margin-top:16px" onclick="saveMyStatus()">עדכון סטטוס 🚀</button>
+    <button class="btn-secondary" style="margin-top:10px" onclick="clearMyStatus()">🔕 כיבוי סטטוס</button>
+    <p class="auth-err" id="status-err"></p>
+  </div>
+
+</div><!-- /#app -->
+
+<!-- Bottom Nav (shared) -->
+<div class="bottom-nav" id="bottom-nav" style="display:none">
+  <button class="nav-item active" data-nav="main" onclick="navTo('main')">
+    <div class="nav-icon">🗺️</div><div class="nav-label">מפה</div>
+  </button>
+  <button class="nav-item" data-nav="status" onclick="navTo('status')">
+    <div class="nav-icon">📍</div><div class="nav-label">הסטטוס שלי</div>
+  </button>
+  <button class="nav-item" data-nav="profile" onclick="navTo('profile')">
+    <div class="nav-icon">👫</div><div class="nav-label">הפרופיל שלנו</div>
+  </button>
+</div>
+
+<!-- Couple Panel -->
+<div class="panel-overlay" id="panel-overlay" onclick="closePanel()"></div>
+<div class="panel" id="couple-panel">
+  <div class="panel-header">
+    <button class="panel-close" onclick="closePanel()">×</button>
+    <div style="font-family:'Syne';font-weight:700;font-size:16px" id="panel-title">פרופיל זוג</div>
+  </div>
+  <div class="panel-body" id="panel-body"></div>
+  <div class="panel-footer">
+    <button class="shake-btn" id="shake-btn" onclick="openChat()">💞 Double Shake!</button>
+    <div class="shake-hint">נפתח צ'אט קבוצתי של 4 אנשים</div>
+  </div>
+</div>
+
+<!-- Chat Panel -->
+<div class="chat-panel" id="chat-panel">
+  <div class="chat-header">
+    <button class="panel-close" onclick="closeChat()">←</button>
+    <div class="chat-couple-info">
+      <div class="chat-couple-name" id="chat-couple-name"></div>
+      <div class="chat-status">Double Chat · 4 אנשים</div>
+    </div>
+    <span id="chat-emoji" style="font-size:24px"></span>
+  </div>
+  <div class="chat-messages" id="chat-messages"></div>
+  <div class="chat-input-row">
+    <input class="chat-input" id="chat-input" placeholder="כתבו הודעה..." onkeydown="if(event.key==='Enter')sendMsg()" />
+    <button class="chat-send" onclick="sendMsg()">↑</button>
+  </div>
+</div>
+
+<!-- Roulette Modal -->
+<div class="modal-overlay" id="roulette-modal" onclick="closeRoulette()">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div id="roulette-content">
+      <div class="modal-emoji">🎰</div>
+      <div class="modal-title">מחפשים...</div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════
+// CONFIG — החליפו עם פרטי Supabase שלכם
+// ═══════════════════════════════════════════
+const SUPABASE_URL  = 'YOUR_SUPABASE_URL';
+const SUPABASE_ANON = 'YOUR_SUPABASE_ANON_KEY';
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+let currentUser   = null;
+let myProfile     = null;
+let myCoupleData  = null;
+let allCouples    = [];
+let mapInstance   = null;
+let markers       = {};
+let selectedVibeFilter = 'all';
+let selectedCouple     = null;
+let chatMessages       = [];
+let statusChannel      = null;
+
+const VIBES_LIST = [
+  { id: 'פאב',      label: '🍺 פאב & בר' },
+  { id: 'מסעדה',    label: '🍷 מסעדה' },
+  { id: 'טבע',      label: '🥾 טבע & הרפתקה' },
+  { id: 'בית',      label: '🎲 ערב ביתי' },
+  { id: 'ים',       label: '🌊 ים & חוף' },
+  { id: 'תרבות',    label: '🎭 תרבות & אמנות' },
+];
+
+const STATUS_META = {
+  hot:  { color: '#ff4b6e', label: 'חמים עכשיו',  emoji: '🔴' },
+  warm: { color: '#ff9f43', label: 'מתכננים',      emoji: '🟠' },
+  cold: { color: '#54a0ff', label: 'פתוחים',       emoji: '🔵' },
+};
+
+const ICEBREAKERS = [
+  'מי הזוג שיותר סביר שיאחר למפגש? 😄',
+  'מהו הדייט הכי מביך שחוויתם יחד? 😂',
+  'אם הייתם חייבים לבחור: ים או הרים?',
+  'מהי ארוחת הערב המושלמת בעיניכם?',
+  'מה הדבר שאתם הכי לא מסכימים עליו? 🤔',
+];
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+async function init() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    currentUser = session.user;
+    await loadMyProfile();
+  } else {
+    hideLoading();
+    showScreen('auth');
+  }
+}
+
+function hideLoading() {
+  document.getElementById('loading').style.display = 'none';
+}
+
+async function loadMyProfile() {
+  const { data } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
+  myProfile = data;
+  hideLoading();
+
+  if (!myProfile || !myProfile.name) {
+    showScreen('setup');
+    initSetupScreen();
+  } else {
+    showScreen('main');
+    initNav();
+    await initMap();
+    subscribeRealtime();
+  }
+}
+
+// ═══════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════
+function switchAuthTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active', (i===0 && tab==='login') || (i===1 && tab==='register')));
+  document.getElementById('auth-login').style.display    = tab === 'login'    ? '' : 'none';
+  document.getElementById('auth-register').style.display = tab === 'register' ? '' : 'none';
+}
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-pass').value;
+  const btn   = document.querySelector('#auth-login .btn-primary');
+  btn.disabled = true; btn.textContent = 'מתחבר...';
+  const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+  btn.disabled = false; btn.textContent = 'כניסה';
+  if (error) { document.getElementById('login-err').textContent = 'שגיאה: ' + error.message; return; }
+  currentUser = (await sb.auth.getUser()).data.user;
+  await loadMyProfile();
+}
+
+async function doRegister() {
+  const name  = document.getElementById('reg-name').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const pass  = document.getElementById('reg-pass').value;
+  if (!name) { document.getElementById('reg-err').textContent = 'נא להזין שם'; return; }
+  const btn = document.querySelector('#auth-register .btn-primary');
+  btn.disabled = true; btn.textContent = 'יוצר חשבון...';
+  const { data, error } = await sb.auth.signUp({ email, password: pass, options: { data: { name } } });
+  btn.disabled = false; btn.textContent = 'יצירת חשבון';
+  if (error) { document.getElementById('reg-err').textContent = error.message; return; }
+  currentUser = data.user;
+  // upsert profile
+  await sb.from('profiles').upsert({ id: currentUser.id, name, email });
+  await loadMyProfile();
+}
+
+async function signOut() {
+  await sb.auth.signOut();
+  location.reload();
+}
+
+// ═══════════════════════════════════════════
+// SETUP
+// ═══════════════════════════════════════════
+let selectedVibes = [];
+
+function initSetupScreen() {
+  const grid = document.getElementById('vibes-grid');
+  grid.innerHTML = '';
+  VIBES_LIST.forEach(v => {
+    const chip = document.createElement('div');
+    chip.className = 'vibe-chip'; chip.textContent = v.label; chip.dataset.id = v.id;
+    chip.onclick = () => {
+      const idx = selectedVibes.indexOf(v.id);
+      if (idx > -1) selectedVibes.splice(idx, 1); else selectedVibes.push(v.id);
+      chip.classList.toggle('selected', selectedVibes.includes(v.id));
+    };
+    grid.appendChild(chip);
+  });
+  // Generate invite link placeholder
+  document.getElementById('invite-link').value = window.location.origin + '?invite=' + (currentUser?.id || 'xxx');
+}
+
+function copyInviteLink() {
+  const val = document.getElementById('invite-link').value;
+  navigator.clipboard.writeText(val).then(() => showToast('קישור הועתק! 📋'));
+}
+
+async function saveSetup() {
+  const partnerName = document.getElementById('setup-partner').value.trim();
+  const err = document.getElementById('setup-err');
+  if (!partnerName) { err.textContent = 'נא להזין שם בן/בת הזוג'; return; }
+
+  const { error } = await sb.from('profiles').upsert({
+    id: currentUser.id,
+    name: myProfile?.name || currentUser.user_metadata?.name || 'משתמש',
+    partner_name: partnerName,
+    vibes: selectedVibes,
+    status: 'cold',
+    status_text: '',
+    lat: 32.08 + (Math.random() - 0.5) * 0.05,
+    lng: 34.78 + (Math.random() - 0.5) * 0.05,
+  });
+
+  if (error) { err.textContent = error.message; return; }
+  await loadMyProfile();
+}
+
+// ═══════════════════════════════════════════
+// MAP
+// ═══════════════════════════════════════════
+async function initMap() {
+  // Israel center
+  mapInstance = L.map('map', { zoomControl: false, attributionControl: false })
+    .setView([31.5, 35.0], 8);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 18,
+  }).addTo(mapInstance);
+
+  // Move zoom control
+  L.control.zoom({ position: 'bottomright' }).addTo(mapInstance);
+
+  buildFilterBar();
+  await loadCouples();
+}
+
+function buildFilterBar() {
+  const bar = document.getElementById('filter-bar');
+  bar.innerHTML = '';
+  const allChip = document.createElement('button');
+  allChip.className = 'filter-chip active'; allChip.textContent = '✨ הכל'; allChip.dataset.vibe = 'all';
+  allChip.onclick = () => applyVibeFilter('all');
+  bar.appendChild(allChip);
+
+  VIBES_LIST.forEach(v => {
+    const chip = document.createElement('button');
+    chip.className = 'filter-chip'; chip.textContent = v.label; chip.dataset.vibe = v.id;
+    chip.onclick = () => applyVibeFilter(v.id);
+    bar.appendChild(chip);
+  });
+
+  // Hot toggle
+  const hotChip = document.createElement('button');
+  hotChip.className = 'filter-chip'; hotChip.textContent = '🔥 חמים עכשיו'; hotChip.dataset.vibe = 'hot';
+  hotChip.onclick = () => applyVibeFilter('hot');
+  bar.appendChild(hotChip);
+}
+
+function applyVibeFilter(vibe) {
+  selectedVibeFilter = vibe;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.toggle('active', c.dataset.vibe === vibe));
+  renderMarkers();
+}
+
+async function loadCouples() {
+  const { data } = await sb.from('profiles')
+    .select('*')
+    .not('lat', 'is', null)
+    .neq('id', currentUser.id);
+
+  allCouples = data || [];
+  renderMarkers();
+  updateLiveCount();
+}
+
+function renderMarkers() {
+  // Clear
+  Object.values(markers).forEach(m => m.remove());
+  markers = {};
+
+  const filtered = allCouples.filter(c => {
+    if (selectedVibeFilter === 'all') return true;
+    if (selectedVibeFilter === 'hot') return c.status === 'hot';
+    return (c.vibes || []).includes(selectedVibeFilter);
+  });
+
+  filtered.forEach(couple => {
+    if (!couple.lat || !couple.lng) return;
+
+    const status = couple.status || 'cold';
+    const meta   = STATUS_META[status] || STATUS_META.cold;
+    const vibe   = (couple.vibes || [])[0] || 'בית';
+    const emoji  = VIBES_LIST.find(v => v.id === vibe)?.label.split(' ')[0] || '💞';
+
+    const icon = L.divIcon({
+      className: '',
+      html: `<div class="double-marker ${status}">
+        ${status === 'hot' ? '<div class="pulse-ring"></div>' : ''}
+        ${emoji}
+      </div>`,
+      iconSize: [46, 46], iconAnchor: [23, 23],
+    });
+
+    const marker = L.marker([couple.lat, couple.lng], { icon })
+      .addTo(mapInstance)
+      .on('click', () => openCouplePanel(couple));
+
+    markers[couple.id] = marker;
+  });
+}
+
+function updateLiveCount() {
+  const hot = allCouples.filter(c => c.status === 'hot').length;
+  document.getElementById('live-count').textContent = hot;
+}
+
+// ═══════════════════════════════════════════
+// REALTIME
+// ═══════════════════════════════════════════
+function subscribeRealtime() {
+  if (statusChannel) statusChannel.unsubscribe();
+  statusChannel = sb.channel('public:profiles')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, payload => {
+      const updated = payload.new;
+      if (!updated || updated.id === currentUser.id) return;
+      const idx = allCouples.findIndex(c => c.id === updated.id);
+      if (payload.eventType === 'DELETE') {
+        if (idx > -1) allCouples.splice(idx, 1);
+      } else if (idx > -1) {
+        allCouples[idx] = updated;
+      } else {
+        allCouples.push(updated);
+      }
+      renderMarkers();
+      updateLiveCount();
+      if (payload.eventType === 'UPDATE' && updated.status === 'hot') {
+        showToast(`${updated.name} & ${updated.partner_name || 'שותף'} מחפשים דאבל! 🔥`);
+      }
+    })
+    .subscribe();
+}
+
+// ═══════════════════════════════════════════
+// COUPLE PANEL
+// ═══════════════════════════════════════════
+function openCouplePanel(couple) {
+  selectedCouple = couple;
+  const status = couple.status || 'cold';
+  const meta   = STATUS_META[status];
+
+  document.getElementById('panel-title').textContent = `${couple.name} & ${couple.partner_name || '?'}`;
+
+  const body = document.getElementById('panel-body');
+  body.innerHTML = `
+    <div class="couple-hero">
+      <div class="couple-emoji">${(couple.vibes||[])[0] ? VIBES_LIST.find(v=>v.id===couple.vibes[0])?.label.split(' ')[0] || '💞' : '💞'}</div>
+      <div class="couple-name">${couple.name} & ${couple.partner_name || '?'}</div>
+      <div class="couple-city">${couple.city || 'ישראל'}</div>
+      <div class="status-badge" style="background:${meta.color}22;color:${meta.color}">
+        <div class="status-dot" style="background:${meta.color}"></div>
+        ${meta.label}
+      </div>
+    </div>
+
+    ${couple.status_text ? `
+    <div class="info-card">
+      <div class="info-card-label">הם מחפשים</div>
+      <div class="info-card-text">"${couple.status_text}"</div>
+    </div>` : ''}
+
+    <div class="people-row">
+      <div class="person-card">
+        <div class="person-name">${couple.name}</div>
+        <div class="person-role">${couple.role_him || 'לא צוין'}</div>
+      </div>
+      <div class="person-card">
+        <div class="person-name">${couple.partner_name || '?'}</div>
+        <div class="person-role">${couple.role_her || 'לא צוין'}</div>
+      </div>
+    </div>
+
+    ${couple.vibes?.length ? `
+    <div class="info-card">
+      <div class="info-card-label">תחומי עניין משותפים</div>
+      <div class="tags-row" style="margin-top:8px">
+        ${(couple.vibes||[]).map(v => `<span class="tag">${VIBES_LIST.find(x=>x.id===v)?.label||v}</span>`).join('')}
+      </div>
+    </div>` : ''}
+  `;
+
+  document.getElementById('panel-overlay').classList.add('open');
+  document.getElementById('couple-panel').classList.add('open');
+}
+
+function closePanel() {
+  document.getElementById('panel-overlay').classList.remove('open');
+  document.getElementById('couple-panel').classList.remove('open');
+}
+
+// ═══════════════════════════════════════════
+// CHAT
+// ═══════════════════════════════════════════
+function openChat() {
+  closePanel();
+  const couple = selectedCouple;
+  document.getElementById('chat-couple-name').textContent = `${couple.name} & ${couple.partner_name || '?'}`;
+  document.getElementById('chat-emoji').textContent = '💞';
+
+  const icebreaker = ICEBREAKERS[Math.floor(Math.random() * ICEBREAKERS.length)];
+  chatMessages = [
+    { from: 'מערכת', text: icebreaker, type: 'icebreaker' },
+    { from: `${couple.name} & ${couple.partner_name || '?'}`, text: 'היי! שמחים שיצרתם קשר 🎉', self: false },
+  ];
+  renderChatMessages();
+  document.getElementById('chat-panel').classList.add('open');
+}
+
+function closeChat() {
+  document.getElementById('chat-panel').classList.remove('open');
+}
+
+function renderChatMessages() {
+  const container = document.getElementById('chat-messages');
+  container.innerHTML = '';
+  chatMessages.forEach(msg => {
+    if (msg.type === 'icebreaker') {
+      container.innerHTML += `
+        <div class="icebreaker-card">
+          <div class="icebreaker-label">🎯 שוברת קרח</div>
+          <div class="icebreaker-text">${msg.text}</div>
+        </div>`;
+    } else {
+      container.innerHTML += `
+        <div class="msg-wrapper ${msg.self ? 'self' : 'other'}">
+          <div class="msg-from">${msg.from}</div>
+          <div class="msg-bubble ${msg.self ? 'self' : 'other'}">${msg.text}</div>
+        </div>`;
+    }
+  });
+  container.scrollTop = container.scrollHeight;
+}
+
+function sendMsg() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+  chatMessages.push({ from: 'אתם', text, self: true });
+  input.value = '';
+  renderChatMessages();
+
+  // Simulated reply (replace with real Supabase realtime messages table)
+  setTimeout(() => {
+    const replies = ['נשמע מעולה! 🙌', 'כן! מתי נוח לכם?', 'אנחנו גמישים, מה אצלכם?', '😊👍'];
+    chatMessages.push({
+      from: selectedCouple?.name || 'הזוג',
+      text: replies[Math.floor(Math.random() * replies.length)],
+      self: false,
+    });
+    renderChatMessages();
+  }, 1200);
+}
+
+// ═══════════════════════════════════════════
+// MY STATUS
+// ═══════════════════════════════════════════
+const STATUS_OPTIONS = [
+  { id: 'hot',  icon: '🔥', title: 'חמים עכשיו!',    desc: 'מחפשים דאבל ספונטני היום' },
+  { id: 'warm', icon: '📅', title: 'מתכננים',         desc: 'יש לנו תוכניות לימים הקרובים' },
+  { id: 'cold', icon: '😴', title: 'לא זמינים כרגע', desc: 'פתוחים לעתיד אבל לא עכשיו' },
+];
+let selectedStatusOption = myProfile?.status || 'cold';
+
+function openMyStatus() {
+  showScreen('status');
+  selectedStatusOption = myProfile?.status || 'cold';
+  document.getElementById('status-text').value = myProfile?.status_text || '';
+  renderStatusOptions();
+}
+
+function renderStatusOptions() {
+  const container = document.getElementById('status-options');
+  container.innerHTML = '';
+  STATUS_OPTIONS.forEach(opt => {
+    const div = document.createElement('div');
+    div.className = `status-option ${opt.id === selectedStatusOption ? 'selected' : ''}`;
+    div.innerHTML = `
+      <div class="status-option-icon">${opt.icon}</div>
+      <div>
+        <div class="status-option-title">${opt.title}</div>
+        <div class="status-option-desc">${opt.desc}</div>
+      </div>`;
+    div.onclick = () => {
+      selectedStatusOption = opt.id;
+      renderStatusOptions();
+    };
+    container.appendChild(div);
+  });
+}
+
+async function saveMyStatus() {
+  const text = document.getElementById('status-text').value.trim();
+  const err  = document.getElementById('status-err');
+
+  // Get current location with fuzz
+  let lat = myProfile?.lat || 32.08;
+  let lng = myProfile?.lng || 34.78;
+  if (navigator.geolocation) {
+    try {
+      const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, { timeout: 4000 }));
+      // Add random fuzz ~300m for privacy
+      lat = pos.coords.latitude  + (Math.random() - 0.5) * 0.006;
+      lng = pos.coords.longitude + (Math.random() - 0.5) * 0.006;
+    } catch {}
+  }
+
+  const { error } = await sb.from('profiles').update({
+    status: selectedStatusOption,
+    status_text: text,
+    lat, lng,
+  }).eq('id', currentUser.id);
+
+  if (error) { err.textContent = error.message; return; }
+  myProfile = { ...myProfile, status: selectedStatusOption, status_text: text, lat, lng };
+  showToast('סטטוס עודכן! 🚀');
+  showScreen('main');
+  navTo('main');
+}
+
+async function clearMyStatus() {
+  await sb.from('profiles').update({ status: 'cold', status_text: '' }).eq('id', currentUser.id);
+  myProfile = { ...myProfile, status: 'cold', status_text: '' };
+  showToast('סטטוס כובה');
+  showScreen('main');
+  navTo('main');
+}
+
+// ═══════════════════════════════════════════
+// ROULETTE
+// ═══════════════════════════════════════════
+function spinRoulette() {
+  const modal = document.getElementById('roulette-modal');
+  modal.classList.add('open');
+  document.getElementById('roulette-content').innerHTML = `
+    <div class="modal-emoji" style="animation:spin 0.6s linear infinite">🎰</div>
+    <div class="modal-title">מחפשים...</div>
+  `;
+  document.getElementById('roulette-content').querySelector('.modal-emoji').style.animation = 'spin 0.5s linear infinite';
+
+  const hotCouples = allCouples.filter(c => c.status === 'hot' || c.status === 'warm');
+  setTimeout(() => {
+    if (!hotCouples.length) {
+      document.getElementById('roulette-content').innerHTML = `
+        <div class="modal-emoji">😴</div>
+        <div class="modal-title">אין זוגות זמינים</div>
+        <div class="modal-sub" style="margin-top:8px;color:var(--text2)">נסו שוב מאוחר יותר</div>
+        <div class="modal-actions" style="margin-top:20px">
+          <button class="btn-secondary" onclick="closeRoulette()">סגור</button>
+        </div>
+      `;
+      return;
+    }
+    const picked = hotCouples[Math.floor(Math.random() * hotCouples.length)];
+    const vibe = (picked.vibes||[])[0];
+    const emoji = VIBES_LIST.find(v=>v.id===vibe)?.label.split(' ')[0] || '💞';
+    document.getElementById('roulette-content').innerHTML = `
+      <div class="modal-emoji">${emoji}</div>
+      <div class="modal-title">${picked.name} & ${picked.partner_name || '?'}</div>
+      <div class="modal-sub">${picked.city || 'ישראל'}</div>
+      ${picked.status_text ? `<div class="modal-quote">"${picked.status_text}"</div>` : ''}
+      <div class="modal-actions">
+        <button class="fab-btn" style="width:100%" onclick="closeRoulette();openCouplePanel(${JSON.stringify(picked).replace(/"/g,'&quot;')})">💞 Double Shake!</button>
+        <button class="btn-secondary" onclick="closeRoulette()" style="margin-top:8px">סגור</button>
+      </div>
+    `;
+  }, 1600);
+}
+
+function closeRoulette() {
+  document.getElementById('roulette-modal').classList.remove('open');
+}
+
+// ═══════════════════════════════════════════
+// NAV & SCREENS
+// ═══════════════════════════════════════════
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  const showNav = ['main', 'status', 'profile'].includes(name);
+  document.getElementById('bottom-nav').style.display = showNav ? 'flex' : 'none';
+}
+
+function initNav() {
+  document.getElementById('bottom-nav').style.display = 'flex';
+}
+
+function navTo(name) {
+  showScreen(name === 'profile' ? 'main' : name); // profile TBD
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.nav === name));
+  if (name === 'main' && mapInstance) setTimeout(() => mapInstance.invalidateSize(), 100);
+}
+
+function openMyStatus() {
+  showScreen('status');
+  navTo('status');
+  selectedStatusOption = myProfile?.status || 'cold';
+  document.getElementById('status-text').value = myProfile?.status_text || '';
+  renderStatusOptions();
+}
+
+// ─── TOAST ───
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ═══════════════════════════════════════════
+// START
+// ═══════════════════════════════════════════
+init();
+</script>
+</body>
+</html>
