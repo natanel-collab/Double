@@ -602,7 +602,6 @@
       <div class="header-actions">
         <button class="icon-btn" onclick="openMyStatus()" title="הסטטוס שלי">📍</button>
         <button class="icon-btn" id="view-toggle-btn" onclick="toggleListView()" title="תצוגת רשימה">📋</button>
-        <button class="icon-btn" onclick="signOut()" title="יציאה">🚪</button>
       </div>
     </div>
 
@@ -650,7 +649,13 @@
       <div style="font-family:'Syne';font-size:22px;font-weight:800">הפרופיל שלנו 👫</div>
     </div>
     <div style="background:linear-gradient(135deg,rgba(255,75,110,0.12),rgba(255,159,67,0.08));border:1px solid rgba(255,75,110,0.2);border-radius:20px;padding:24px;text-align:center;margin-bottom:20px">
-      <div style="font-size:48px;margin-bottom:10px">💞</div>
+      <!-- Photo upload -->
+      <div style="position:relative;display:inline-block;margin-bottom:14px">
+        <div id="profile-photo-preview" style="width:90px;height:90px;border-radius:50%;background:rgba(255,75,110,0.2);border:2px solid rgba(255,75,110,0.4);display:flex;align-items:center;justify-content:center;font-size:36px;overflow:hidden;margin:0 auto">💞</div>
+        <label for="photo-upload" style="position:absolute;bottom:0;left:0;width:28px;height:28px;background:var(--pink);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;border:2px solid var(--bg2)">📷</label>
+        <input type="file" id="photo-upload" accept="image/*" style="display:none" onchange="handlePhotoUpload(this)" />
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:10px">לחצו על המצלמה לשינוי תמונה</div>
       <div style="font-family:'Syne';font-size:22px;font-weight:800" id="profile-couple-name">טוען...</div>
       <div style="color:var(--text2);font-size:13px;margin-top:4px" id="profile-couple-city"></div>
     </div>
@@ -686,6 +691,7 @@
       </div>
     </div>
     <button class="btn-primary" onclick="saveProfile()">שמור שינויים ✅</button>
+    <button class="btn-secondary" style="margin-top:10px;color:#ff4b6e;border-color:rgba(255,75,110,0.3)" onclick="signOut()">🚪 יציאה מהחשבון</button>
     <p class="auth-err" id="profile-err"></p>
   </div>
 
@@ -1017,7 +1023,8 @@ function renderMarkers() {
   Object.values(markers).forEach(m => m.remove());
   markers = {};
 
-  const filtered = allCouples.filter(c => {
+  const allWithSelf = myProfile?.lat ? [...allCouples.filter(c=>c.id!==currentUser.id), myProfile] : allCouples;
+  const filtered = allWithSelf.filter(c => {
     if (selectedVibeFilter === 'all') return true;
     if (selectedVibeFilter === 'hot') return c.status === 'hot';
     return (c.vibes || []).includes(selectedVibeFilter);
@@ -1358,6 +1365,32 @@ function showToast(msg) {
 
 
 
+
+// ═══════════════════════════════════════════
+// PHOTO UPLOAD
+// ═══════════════════════════════════════════
+async function handlePhotoUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { showToast('תמונה גדולה מדי (מקסימום 5MB)'); return; }
+
+  showToast('מעלה תמונה...');
+  const ext = file.name.split('.').pop();
+  const path = `${currentUser.id}/couple.${ext}`;
+
+  const { error: upErr } = await sb.storage.from('photos').upload(path, file, { upsert: true });
+  if (upErr) { showToast('שגיאה בהעלאה: ' + upErr.message); return; }
+
+  const { data: { publicUrl } } = sb.storage.from('photos').getPublicUrl(path);
+
+  await sb.from('profiles').update({ photo_url: publicUrl }).eq('id', currentUser.id);
+  myProfile = { ...myProfile, photo_url: publicUrl };
+
+  const preview = document.getElementById('profile-photo-preview');
+  preview.innerHTML = `<img src="${publicUrl}" style="width:100%;height:100%;object-fit:cover" />`;
+  showToast('תמונה עודכנה! 📸');
+}
+
 // ═══════════════════════════════════════════
 // LIST VIEW
 // ═══════════════════════════════════════════
@@ -1373,14 +1406,15 @@ function toggleListView() {
 
 function renderListView() {
   const container = document.getElementById('list-couples');
-  const filtered = allCouples.filter(c =>
+  const allWithSelf = myProfile?.lat ? [...allCouples.filter(c=>c.id!==currentUser.id), myProfile] : allCouples;
+  const filtered = allWithSelf.filter(c =>
     selectedVibeFilter === 'all' ? true :
     selectedVibeFilter === 'hot' ? c.status === 'hot' :
     (c.vibes||[]).includes(selectedVibeFilter)
   );
 
   if (!filtered.length) {
-    container.innerHTML = '<div style="text-align:center;color:var(--text3);padding:40px 20px;font-size:15px">אין זוגות להצגה 😴</div>';
+    container.innerHTML = '<div style="text-align:center;color:var(--text3);padding:40px 20px;font-size:15px">אין זוגות להצגה 😴<br><br>הוסיפו אירוע כדי להופיע על המפה!</div>';
     return;
   }
 
@@ -1434,48 +1468,20 @@ function selectManualLocation() {
   document.getElementById('selected-location').style.display = 'none';
 }
 
-const ISRAEL_CITIES = [
-  { name: 'תל אביב', lat: 32.0853, lng: 34.7818 },
-  { name: 'ירושלים', lat: 31.7683, lng: 35.2137 },
-  { name: 'חיפה', lat: 32.7940, lng: 34.9896 },
-  { name: 'באר שבע', lat: 31.2518, lng: 34.7913 },
-  { name: 'נתניה', lat: 32.3215, lng: 34.8532 },
-  { name: 'פתח תקווה', lat: 32.0840, lng: 34.8878 },
-  { name: 'רמת גן', lat: 32.0684, lng: 34.8248 },
-  { name: 'אשדוד', lat: 31.8044, lng: 34.6553 },
-  { name: 'אשקלון', lat: 31.6658, lng: 34.5664 },
-  { name: 'רחובות', lat: 31.8928, lng: 34.8113 },
-  { name: 'בת ים', lat: 32.0204, lng: 34.7447 },
-  { name: 'הרצליה', lat: 32.1663, lng: 34.8436 },
-  { name: 'כפר סבא', lat: 32.1752, lng: 34.9077 },
-  { name: 'רעננה', lat: 32.1836, lng: 34.8706 },
-  { name: 'חולון', lat: 32.0114, lng: 34.7795 },
-  { name: 'ראשון לציון', lat: 31.9642, lng: 34.8044 },
-  { name: 'נס ציונה', lat: 31.9301, lng: 34.7981 },
-  { name: 'מודיעין', lat: 31.8969, lng: 35.0095 },
-  { name: 'לוד', lat: 31.9516, lng: 34.8951 },
-  { name: 'רמלה', lat: 31.9298, lng: 34.8695 },
-  { name: 'עכו', lat: 32.9233, lng: 35.0682 },
-  { name: 'נהריה', lat: 33.0068, lng: 35.0966 },
-  { name: 'טבריה', lat: 32.7922, lng: 35.5312 },
-  { name: 'צפת', lat: 32.9646, lng: 35.4960 },
-  { name: 'אילת', lat: 29.5577, lng: 34.9519 },
-  { name: 'דימונה', lat: 31.0693, lng: 35.0323 },
-  { name: 'קריית גת', lat: 31.6100, lng: 34.7642 },
-  { name: 'פלורנטין', lat: 32.0580, lng: 34.7710 },
-  { name: 'נווה צדק', lat: 32.0617, lng: 34.7653 },
-  { name: 'הכרמל', lat: 32.8000, lng: 34.9800 },
-];
-
-function searchCity(q) {
+async function searchCity(q) {
   const results = document.getElementById('city-results');
   if (!q || q.length < 2) { results.innerHTML = ''; return; }
-  const matches = ISRAEL_CITIES.filter(c => c.name.includes(q)).slice(0, 5);
-  results.innerHTML = matches.map(c => `
-    <div onclick="pickCity('${c.name}',${c.lat},${c.lng})"
-      style="padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;margin-bottom:6px;cursor:pointer;font-size:14px;display:flex;align-items:center;gap:8px">
-      📍 ${c.name}
-    </div>`).join('');
+  results.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:8px">מחפש...</div>';
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}+ישראל&format=json&limit=6&accept-language=he&countrycodes=il`);
+    const data = await res.json();
+    if (!data.length) { results.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:8px">לא נמצאו תוצאות</div>'; return; }
+    results.innerHTML = data.map(p => `
+      <div onclick="pickCity('${p.display_name.split(',')[0]}',${p.lat},${p.lon})"
+        style="padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;margin-bottom:6px;cursor:pointer;font-size:14px">
+        📍 ${p.display_name.split(',').slice(0,2).join(', ')}
+      </div>`).join('');
+  } catch { results.innerHTML = '<div style="color:var(--pink);font-size:13px;padding:8px">שגיאת חיפוש</div>'; }
 }
 
 function pickCity(name, lat, lng) {
@@ -1507,6 +1513,14 @@ function openProfile() {
   document.getElementById('profile-couple-city').textContent = myProfile?.city || '';
   document.getElementById('profile-invite-link').value =
     window.location.origin + '?invite=' + currentUser.id;
+
+  // Load photo if exists
+  const preview = document.getElementById('profile-photo-preview');
+  if (myProfile?.photo_url) {
+    preview.innerHTML = `<img src="${myProfile.photo_url}" style="width:100%;height:100%;object-fit:cover" />`;
+  } else {
+    preview.innerHTML = '💞';
+  }
 
   // Vibes grid
   const grid = document.getElementById('profile-vibes-grid');
@@ -1618,11 +1632,18 @@ async function saveEvent() {
     lat, lng,
   }).eq('id', currentUser.id);
 
-  if (error) { showToast('שגיאה: ' + error.message); return; }
+  if (error) { showToast('שגיאה: ' + error.message); console.error(error); return; }
   myProfile = { ...myProfile, status: 'hot', status_text: statusText, lat, lng };
   closeEventModal();
   showToast('האירוע פורסם על המפה! 🗺️');
-  await loadCouples();
+  // Add self to map
+  const selfExists = allCouples.findIndex(c => c.id === currentUser.id);
+  if (selfExists > -1) allCouples[selfExists] = myProfile;
+  else allCouples.push(myProfile);
+  renderMarkers();
+  updateLiveCount();
+  // Fly to location
+  if (mapInstance && lat && lng) mapInstance.flyTo([lat, lng], 13, { duration: 1.5 });
 }
 
 // ═══════════════════════════════════════════
