@@ -601,6 +601,7 @@
       </div>
       <div class="header-actions">
         <button class="icon-btn" onclick="openMyStatus()" title="הסטטוס שלי">📍</button>
+        <button class="icon-btn" id="view-toggle-btn" onclick="toggleListView()" title="תצוגת רשימה">📋</button>
         <button class="icon-btn" onclick="signOut()" title="יציאה">🚪</button>
       </div>
     </div>
@@ -613,6 +614,11 @@
         <button class="fab-btn" onclick="openEventModal()" style="background:linear-gradient(135deg,#1dd1a1,#00b894);box-shadow:0 4px 24px rgba(29,209,161,0.35)">➕ אירוע</button><button class="fab-btn roulette" onclick="spinRoulette()">🎰 Double רולטה</button>
         <button class="fab-btn" onclick="openMyStatus()">📍 הסטטוס שלי</button>
       </div>
+    </div>
+
+    <!-- List View Overlay -->
+    <div id="list-overlay" style="display:none;position:absolute;inset:0;background:var(--bg2);overflow-y:auto;z-index:300;padding:12px 16px 80px">
+      <div id="list-couples"></div>
     </div>
   </div>
 
@@ -747,9 +753,15 @@
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px" id="event-vibes"></div>
     </div>
     <div style="margin-bottom:20px">
-      <label class="field-label">מיקום (ישתמש במיקום הנוכחי שלכם)</label>
-      <div style="background:rgba(255,75,110,0.08);border:1px solid rgba(255,75,110,0.2);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--text2)">
-        📍 המיקום יזוהה אוטומטית ויוצג במפה עם טשטוש לפרטיות
+      <label class="field-label">מיקום</label>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <button class="vibe-chip" id="loc-auto-btn" onclick="selectAutoLocation()" style="flex:1;text-align:center">📍 מיקום נוכחי</button>
+        <button class="vibe-chip" id="loc-manual-btn" onclick="selectManualLocation()" style="flex:1;text-align:center">🔍 חיפוש עיר</button>
+      </div>
+      <input class="field-input" id="event-city-search" placeholder="חפשו עיר, שכונה..." style="display:none" oninput="searchCity(this.value)" />
+      <div id="city-results" style="margin-top:6px"></div>
+      <div id="selected-location" style="background:rgba(29,209,161,0.1);border:1px solid rgba(29,209,161,0.3);border-radius:10px;padding:10px 14px;font-size:13px;color:#1dd1a1;display:none">
+        ✅ <span id="selected-location-text"></span>
       </div>
     </div>
     <button class="btn-primary" onclick="saveEvent()">פרסם על המפה 🗺️</button>
@@ -1345,6 +1357,136 @@ function showToast(msg) {
 }
 
 
+
+// ═══════════════════════════════════════════
+// LIST VIEW
+// ═══════════════════════════════════════════
+let listViewOpen = false;
+
+function toggleListView() {
+  listViewOpen = !listViewOpen;
+  document.getElementById('list-overlay').style.display = listViewOpen ? 'block' : 'none';
+  document.getElementById('view-toggle-btn').classList.toggle('active', listViewOpen);
+  document.getElementById('view-toggle-btn').textContent = listViewOpen ? '🗺️' : '📋';
+  if (listViewOpen) renderListView();
+}
+
+function renderListView() {
+  const container = document.getElementById('list-couples');
+  const filtered = allCouples.filter(c =>
+    selectedVibeFilter === 'all' ? true :
+    selectedVibeFilter === 'hot' ? c.status === 'hot' :
+    (c.vibes||[]).includes(selectedVibeFilter)
+  );
+
+  if (!filtered.length) {
+    container.innerHTML = '<div style="text-align:center;color:var(--text3);padding:40px 20px;font-size:15px">אין זוגות להצגה 😴</div>';
+    return;
+  }
+
+  container.innerHTML = filtered.map(c => {
+    const meta = STATUS_META[c.status || 'cold'];
+    const vibe = (c.vibes||[])[0];
+    const emoji = VIBES_LIST.find(v=>v.id===vibe)?.label.split(' ')[0] || '💞';
+    return `
+      <div onclick="openCouplePanel(${JSON.stringify(c).replace(/"/g,'&quot;')});toggleListView()"
+        style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:16px;margin-bottom:10px;cursor:pointer;display:flex;gap:12px;align-items:flex-start">
+        <div style="width:52px;height:52px;border-radius:12px;background:rgba(255,75,110,0.12);border:1px solid ${meta.color}44;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">${emoji}</div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+            <span style="font-family:'Syne';font-weight:700;font-size:16px">${c.name} & ${c.partner_name||'?'}</span>
+            <div style="background:${meta.color}22;color:${meta.color};padding:2px 8px;border-radius:100px;font-size:11px;font-weight:700;white-space:nowrap">${meta.label}</div>
+          </div>
+          <div style="color:var(--text3);font-size:12px;margin-top:2px">${c.city||'ישראל'}</div>
+          ${c.status_text ? `<div style="color:var(--text2);font-size:13px;margin-top:6px;line-height:1.4">"${c.status_text}"</div>` : ''}
+          <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px">
+            ${(c.vibes||[]).map(v=>`<span style="background:rgba(255,75,110,0.12);color:#ff8fa8;padding:3px 10px;border-radius:100px;font-size:11px;border:1px solid rgba(255,75,110,0.2)">${VIBES_LIST.find(x=>x.id===v)?.label||v}</span>`).join('')}
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════
+// EVENT LOCATION PICKER
+// ═══════════════════════════════════════════
+let eventLat = null;
+let eventLng = null;
+let locationMode = 'auto';
+
+function selectAutoLocation() {
+  locationMode = 'auto';
+  document.getElementById('loc-auto-btn').classList.add('selected');
+  document.getElementById('loc-manual-btn').classList.remove('selected');
+  document.getElementById('event-city-search').style.display = 'none';
+  document.getElementById('city-results').innerHTML = '';
+  document.getElementById('selected-location').style.display = 'flex';
+  document.getElementById('selected-location-text').textContent = 'מיקום נוכחי (יזוהה אוטומטית)';
+  eventLat = null; eventLng = null;
+}
+
+function selectManualLocation() {
+  locationMode = 'manual';
+  document.getElementById('loc-manual-btn').classList.add('selected');
+  document.getElementById('loc-auto-btn').classList.remove('selected');
+  document.getElementById('event-city-search').style.display = 'block';
+  document.getElementById('event-city-search').focus();
+  document.getElementById('selected-location').style.display = 'none';
+}
+
+const ISRAEL_CITIES = [
+  { name: 'תל אביב', lat: 32.0853, lng: 34.7818 },
+  { name: 'ירושלים', lat: 31.7683, lng: 35.2137 },
+  { name: 'חיפה', lat: 32.7940, lng: 34.9896 },
+  { name: 'באר שבע', lat: 31.2518, lng: 34.7913 },
+  { name: 'נתניה', lat: 32.3215, lng: 34.8532 },
+  { name: 'פתח תקווה', lat: 32.0840, lng: 34.8878 },
+  { name: 'רמת גן', lat: 32.0684, lng: 34.8248 },
+  { name: 'אשדוד', lat: 31.8044, lng: 34.6553 },
+  { name: 'אשקלון', lat: 31.6658, lng: 34.5664 },
+  { name: 'רחובות', lat: 31.8928, lng: 34.8113 },
+  { name: 'בת ים', lat: 32.0204, lng: 34.7447 },
+  { name: 'הרצליה', lat: 32.1663, lng: 34.8436 },
+  { name: 'כפר סבא', lat: 32.1752, lng: 34.9077 },
+  { name: 'רעננה', lat: 32.1836, lng: 34.8706 },
+  { name: 'חולון', lat: 32.0114, lng: 34.7795 },
+  { name: 'ראשון לציון', lat: 31.9642, lng: 34.8044 },
+  { name: 'נס ציונה', lat: 31.9301, lng: 34.7981 },
+  { name: 'מודיעין', lat: 31.8969, lng: 35.0095 },
+  { name: 'לוד', lat: 31.9516, lng: 34.8951 },
+  { name: 'רמלה', lat: 31.9298, lng: 34.8695 },
+  { name: 'עכו', lat: 32.9233, lng: 35.0682 },
+  { name: 'נהריה', lat: 33.0068, lng: 35.0966 },
+  { name: 'טבריה', lat: 32.7922, lng: 35.5312 },
+  { name: 'צפת', lat: 32.9646, lng: 35.4960 },
+  { name: 'אילת', lat: 29.5577, lng: 34.9519 },
+  { name: 'דימונה', lat: 31.0693, lng: 35.0323 },
+  { name: 'קריית גת', lat: 31.6100, lng: 34.7642 },
+  { name: 'פלורנטין', lat: 32.0580, lng: 34.7710 },
+  { name: 'נווה צדק', lat: 32.0617, lng: 34.7653 },
+  { name: 'הכרמל', lat: 32.8000, lng: 34.9800 },
+];
+
+function searchCity(q) {
+  const results = document.getElementById('city-results');
+  if (!q || q.length < 2) { results.innerHTML = ''; return; }
+  const matches = ISRAEL_CITIES.filter(c => c.name.includes(q)).slice(0, 5);
+  results.innerHTML = matches.map(c => `
+    <div onclick="pickCity('${c.name}',${c.lat},${c.lng})"
+      style="padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;margin-bottom:6px;cursor:pointer;font-size:14px;display:flex;align-items:center;gap:8px">
+      📍 ${c.name}
+    </div>`).join('');
+}
+
+function pickCity(name, lat, lng) {
+  eventLat = lat + (Math.random()-0.5)*0.006;
+  eventLng = lng + (Math.random()-0.5)*0.006;
+  document.getElementById('city-results').innerHTML = '';
+  document.getElementById('event-city-search').style.display = 'none';
+  document.getElementById('selected-location').style.display = 'flex';
+  document.getElementById('selected-location-text').textContent = name;
+}
+
 // ═══════════════════════════════════════════
 // PROFILE SCREEN
 // ═══════════════════════════════════════════
@@ -1420,6 +1562,13 @@ function openEventModal() {
   document.getElementById('event-title').value = '';
   document.getElementById('event-desc').value  = '';
   eventSelectedVibe = '';
+  eventLat = null; eventLng = null; locationMode = 'auto';
+  document.getElementById('event-city-search').style.display = 'none';
+  document.getElementById('city-results').innerHTML = '';
+  document.getElementById('selected-location').style.display = 'flex';
+  document.getElementById('selected-location-text').textContent = 'מיקום נוכחי (יזוהה אוטומטית)';
+  document.getElementById('loc-auto-btn').classList.add('selected');
+  document.getElementById('loc-manual-btn').classList.remove('selected');
 
   const grid = document.getElementById('event-vibes');
   grid.innerHTML = '';
@@ -1444,15 +1593,21 @@ async function saveEvent() {
   const title = document.getElementById('event-title').value.trim();
   if (!title) { showToast('נא להזין כותרת לאירוע'); return; }
 
-  let lat = myProfile?.lat || 32.08;
-  let lng = myProfile?.lng || 34.78;
-  if (navigator.geolocation) {
-    try {
-      const pos = await new Promise((res, rej) =>
-        navigator.geolocation.getCurrentPosition(res, rej, { timeout: 4000 }));
-      lat = pos.coords.latitude  + (Math.random() - 0.5) * 0.006;
-      lng = pos.coords.longitude + (Math.random() - 0.5) * 0.006;
-    } catch {}
+  let lat = eventLat;
+  let lng = eventLng;
+
+  // Auto location if not manually picked
+  if (!lat || !lng) {
+    lat = myProfile?.lat || 32.08;
+    lng = myProfile?.lng || 34.78;
+    if (navigator.geolocation) {
+      try {
+        const pos = await new Promise((res, rej) =>
+          navigator.geolocation.getCurrentPosition(res, rej, { timeout: 4000 }));
+        lat = pos.coords.latitude  + (Math.random() - 0.5) * 0.006;
+        lng = pos.coords.longitude + (Math.random() - 0.5) * 0.006;
+      } catch {}
+    }
   }
 
   const statusText = document.getElementById('event-desc').value.trim() || title;
