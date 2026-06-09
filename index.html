@@ -755,6 +755,24 @@
     <div id="chats-list"></div>
   </div>
 
+
+  <!-- ══ FEED ══ -->
+  <div id="screen-feed" class="screen scroll-screen" style="padding: calc(var(--safe-top) + 20px) 20px calc(var(--safe-bot) + 80px);">
+    <div style="font-family:'Syne';font-size:22px;font-weight:800;margin-bottom:6px">✨ סטטוסים</div>
+    <div style="color:var(--text2);font-size:13px;margin-bottom:20px">מה הזוגות עושים עכשיו</div>
+    <!-- Vibe filter -->
+    <div style="display:flex;gap:7px;overflow-x:auto;margin-bottom:16px;padding-bottom:4px;scrollbar-width:none">
+      <button class="filter-chip active" data-feed-vibe="all" onclick="filterFeed('all')">✨ הכל</button>
+      <button class="filter-chip" data-feed-vibe="hot" onclick="filterFeed('hot')">🔥 חמים</button>
+      <button class="filter-chip" data-feed-vibe="פאב" onclick="filterFeed('פאב')">🍺 פאב</button>
+      <button class="filter-chip" data-feed-vibe="מסעדה" onclick="filterFeed('מסעדה')">🍷 מסעדה</button>
+      <button class="filter-chip" data-feed-vibe="טבע" onclick="filterFeed('טבע')">🥾 טבע</button>
+      <button class="filter-chip" data-feed-vibe="בית" onclick="filterFeed('בית')">🎲 בית</button>
+      <button class="filter-chip" data-feed-vibe="ים" onclick="filterFeed('ים')">🌊 ים</button>
+    </div>
+    <div id="feed-list"></div>
+  </div>
+
   <!-- ══ SHAKES ══ -->
   <div id="screen-shakes" class="screen scroll-screen" style="padding: calc(var(--safe-top) + 20px) 20px calc(var(--safe-bot) + 80px);">
     <div style="font-family:'Syne';font-size:22px;font-weight:800;margin-bottom:6px">💞 Double Shake</div>
@@ -767,22 +785,25 @@
 <!-- Bottom Nav (shared) -->
 <div class="bottom-nav" id="bottom-nav" style="display:none">
   <button class="nav-item active" data-nav="main" onclick="navTo('main')">
-    <div class="nav-icon">🗺️</div><div class="nav-label">מפה</div>
-  </button>
-  <button class="nav-item" data-nav="status" onclick="navTo('status')">
-    <div class="nav-icon">📍</div><div class="nav-label">הסטטוס שלי</div>
+    <div class="nav-icon">🗺️</div>
+    <div class="nav-label">בית</div>
   </button>
   <button class="nav-item" data-nav="chats" onclick="navTo('chats')">
-    <div class="nav-icon">💬</div><div class="nav-label">צ'אטים</div>
-    <div id="chats-badge" style="display:none;position:absolute;top:6px;right:calc(50% - 18px);width:8px;height:8px;background:var(--pink);border-radius:50%"></div>
+    <div class="nav-icon">💬</div>
+    <div class="nav-label">צ'אטים</div>
+    <div id="chats-badge" style="display:none;position:absolute;top:6px;right:calc(50% - 20px);width:8px;height:8px;background:var(--pink);border-radius:50%"></div>
   </button>
-  <button class="nav-item" data-nav="shakes" onclick="navTo('shakes')">
-    <div class="nav-icon">💞</div><div class="nav-label">Shake</div>
-    <div id="shake-badge" style="display:none;position:absolute;top:6px;right:calc(50% - 18px);width:8px;height:8px;background:var(--pink);border-radius:50%"></div>
+  <button class="nav-item" data-nav="feed" onclick="navTo('feed')">
+    <div class="nav-icon">✨</div>
+    <div class="nav-label">סטטוסים</div>
+    <div id="shake-badge" style="display:none;position:absolute;top:6px;right:calc(50% - 20px);width:8px;height:8px;background:var(--pink);border-radius:50%"></div>
   </button>
   <button class="nav-item" data-nav="profile" onclick="navTo('profile')">
-    <div class="nav-icon" id="nav-profile-icon">👫</div><div class="nav-label">פרופיל</div>
+    <div class="nav-icon" id="nav-profile-icon">👫</div>
+    <div class="nav-label">פרופיל</div>
   </button>
+</div>
+
 </div>
 
 <!-- Couple Panel -->
@@ -1098,6 +1119,7 @@ async function loadCouples() {
   allCouples = data || [];
   renderMarkers();
   updateLiveCount();
+  if (document.getElementById("screen-feed")?.classList.contains("active")) renderFeed();
 }
 
 function renderMarkers() {
@@ -1518,6 +1540,7 @@ function navTo(name) {
   if (name === 'profile') { openProfile(); return; }
   if (name === 'shakes') { showScreen('shakes'); document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav===name)); loadShakes(); return; }
   if (name === 'chats') { showScreen('chats'); document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav===name)); loadChats(); return; }
+  if (name === 'feed') { showScreen('feed'); document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav===name)); loadFeed(); return; }
   showScreen(name);
   document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.nav === name));
   if (name === 'main' && mapInstance) setTimeout(() => mapInstance.invalidateSize(), 100);
@@ -1897,6 +1920,84 @@ async function saveEvent() {
 
 
 
+
+
+// ═══════════════════════════════════════════
+// STATUS FEED
+// ═══════════════════════════════════════════
+let feedVibeFilter = 'all';
+
+function filterFeed(vibe) {
+  feedVibeFilter = vibe;
+  document.querySelectorAll('[data-feed-vibe]').forEach(b =>
+    b.classList.toggle('active', b.dataset.feedVibe === vibe));
+  renderFeed();
+}
+
+function renderFeed() {
+  const list = document.getElementById('feed-list');
+  if (!list) return;
+
+  const couples = allCouples.filter(c => {
+    if (c.id === currentUser.id) return false;
+    if (feedVibeFilter === 'hot') return c.status === 'hot';
+    if (feedVibeFilter !== 'all') return (c.vibes||[]).includes(feedVibeFilter);
+    return true;
+  });
+
+  // Sort: hot first, then warm, then cold
+  couples.sort((a,b) => ({ hot:0, warm:1, cold:2 }[a.status||'cold'] || 0) - ({ hot:0, warm:1, cold:2 }[b.status||'cold'] || 0));
+
+  if (!couples.length) {
+    list.innerHTML = `<div style="text-align:center;padding:60px 20px;color:var(--text3)">
+      <div style="font-size:48px;margin-bottom:16px">😴</div>
+      <div style="font-size:16px;font-weight:700;margin-bottom:8px">אין זוגות פעילים</div>
+      <div style="font-size:13px">כשזוגות יפרסמו אירועים הם יופיעו כאן</div>
+    </div>`;
+    return;
+  }
+
+  const STATUS_META_LOCAL = {
+    hot:  { color: '#ff4b6e', label: 'חמים עכשיו', bg: 'rgba(255,75,110,0.12)' },
+    warm: { color: '#ff9f43', label: 'מתכננים',    bg: 'rgba(255,159,67,0.1)'  },
+    cold: { color: '#54a0ff', label: 'פתוחים',     bg: 'rgba(84,160,255,0.08)' },
+  };
+
+  list.innerHTML = couples.map(c => {
+    const meta = STATUS_META_LOCAL[c.status||'cold'];
+    const emoji = vibeEmoji((c.vibes||[])[0]);
+    const photoEl = c.photo_url
+      ? `<img src="${c.photo_url}" style="width:54px;height:54px;border-radius:50%;object-fit:cover;border:2px solid ${meta.color}55;flex-shrink:0" />`
+      : `<div style="width:54px;height:54px;border-radius:50%;background:${meta.color}18;border:2px solid ${meta.color}44;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">${emoji}</div>`;
+
+    const tagsHtml = (c.vibes||[]).slice(0,3).map(v =>
+      `<span style="background:rgba(255,75,110,0.1);color:#ff8fa8;padding:3px 10px;border-radius:100px;font-size:11px;border:1px solid rgba(255,75,110,0.2)">${v}</span>`
+    ).join('');
+
+    return `
+    <div onclick="openCouplePanel(${JSON.stringify(c).replace(/"/g,'&quot;')})"
+      style="background:rgba(255,255,255,0.04);border:1px solid ${meta.color}22;border-radius:18px;padding:16px;margin-bottom:12px;cursor:pointer;transition:all 0.15s"
+      onmouseenter="this.style.background='${meta.bg}'" onmouseleave="this.style.background='rgba(255,255,255,0.04)'">
+      <div style="display:flex;gap:12px;align-items:center;margin-bottom:${c.status_text||tagsHtml?'12px':'0'}">
+        ${photoEl}
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+            <span style="font-family:'Syne';font-weight:800;font-size:16px">${c.name} & ${c.partner_name||'?'}</span>
+            <div style="background:${meta.color}22;color:${meta.color};padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;white-space:nowrap;flex-shrink:0">${meta.label}</div>
+          </div>
+          <div style="color:var(--text3);font-size:12px;margin-top:2px">${c.city||'ישראל'}</div>
+        </div>
+      </div>
+      ${c.status_text ? `<div style="color:var(--text2);font-size:14px;line-height:1.5;margin-bottom:10px;padding:10px 14px;background:rgba(255,255,255,0.04);border-radius:10px">"${c.status_text}"</div>` : ''}
+      ${tagsHtml ? `<div style="display:flex;flex-wrap:wrap;gap:5px">${tagsHtml}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+async function loadFeed() {
+  await loadCouples();
+  renderFeed();
+}
 
 // ═══════════════════════════════════════════
 // CHATS LIST
