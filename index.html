@@ -747,6 +747,14 @@
   </div>
 
 
+
+  <!-- ══ CHATS ══ -->
+  <div id="screen-chats" class="screen scroll-screen" style="padding: calc(var(--safe-top) + 20px) 20px calc(var(--safe-bot) + 80px);">
+    <div style="font-family:'Syne';font-size:22px;font-weight:800;margin-bottom:6px">💬 צ'אטים</div>
+    <div style="color:var(--text2);font-size:13px;margin-bottom:24px">השיחות הפעילות שלכם</div>
+    <div id="chats-list"></div>
+  </div>
+
   <!-- ══ SHAKES ══ -->
   <div id="screen-shakes" class="screen scroll-screen" style="padding: calc(var(--safe-top) + 20px) 20px calc(var(--safe-bot) + 80px);">
     <div style="font-family:'Syne';font-size:22px;font-weight:800;margin-bottom:6px">💞 Double Shake</div>
@@ -763,6 +771,10 @@
   </button>
   <button class="nav-item" data-nav="status" onclick="navTo('status')">
     <div class="nav-icon">📍</div><div class="nav-label">הסטטוס שלי</div>
+  </button>
+  <button class="nav-item" data-nav="chats" onclick="navTo('chats')">
+    <div class="nav-icon">💬</div><div class="nav-label">צ'אטים</div>
+    <div id="chats-badge" style="display:none;position:absolute;top:6px;right:calc(50% - 18px);width:8px;height:8px;background:var(--pink);border-radius:50%"></div>
   </button>
   <button class="nav-item" data-nav="shakes" onclick="navTo('shakes')">
     <div class="nav-icon">💞</div><div class="nav-label">Shake</div>
@@ -935,6 +947,7 @@ async function loadMyProfile() {
     subscribeRealtime();
     await checkInviteCode();
     subscribeShakes();
+    subscribeNewMessages();
   }
 }
 
@@ -1343,7 +1356,9 @@ async function sendMsg() {
     text,
   });
 
-  if (error) showToast('שגיאה בשליחה: ' + error.message);
+  if (error) { showToast('שגיאה בשליחה: ' + error.message); return; }
+  // update chats badge
+  const cb = document.getElementById('chats-badge'); if (cb) cb.style.display = 'block';
 }
 
 // legacy stub
@@ -1502,6 +1517,7 @@ function initNav() {
 function navTo(name) {
   if (name === 'profile') { openProfile(); return; }
   if (name === 'shakes') { showScreen('shakes'); document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav===name)); loadShakes(); return; }
+  if (name === 'chats') { showScreen('chats'); document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav===name)); loadChats(); return; }
   showScreen(name);
   document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.nav === name));
   if (name === 'main' && mapInstance) setTimeout(() => mapInstance.invalidateSize(), 100);
@@ -1881,6 +1897,87 @@ async function saveEvent() {
 
 
 
+
+// ═══════════════════════════════════════════
+// CHATS LIST
+// ═══════════════════════════════════════════
+async function loadChats() {
+  // Get all rooms this user has messages in
+  const { data: sent } = await sb.from('messages')
+    .select('room_id, text, created_at, sender_name')
+    .order('created_at', { ascending: false });
+
+  if (!sent?.length) {
+    document.getElementById('chats-list').innerHTML = `
+      <div style="text-align:center;padding:60px 20px;color:var(--text3)">
+        <div style="font-size:48px;margin-bottom:16px">💬</div>
+        <div style="font-size:16px;font-weight:700;margin-bottom:8px">אין צ'אטים עדיין</div>
+        <div style="font-size:13px">שלחו Double Shake לזוג כדי להתחיל שיחה</div>
+      </div>`;
+    return;
+  }
+
+  // Dedupe rooms, keep latest message per room
+  const rooms = {};
+  sent.forEach(m => {
+    if (!rooms[m.room_id] || m.created_at > rooms[m.room_id].created_at) {
+      rooms[m.room_id] = m;
+    }
+  });
+
+  // For each room, get the other user's profile
+  const roomEntries = Object.entries(rooms);
+  const profiles = await Promise.all(roomEntries.map(async ([roomId, lastMsg]) => {
+    const ids = roomId.split(':');
+    const otherId = ids.find(id => id !== currentUser.id);
+    if (!otherId) return null;
+    const { data: profile } = await sb.from('profiles').select('*').eq('id', otherId).single();
+    return { roomId, lastMsg, profile };
+  }));
+
+  const valid = profiles.filter(Boolean).sort((a,b) =>
+    b.lastMsg.created_at.localeCompare(a.lastMsg.created_at)
+  );
+
+  if (!valid.length) {
+    document.getElementById('chats-list').innerHTML = `<div style="text-align:center;padding:60px 20px;color:var(--text3)"><div style="font-size:48px">💬</div><div style="margin-top:16px;font-size:15px">אין צ'אטים פעילים</div></div>`;
+    return;
+  }
+
+  document.getElementById('chats-list').innerHTML = valid.map(({ roomId, lastMsg, profile }) => {
+    if (!profile) return '';
+    const photoEl = profile.photo_url
+      ? `<img src="${profile.photo_url}" style="width:54px;height:54px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,75,110,0.4);flex-shrink:0" />`
+      : `<div style="width:54px;height:54px;border-radius:50%;background:rgba(255,75,110,0.15);border:2px solid rgba(255,75,110,0.3);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${vibeEmoji((profile.vibes||[])[0])}</div>`;
+    const time = new Date(lastMsg.created_at).toLocaleTimeString('he-IL', { hour:'2-digit', minute:'2-digit' });
+    const isMine = lastMsg.sender_name === (myProfile?.name || '');
+    return `
+    <div onclick="openChatById('${profile.id}')" 
+      style="display:flex;gap:12px;align-items:center;padding:14px 16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;margin-bottom:10px;cursor:pointer;transition:all 0.15s"
+      onmouseenter="this.style.background='rgba(255,75,110,0.08)'"
+      onmouseleave="this.style.background='rgba(255,255,255,0.04)'">
+      ${photoEl}
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
+          <span style="font-family:'Syne';font-weight:700;font-size:15px">${profile.name} & ${profile.partner_name||'?'}</span>
+          <span style="font-size:11px;color:var(--text3)">${time}</span>
+        </div>
+        <div style="font-size:13px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+          ${isMine ? 'אתם: ' : ''}${lastMsg.text}
+        </div>
+      </div>
+      <div style="font-size:18px;flex-shrink:0">›</div>
+    </div>`;
+  }).join('');
+}
+
+async function openChatById(profileId) {
+  const { data: profile } = await sb.from('profiles').select('*').eq('id', profileId).single();
+  if (!profile) return;
+  selectedCouple = profile;
+  openChat();
+}
+
 // ═══════════════════════════════════════════
 // DOUBLE SHAKE
 // ═══════════════════════════════════════════
@@ -1970,6 +2067,21 @@ async function respondShake(shakeId, status, fromName) {
 }
 
 // Subscribe to new shakes
+function subscribeNewMessages() {
+  sb.channel('new-messages:' + currentUser.id)
+    .on('postgres_changes', {
+      event: 'INSERT', schema: 'public', table: 'messages'
+    }, payload => {
+      const roomId = payload.new?.room_id || '';
+      if (roomId.includes(currentUser.id) && payload.new?.sender_id !== currentUser.id) {
+        const badge = document.getElementById('chats-badge');
+        if (badge) badge.style.display = 'block';
+        showToast(`💬 הודעה חדשה מ-${payload.new.sender_name}`);
+      }
+    })
+    .subscribe();
+}
+
 function subscribeShakes() {
   sb.channel('shakes:' + currentUser.id)
     .on('postgres_changes', {
