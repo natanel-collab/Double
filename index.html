@@ -61,6 +61,7 @@
     /* ─── SCREENS ─── */
     .screen { display: none; flex-direction: column; flex: 1; overflow: hidden; }
     .screen.active { display: flex; }
+    .screen.active.scroll-screen { display: block; }
 
     /* ════════════════════════════════
        AUTH SCREEN
@@ -562,7 +563,7 @@
   </div>
 
   <!-- ══ SETUP ══ -->
-  <div id="screen-setup" class="screen">
+  <div id="screen-setup" class="screen scroll-screen">
     <div class="setup-title">בואו נכיר אתכם 👋</div>
     <p class="setup-sub">מלאו כמה פרטים כדי שזוגות אחרים יוכלו להכיר אתכם</p>
 
@@ -613,15 +614,32 @@
         <button class="fab-btn" id="event-fab" onclick="openEventModal()" style="background:linear-gradient(135deg,#1dd1a1,#00b894);box-shadow:0 4px 24px rgba(29,209,161,0.35)">➕ אירוע</button>
         <button class="fab-btn roulette" onclick="spinRoulette()">🎰 רולטה</button>
       </div>
-      <!-- List View Overlay -->
-      <div id="list-overlay" style="display:none;position:absolute;inset:0;background:var(--bg2);overflow-y:auto;z-index:300;padding:12px 16px calc(140px + var(--safe-bot))">
-        <div id="list-couples"></div>
-      </div>
+
     </div>
   </div>
 
+  <!-- ══ LIST VIEW ══ -->
+  <div id="list-screen" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg2);z-index:450;flex-direction:column;">
+    <div style="display:flex;align-items:center;gap:12px;padding:calc(var(--safe-top) + 56px) 18px 12px;background:rgba(13,13,24,0.95);border-bottom:1px solid var(--border);flex-shrink:0">
+      <button class="icon-btn" onclick="closeListView()">←</button>
+      <div style="font-family:'Syne';font-weight:800;font-size:18px">זוגות זמינים</div>
+      <div id="list-count" style="margin-right:auto;font-size:12px;color:var(--text3)"></div>
+    </div>
+    <!-- Vibe filter inside list -->
+    <div style="display:flex;gap:7px;padding:10px 16px;overflow-x:auto;border-bottom:1px solid var(--border);flex-shrink:0;scrollbar-width:none">
+      <button class="filter-chip active" data-list-vibe="all" onclick="filterList('all')">✨ הכל</button>
+      <button class="filter-chip" data-list-vibe="hot" onclick="filterList('hot')">🔥 חמים</button>
+      <button class="filter-chip" data-list-vibe="פאב" onclick="filterList('פאב')">🍺 פאב</button>
+      <button class="filter-chip" data-list-vibe="מסעדה" onclick="filterList('מסעדה')">🍷 מסעדה</button>
+      <button class="filter-chip" data-list-vibe="טבע" onclick="filterList('טבע')">🥾 טבע</button>
+      <button class="filter-chip" data-list-vibe="בית" onclick="filterList('בית')">🎲 בית</button>
+      <button class="filter-chip" data-list-vibe="ים" onclick="filterList('ים')">🌊 ים</button>
+    </div>
+    <div id="list-couples" style="flex:1;overflow-y:auto;padding:12px 16px calc(80px + var(--safe-bot))"></div>
+  </div>
+
   <!-- ══ MY STATUS ══ -->
-  <div id="screen-status" class="screen">
+  <div id="screen-status" class="screen scroll-screen">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
       <button class="icon-btn" onclick="showScreen('main')" style="flex-shrink:0">←</button>
       <div>
@@ -642,7 +660,7 @@
 
 
   <!-- ══ PROFILE ══ -->
-  <div id="screen-profile" class="screen" style="overflow-y:auto; padding: calc(var(--safe-top) + 20px) 20px calc(var(--safe-bot) + 80px);">
+  <div id="screen-profile" class="screen scroll-screen" style="overflow-y:auto; padding: calc(var(--safe-top) + 20px) 20px calc(var(--safe-bot) + 80px);">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
       <button class="icon-btn" onclick="navTo('main')" style="flex-shrink:0">←</button>
       <div style="font-family:'Syne';font-size:22px;font-weight:800">הפרופיל שלנו 👫</div>
@@ -1466,51 +1484,69 @@ function updateProfileNavIcon() {
 let listViewOpen = false;
 
 function toggleListView() {
-  listViewOpen = !listViewOpen;
-  document.getElementById('list-overlay').style.display = listViewOpen ? 'block' : 'none';
-  document.getElementById('view-toggle-btn').classList.toggle('active', listViewOpen);
-  document.getElementById('view-toggle-btn').textContent = listViewOpen ? '🗺️' : '📋';
-  if (listViewOpen) renderListView();
+  const screen = document.getElementById('list-screen');
+  screen.style.display = 'flex';
+  document.getElementById('view-toggle-btn').classList.add('active');
+  document.getElementById('view-toggle-btn').textContent = '🗺️';
+  renderListView('all');
 }
 
-function renderListView() {
-  const container = document.getElementById('list-couples');
-  const selfActive = myProfile?.lat && (myProfile?.status === 'hot' || myProfile?.status === 'warm');
-  const allWithSelf = selfActive ? [...allCouples.filter(c=>c.id!==currentUser.id), myProfile] : allCouples.filter(c=>c.id!==currentUser.id);
-  const filtered = allWithSelf.filter(c =>
-    selectedVibeFilter === 'all' ? true :
-    selectedVibeFilter === 'hot' ? c.status === 'hot' :
-    (c.vibes||[]).includes(selectedVibeFilter)
-  );
+function closeListView() {
+  const screen = document.getElementById('list-screen');
+  screen.style.display = 'none';
+  document.getElementById('view-toggle-btn').classList.remove('active');
+  document.getElementById('view-toggle-btn').textContent = '📋';
+}
 
+let listVibeFilter = 'all';
+function filterList(vibe) {
+  listVibeFilter = vibe;
+  document.querySelectorAll('[data-list-vibe]').forEach(b => b.classList.toggle('active', b.dataset.listVibe === vibe));
+  renderListView(vibe);
+}
+
+function renderListView(vibe) {
+  vibe = vibe || listVibeFilter || 'all';
+  const container = document.getElementById('list-couples');
+  const allVisible = allCouples.filter(c => c.id !== currentUser.id);
+  const filtered = allVisible.filter(c => {
+    if (vibe === 'all') return true;
+    if (vibe === 'hot') return c.status === 'hot';
+    return (c.vibes||[]).includes(vibe);
+  });
+  filtered.sort((a,b) => {
+    const order = { hot: 0, warm: 1, cold: 2 };
+    return (order[a.status]||2) - (order[b.status]||2);
+  });
+  const countEl = document.getElementById('list-count');
+  if (countEl) countEl.textContent = filtered.length + ' זוגות';
   if (!filtered.length) {
-    container.innerHTML = '<div style="text-align:center;color:var(--text3);padding:40px 20px;font-size:15px">אין זוגות להצגה 😴<br><br>הוסיפו אירוע כדי להופיע על המפה!</div>';
+    container.innerHTML = `<div style="text-align:center;color:var(--text3);padding:60px 20px"><div style="font-size:48px;margin-bottom:16px">😴</div><div style="font-size:16px;font-weight:700;margin-bottom:8px">אין זוגות זמינים</div><div style="font-size:13px">הוסיפו אירוע כדי להופיע!</div></div>`;
     return;
   }
-
   container.innerHTML = filtered.map(c => {
     const meta = STATUS_META[c.status || 'cold'];
-    const vibe = (c.vibes||[])[0];
-    const emoji = vibeEmoji(vibe);
-    return `
-      <div onclick="openCouplePanel(${JSON.stringify(c).replace(/"/g,'&quot;')});toggleListView()"
-        style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:16px;margin-bottom:10px;cursor:pointer;display:flex;gap:12px;align-items:flex-start">
-        ${c.photo_url
-          ? `<img src="${c.photo_url}" style="width:52px;height:52px;border-radius:12px;object-fit:cover;border:1px solid ${meta.color}44;flex-shrink:0" />`
-          : `<div style="width:52px;height:52px;border-radius:12px;background:rgba(255,75,110,0.12);border:1px solid ${meta.color}44;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">${emoji}</div>`
-        }
-        <div style="flex:1;min-width:0">
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-            <span style="font-family:'Syne';font-weight:700;font-size:16px">${c.name} & ${c.partner_name||'?'}</span>
-            <div style="background:${meta.color}22;color:${meta.color};padding:2px 8px;border-radius:100px;font-size:11px;font-weight:700;white-space:nowrap">${meta.label}</div>
-          </div>
-          <div style="color:var(--text3);font-size:12px;margin-top:2px">${c.city||'ישראל'}</div>
-          ${c.status_text ? `<div style="color:var(--text2);font-size:13px;margin-top:6px;line-height:1.4">"${c.status_text}"</div>` : ''}
-          <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px">
-            ${(c.vibes||[]).map(v=>`<span style="background:rgba(255,75,110,0.12);color:#ff8fa8;padding:3px 10px;border-radius:100px;font-size:11px;border:1px solid rgba(255,75,110,0.2)">${VIBES_LIST.find(x=>x.id===v)?.label||v}</span>`).join('')}
-          </div>
+    const vibe0 = (c.vibes||[])[0];
+    const emoji = vibeEmoji(vibe0);
+    const photoEl = c.photo_url
+      ? `<img src="${c.photo_url}" style="width:58px;height:58px;border-radius:14px;object-fit:cover;border:2px solid ${meta.color}55;flex-shrink:0" />`
+      : `<div style="width:58px;height:58px;border-radius:14px;background:${meta.color}18;border:2px solid ${meta.color}44;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0">${emoji}</div>`;
+    return `<div onclick="closeListView();openCouplePanel(${JSON.stringify(c).replace(/"/g,'&quot;')})"
+      style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:18px;padding:16px;margin-bottom:10px;cursor:pointer;display:flex;gap:14px;align-items:flex-start"
+      onmouseenter="this.style.background='rgba(255,75,110,0.08)'" onmouseleave="this.style.background='rgba(255,255,255,0.04)'">
+      ${photoEl}
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:4px">
+          <span style="font-family:'Syne';font-weight:800;font-size:16px">${c.name} & ${c.partner_name||'?'}</span>
+          <div style="background:${meta.color}22;color:${meta.color};padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;white-space:nowrap;flex-shrink:0">${meta.label}</div>
         </div>
-      </div>`;
+        <div style="color:var(--text3);font-size:12px;margin-bottom:6px">${c.city||'ישראל'}</div>
+        ${c.status_text ? `<div style="color:var(--text2);font-size:13px;line-height:1.4;margin-bottom:8px">"${c.status_text}"</div>` : ''}
+        <div style="display:flex;flex-wrap:wrap;gap:5px">
+          ${(c.vibes||[]).map(v=>`<span style="background:rgba(255,75,110,0.1);color:#ff8fa8;padding:3px 10px;border-radius:100px;font-size:11px;border:1px solid rgba(255,75,110,0.2)">${VIBES_LIST.find(x=>x.id===v)?.label||v}</span>`).join('')}
+        </div>
+      </div>
+    </div>`;
   }).join('');
 }
 
