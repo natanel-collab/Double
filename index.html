@@ -7,7 +7,7 @@
   <meta name="description" content="מצאו זוגות לדאבל דייט" />
   <meta name="theme-color" content="#0d0d18" />
   <link rel="manifest" href="manifest.json" />
-  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="apple-touch-icon" href="IMG_1357.png" />
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -610,6 +610,20 @@
 
     <div id="map-container" style="flex:1;position:relative;overflow:hidden">
       <div id="map"></div>
+      <!-- Distance filter -->
+      <div id="distance-filter" style="position:absolute;top:12px;right:12px;z-index:500;background:rgba(13,13,24,0.88);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:10px 14px;min-width:160px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-size:11px;color:var(--text3);font-family:'Heebo'">מרחק מקסימלי</span>
+          <span id="dist-label" style="font-size:12px;color:var(--pink);font-weight:700;font-family:'Heebo'">הכל</span>
+        </div>
+        <input type="range" id="dist-slider" min="0" max="5" value="5" step="1"
+          oninput="updateDistanceFilter(this.value)"
+          style="width:100%;accent-color:var(--pink);cursor:pointer" />
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);font-family:'Heebo';margin-top:3px">
+          <span>2ק"מ</span><span>10</span><span>25</span><span>50</span><span>100</span><span>הכל</span>
+        </div>
+      </div>
+
       <div class="map-fab">
         <button class="fab-btn" id="event-fab" onclick="openEventModal()" style="background:linear-gradient(135deg,#1dd1a1,#00b894);box-shadow:0 4px 24px rgba(29,209,161,0.35)">➕ אירוע</button>
         <button class="fab-btn roulette" onclick="spinRoulette()">🎰 רולטה</button>
@@ -691,6 +705,7 @@
       <div style="font-size:11px;color:var(--text3);margin-bottom:10px">לחצו על המצלמה לשינוי תמונה</div>
       <div style="font-family:'Syne';font-size:22px;font-weight:800" id="profile-couple-name">טוען...</div>
       <div style="color:var(--text2);font-size:13px;margin-top:4px" id="profile-couple-city"></div>
+      <div style="font-size:12px;margin-top:8px" id="partner-link-status"></div>
     </div>
     <div style="margin-bottom:14px">
       <label class="field-label">השם שלך</label>
@@ -902,6 +917,7 @@ async function loadMyProfile() {
     updateProfileNavIcon();
     await initMap();
     subscribeRealtime();
+    await checkInviteCode();
   }
 }
 
@@ -1060,9 +1076,14 @@ function renderMarkers() {
   const selfActive = myProfile?.lat && (myProfile?.status === 'hot' || myProfile?.status === 'warm');
   const allWithSelf = selfActive ? [...allCouples.filter(c=>c.id!==currentUser.id), myProfile] : allCouples.filter(c=>c.id!==currentUser.id);
   const filtered = allWithSelf.filter(c => {
-    if (selectedVibeFilter === 'all') return true;
-    if (selectedVibeFilter === 'hot') return c.status === 'hot';
-    return (c.vibes || []).includes(selectedVibeFilter);
+    if (selectedVibeFilter !== 'all' && selectedVibeFilter !== 'hot' && !(c.vibes||[]).includes(selectedVibeFilter)) return false;
+    if (selectedVibeFilter === 'hot' && c.status !== 'hot') return false;
+    // Distance filter
+    if (maxDistanceKm < 99999 && myProfile?.lat && c.lat) {
+      const dist = getDistanceKm(myProfile.lat, myProfile.lng, c.lat, c.lng);
+      if (dist > maxDistanceKm) return false;
+    }
+    return true;
   });
 
 // Update event FAB to show active state
@@ -1198,65 +1219,108 @@ function closePanel() {
 // ═══════════════════════════════════════════
 // CHAT
 // ═══════════════════════════════════════════
-function openChat() {
+// ═══════════════════════════════════════════
+// REAL CHAT
+// ═══════════════════════════════════════════
+let currentRoomId = null;
+let chatChannel   = null;
+let chatDbMessages = [];
+
+function getRoomId(idA, idB) {
+  return [idA, idB].sort().join(':');
+}
+
+async function openChat() {
   closePanel();
   const couple = selectedCouple;
-  document.getElementById('chat-couple-name').textContent = `${couple.name} & ${couple.partner_name || '?'}`;
-  document.getElementById('chat-emoji').textContent = '💞';
+  currentRoomId = getRoomId(currentUser.id, couple.id);
 
-  const icebreaker = ICEBREAKERS[Math.floor(Math.random() * ICEBREAKERS.length)];
-  chatMessages = [
-    { from: 'מערכת', text: icebreaker, type: 'icebreaker' },
-    { from: `${couple.name} & ${couple.partner_name || '?'}`, text: 'היי! שמחים שיצרתם קשר 🎉', self: false },
-  ];
-  renderChatMessages();
+  document.getElementById('chat-couple-name').textContent = `${couple.name} & ${couple.partner_name || '?'}`;
+  document.getElementById('chat-emoji').textContent = vibeEmoji((couple.vibes||[])[0]);
+  document.getElementById('chat-messages').innerHTML = '<div style="text-align:center;color:var(--text3);padding:20px;font-size:13px">טוען הודעות...</div>';
   document.getElementById('chat-panel').classList.add('open');
+
+  // Load existing messages
+  const { data } = await sb.from('messages')
+    .select('*')
+    .eq('room_id', currentRoomId)
+    .order('created_at', { ascending: true })
+    .limit(100);
+
+  chatDbMessages = data || [];
+
+  // Show icebreaker if first time
+  if (!chatDbMessages.length) {
+    const icebreaker = ICEBREAKERS[Math.floor(Math.random() * ICEBREAKERS.length)];
+    renderRealChat(chatDbMessages, icebreaker);
+  } else {
+    renderRealChat(chatDbMessages, null);
+  }
+
+  // Subscribe realtime
+  if (chatChannel) chatChannel.unsubscribe();
+  chatChannel = sb.channel('room:' + currentRoomId)
+    .on('postgres_changes', {
+      event: 'INSERT', schema: 'public', table: 'messages',
+      filter: `room_id=eq.${currentRoomId}`
+    }, payload => {
+      chatDbMessages.push(payload.new);
+      renderRealChat(chatDbMessages, null);
+    })
+    .subscribe();
 }
 
 function closeChat() {
   document.getElementById('chat-panel').classList.remove('open');
+  if (chatChannel) { chatChannel.unsubscribe(); chatChannel = null; }
 }
 
-function renderChatMessages() {
+function renderRealChat(msgs, icebreaker) {
   const container = document.getElementById('chat-messages');
-  container.innerHTML = '';
-  chatMessages.forEach(msg => {
-    if (msg.type === 'icebreaker') {
-      container.innerHTML += `
-        <div class="icebreaker-card">
-          <div class="icebreaker-label">🎯 שוברת קרח</div>
-          <div class="icebreaker-text">${msg.text}</div>
-        </div>`;
-    } else {
-      container.innerHTML += `
-        <div class="msg-wrapper ${msg.self ? 'self' : 'other'}">
-          <div class="msg-from">${msg.from}</div>
-          <div class="msg-bubble ${msg.self ? 'self' : 'other'}">${msg.text}</div>
-        </div>`;
-    }
+  let html = '';
+
+  if (icebreaker) {
+    html += `<div class="icebreaker-card">
+      <div class="icebreaker-label">🎯 שוברת קרח</div>
+      <div class="icebreaker-text">${icebreaker}</div>
+    </div>`;
+  }
+
+  if (!msgs.length && !icebreaker) {
+    html += '<div style="text-align:center;color:var(--text3);padding:30px 20px;font-size:13px">התחילו את השיחה! 👋</div>';
+  }
+
+  msgs.forEach(msg => {
+    const isSelf = msg.sender_id === currentUser.id;
+    const time = new Date(msg.created_at).toLocaleTimeString('he-IL', { hour:'2-digit', minute:'2-digit' });
+    html += `<div class="msg-wrapper ${isSelf ? 'self' : 'other'}">
+      <div class="msg-from">${isSelf ? 'אתם' : msg.sender_name} · ${time}</div>
+      <div class="msg-bubble ${isSelf ? 'self' : 'other'}">${msg.text}</div>
+    </div>`;
   });
+
+  container.innerHTML = html;
   container.scrollTop = container.scrollHeight;
 }
 
-function sendMsg() {
+async function sendMsg() {
   const input = document.getElementById('chat-input');
   const text = input.value.trim();
-  if (!text) return;
-  chatMessages.push({ from: 'אתם', text, self: true });
+  if (!text || !currentRoomId) return;
   input.value = '';
-  renderChatMessages();
 
-  // Simulated reply (replace with real Supabase realtime messages table)
-  setTimeout(() => {
-    const replies = ['נשמע מעולה! 🙌', 'כן! מתי נוח לכם?', 'אנחנו גמישים, מה אצלכם?', '😊👍'];
-    chatMessages.push({
-      from: selectedCouple?.name || 'הזוג',
-      text: replies[Math.floor(Math.random() * replies.length)],
-      self: false,
-    });
-    renderChatMessages();
-  }, 1200);
+  const { error } = await sb.from('messages').insert({
+    room_id: currentRoomId,
+    sender_id: currentUser.id,
+    sender_name: myProfile?.name || 'אנחנו',
+    text,
+  });
+
+  if (error) showToast('שגיאה בשליחה: ' + error.message);
 }
+
+// legacy stub
+function renderChatMessages() {}
 
 // ═══════════════════════════════════════════
 // MY STATUS
@@ -1625,8 +1689,17 @@ function openProfile() {
   document.getElementById('profile-couple-name').textContent =
     `${myProfile?.name || '?'} & ${myProfile?.partner_name || '?'}`;
   document.getElementById('profile-couple-city').textContent = myProfile?.city || '';
+  // Show partner link status
+  const partnerStatus = document.getElementById('partner-link-status');
+  if (partnerStatus) {
+    if (myProfile?.partner_id && myProfile?.partner_confirmed) {
+      partnerStatus.innerHTML = '<span style="color:var(--green)">✅ זוג מחובר</span>';
+    } else {
+      partnerStatus.innerHTML = '<span style="color:var(--orange)">⏳ ממתין לחיבור בן/בת הזוג</span>';
+    }
+  }
   document.getElementById('profile-invite-link').value =
-    window.location.origin + '?invite=' + currentUser.id;
+    window.location.origin + '?invite=' + (myProfile?.invite_code || currentUser.id);
 
   // Load photo
   updateProfileNavIcon();
@@ -1768,6 +1841,52 @@ async function saveEvent() {
   updateLiveCount();
   // Fly to location
   if (mapInstance && lat && lng) mapInstance.flyTo([lat, lng], 13, { duration: 1.5 });
+}
+
+
+// ═══════════════════════════════════════════
+// DISTANCE FILTER
+// ═══════════════════════════════════════════
+const DIST_VALUES = [2, 10, 25, 50, 100, 99999];
+const DIST_LABELS = ['2 ק"מ', '10 ק"מ', '25 ק"מ', '50 ק"מ', '100 ק"מ', 'הכל'];
+let maxDistanceKm = 99999;
+
+function updateDistanceFilter(val) {
+  const idx = parseInt(val);
+  maxDistanceKm = DIST_VALUES[idx];
+  document.getElementById('dist-label').textContent = DIST_LABELS[idx];
+  renderMarkers();
+}
+
+function getDistanceKm(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// ═══════════════════════════════════════════
+// PARTNER INVITE / COUPLE LINKING
+// ═══════════════════════════════════════════
+async function checkInviteCode() {
+  const params = new URLSearchParams(window.location.search);
+  const inviterId = params.get('invite');
+  if (!inviterId || !currentUser || inviterId === currentUser.id) return;
+
+  // Check if inviter exists
+  const { data: inviter } = await sb.from('profiles').select('id,name,partner_id').eq('id', inviterId).single();
+  if (!inviter || inviter.partner_id) return; // already linked
+
+  // Link both profiles
+  await sb.from('profiles').update({ partner_id: currentUser.id, partner_confirmed: true }).eq('id', inviterId);
+  await sb.from('profiles').update({ partner_id: inviterId, partner_confirmed: true }).eq('id', currentUser.id);
+
+  myProfile = { ...myProfile, partner_id: inviterId, partner_confirmed: true };
+  showToast(`✅ התחברתם לפרופיל המשותף עם ${inviter.name}!`);
+
+  // Clean URL
+  window.history.replaceState({}, '', window.location.pathname);
 }
 
 // ═══════════════════════════════════════════
