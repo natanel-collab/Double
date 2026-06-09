@@ -229,6 +229,25 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
 @keyframes fadeSlide { from { opacity:0; transform:translateX(30px); } to { opacity:1; transform:translateX(0); } }
 </style>
 
+
+<!-- RESET PASSWORD -->
+<div id="screen-reset" class="screen" style="align-items:center;justify-content:center;background:var(--bg);padding:24px">
+  <div style="width:100%;max-width:380px">
+    <div style="font-family:'Syne';font-size:26px;font-weight:800;margin-bottom:6px;text-align:center">סיסמה חדשה 🔐</div>
+    <div style="color:var(--text2);font-size:14px;margin-bottom:24px;text-align:center">הזינו סיסמה חדשה לחשבונכם</div>
+    <div class="field-group">
+      <label class="field-label">סיסמה חדשה</label>
+      <input class="field-input" type="password" id="new-pass" placeholder="לפחות 6 תווים" dir="ltr"/>
+    </div>
+    <div class="field-group">
+      <label class="field-label">אימות סיסמה</label>
+      <input class="field-input" type="password" id="new-pass-confirm" placeholder="הזינו שוב" dir="ltr"/>
+    </div>
+    <button class="btn-primary" onclick="doResetPassword()">שמור סיסמה</button>
+    <p class="auth-err" id="reset-err"></p>
+  </div>
+</div>
+
 <!-- AUTH -->
 <div id="screen-auth" class="screen">
   <div class="auth-logo">Double 💞</div>
@@ -662,6 +681,8 @@ function hideLoading() { document.getElementById('loading').style.display='none'
 // INIT
 // ═══════════════════════════════════
 async function init() {
+  await checkResetToken();
+  if (document.getElementById('screen-reset').classList.contains('active')) return;
   const safetyTimer = setTimeout(()=>{hideLoading();showScreen('auth');},6000);
   const {data:{session}} = await sb.auth.getSession();
   clearTimeout(safetyTimer);
@@ -1701,6 +1722,31 @@ async function loadCoupleReviews(coupleId) {
   </div>`;
 }
 
+
+
+// ═══ RESET PASSWORD ═══
+async function doResetPassword() {
+  const pass = document.getElementById('new-pass').value;
+  const confirm = document.getElementById('new-pass-confirm').value;
+  const err = document.getElementById('reset-err');
+  if (pass.length < 6) { err.textContent = 'סיסמה חייבת להיות לפחות 6 תווים'; return; }
+  if (pass !== confirm) { err.textContent = 'הסיסמאות לא תואמות'; return; }
+  const { error } = await sb.auth.updateUser({ password: pass });
+  if (error) { err.textContent = 'שגיאה: ' + error.message; return; }
+  showToast('✅ סיסמה עודכנה בהצלחה!');
+  await loadMyProfile();
+}
+
+// Check for password reset token on load
+async function checkResetToken() {
+  const hash = window.location.hash;
+  if (hash.includes('type=recovery')) {
+    hideLoading();
+    showScreen('reset');
+    // Clear hash from URL
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+}
 
 // ═══ FORGOT PASSWORD ═══
 async function forgotPassword() {
