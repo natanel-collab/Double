@@ -1786,6 +1786,7 @@ async function togglePlaces() {
     btn.classList.add('active');
     btn.textContent = '✕';
     bar.style.display = 'flex';
+    showToast('זומו פנימה לעיר לראות אטרקציות 🗺️');
     if (!placesLoaded) await loadPlaces();
     else renderPlaceMarkers(activePlaceFilter);
   } else {
@@ -1793,6 +1794,7 @@ async function togglePlaces() {
     btn.textContent = '📍';
     bar.style.display = 'none';
     clearPlaceMarkers();
+    showToast('אטרקציות כובו');
   }
 }
 
@@ -1832,7 +1834,7 @@ async function loadPlaces() {
     ].join('');
 
     const query = `[out:json][timeout:25];(${parts});out 300;`;
-    const url = `https://lz4.overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
+    const url = `https://overpass.kumi.systems/api/interpreter?data=${encodeURIComponent(query)}`;
 
     const res = await fetch(url);
     if (!res.ok) throw new Error('HTTP ' + res.status);
