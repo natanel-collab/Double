@@ -752,7 +752,7 @@ async function initMap() {
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:18}).addTo(mapInstance);
   L.control.zoom({position:'bottomright'}).addTo(mapInstance);
   mapInstance.on('moveend', onMapMoveEnd);
-  startNearbyCheck();
+  try { startNearbyCheck(); } catch(e) { console.log(e); }
   buildFilterBar();
   await loadCouples();
 }
@@ -1384,8 +1384,8 @@ function openProfile() {
     else sc.style.display='none';
   }
   renderStatusOptions();
-  loadReviewsReceived();
-  loadDateHistory();
+  try { loadReviewsReceived(); } catch(e) { console.log(e); }
+  try { loadDateHistory(); } catch(e) { console.log(e); }
 }
 
 async function saveProfile() {
