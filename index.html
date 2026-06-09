@@ -574,8 +574,9 @@
     </div>
 
     <div class="setup-section">
-      <div class="setup-section-title">מה אתם אוהבים לעשות יחד?</div>
-      <div class="vibes-grid" id="vibes-grid"></div>
+      <div class="setup-section-title">תחומי עניין משותפים</div>
+      <input class="field-input" id="vibes-input" placeholder='לדוגמה: בורד גיימס, יין, טיולים, סרטים...' />
+      <div style="font-size:11px;color:var(--text3);margin-top:6px">הפרידו בפסיקים</div>
     </div>
 
     <div class="setup-section">
@@ -729,8 +730,9 @@
       <input class="field-input" id="profile-city-input" placeholder="תל אביב, חיפה..." />
     </div>
     <div style="margin-bottom:16px">
-      <label class="field-label" style="margin-bottom:10px;display:block">מה אתם אוהבים לעשות יחד?</label>
-      <div class="vibes-grid" id="profile-vibes-grid"></div>
+      <label class="field-label">תחומי עניין משותפים</label>
+      <input class="field-input" id="profile-vibes-input" placeholder='בורד גיימס, יין, טיולים, סרטים...' style="margin-top:6px" />
+      <div style="font-size:11px;color:var(--text3);margin-top:6px">הפרידו בפסיקים</div>
     </div>
     <div class="partner-invite-box" style="margin-bottom:20px">
       <p>שתפו קישור זה עם בן/בת הזוג להצטרפות לפרופיל המשותף</p>
@@ -996,11 +998,13 @@ async function saveSetup() {
   const err = document.getElementById('setup-err');
   if (!partnerName) { err.textContent = 'נא להזין שם בן/בת הזוג'; return; }
 
+  const vibesRaw = document.getElementById('vibes-input')?.value || '';
+  const parsedVibes = vibesRaw.split(',').map(v=>v.trim()).filter(Boolean);
   const { error } = await sb.from('profiles').upsert({
     id: currentUser.id,
     name: myProfile?.name || currentUser.user_metadata?.name || 'משתמש',
     partner_name: partnerName,
-    vibes: selectedVibes,
+    vibes: parsedVibes,
     status: 'cold',
     status_text: '',
     lat: 32.08 + (Math.random() - 0.5) * 0.05,
@@ -1557,6 +1561,8 @@ function toggleListView() {
   screen.style.display = 'flex';
   document.getElementById('view-toggle-btn').classList.add('active');
   document.getElementById('view-toggle-btn').textContent = '🗺️';
+  const df = document.getElementById('distance-filter');
+  if (df) df.style.display = 'none';
   renderListView('all');
 }
 
@@ -1565,6 +1571,8 @@ function closeListView() {
   screen.style.display = 'none';
   document.getElementById('view-toggle-btn').classList.remove('active');
   document.getElementById('view-toggle-btn').textContent = '📋';
+  const df = document.getElementById('distance-filter');
+  if (df) df.style.display = 'block';
 }
 
 let listVibeFilter = 'all';
@@ -1681,6 +1689,8 @@ function openProfile() {
   document.getElementById('bottom-nav').style.display = 'flex';
   document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.nav === 'profile'));
   profileSelectedVibes = [...(myProfile?.vibes || [])];
+  const vibesInputEl = document.getElementById('profile-vibes-input');
+  if (vibesInputEl) vibesInputEl.value = (myProfile?.vibes||[]).join(', ');
 
   document.getElementById('profile-name').value        = myProfile?.name || '';
   document.getElementById('profile-partner').value     = myProfile?.partner_name || '';
@@ -1737,10 +1747,12 @@ async function saveProfile() {
 
   if (!name) { err.textContent = 'נא להזין שם'; return; }
 
+  const vibesInputVal = document.getElementById('profile-vibes-input')?.value || '';
+  const newVibesArr = vibesInputVal.split(',').map(v=>v.trim()).filter(Boolean);
   const { error } = await sb.from('profiles').update({
     name, partner_name: partnerName,
     role_him: roleHim, role_her: roleHer,
-    city, vibes: profileSelectedVibes,
+    city, vibes: newVibesArr,
   }).eq('id', currentUser.id);
 
   if (error) { err.textContent = error.message; return; }
