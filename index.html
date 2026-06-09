@@ -752,7 +752,7 @@ async function initMap() {
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:18}).addTo(mapInstance);
   L.control.zoom({position:'bottomright'}).addTo(mapInstance);
   mapInstance.on('moveend', onMapMoveEnd);
-  try { startNearbyCheck(); } catch(e) { console.log(e); }
+  startNearbyCheck();
   buildFilterBar();
   await loadCouples();
 }
@@ -1384,8 +1384,8 @@ function openProfile() {
     else sc.style.display='none';
   }
   renderStatusOptions();
-  try { loadReviewsReceived(); } catch(e) { console.log(e); }
-  try { loadDateHistory(); } catch(e) { console.log(e); }
+  loadReviewsReceived();
+  loadDateHistory();
 }
 
 async function saveProfile() {
@@ -1696,6 +1696,20 @@ async function loadCoupleReviews(coupleId) {
     ${data.map(r => `<div style="font-size:13px;color:var(--text2);padding:8px 0;border-bottom:1px solid var(--border)">"${r.text}" — ${r.from_profile?.name || '?'}</div>`).join('')}
   </div>`;
 }
+
+
+// ═══ ONBOARDING ═══
+let _obSlide = 0;
+function obNext() {
+  document.getElementById('ob-'+_obSlide).style.display='none';
+  document.getElementById('od-'+_obSlide).style.cssText='width:8px;height:8px;border-radius:100px;background:rgba(255,255,255,0.2);transition:all 0.3s';
+  _obSlide++;
+  if (_obSlide>=4){obDone();return;}
+  document.getElementById('ob-'+_obSlide).style.display='block';
+  document.getElementById('od-'+_obSlide).style.cssText='width:24px;height:8px;border-radius:100px;background:var(--pink);transition:all 0.3s';
+  if (_obSlide===3) document.getElementById('ob-next').textContent='בואו נתחיל! 🚀';
+}
+function obDone(){localStorage.setItem('dbl_ob','1');showScreen('auth');}
 
 // ═══════════════════════════════════
 // PLACES (מסעדות, פארקים, חופים...)
