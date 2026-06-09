@@ -61,7 +61,7 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
 
 /* MAIN */
 #screen-main{position:relative}
-.app-header{display:flex;align-items:center;justify-content:space-between;padding:calc(var(--safe-top) + 56px) 18px 12px;background:rgba(13,13,24,0.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);position:relative;z-index:400;flex-shrink:0}
+.app-header{display:flex;align-items:center;justify-content:space-between;padding:calc(var(--safe-top) + 14px) 18px 12px;background:rgba(13,13,24,0.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);position:relative;z-index:400;flex-shrink:0}
 .header-logo{font-family:'Syne';font-weight:800;font-size:22px;letter-spacing:-0.5px}
 .header-logo span{background:linear-gradient(135deg,var(--pink),var(--orange));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .header-live{font-size:11px;color:var(--text3);margin-top:-2px}
@@ -87,7 +87,7 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
 .double-marker.cold{background:rgba(84,160,255,0.15);border-color:#54a0ff}
 .pulse-ring{position:absolute;inset:-6px;border-radius:50%;border:2px solid var(--pink);animation:pulseRing 1.8s infinite}
 @keyframes pulseRing{0%{transform:scale(1);opacity:0.8}100%{transform:scale(2.2);opacity:0}}
-.map-fab{position:absolute;bottom:calc(70px + var(--safe-bot));left:50%;transform:translateX(-50%);z-index:500;display:flex;gap:10px}
+.map-fab{position:absolute;bottom:calc(85px + var(--safe-bot));left:50%;transform:translateX(-50%);z-index:500;display:flex;gap:10px}
 .fab-btn{background:linear-gradient(135deg,var(--pink),var(--pink2));border:none;color:white;padding:13px 22px;border-radius:100px;cursor:pointer;font-family:'Heebo';font-weight:700;font-size:14px;box-shadow:0 4px 24px rgba(255,75,110,0.45);transition:all 0.2s;white-space:nowrap}
 .fab-btn.roulette{background:linear-gradient(135deg,var(--orange),#ffbe76);box-shadow:0 4px 24px rgba(255,159,67,0.35)}
 
@@ -268,7 +268,7 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
   </div>
   <!-- List View -->
   <div id="list-screen">
-    <div style="display:flex;align-items:center;gap:12px;padding:calc(var(--safe-top) + 56px) 18px 12px;background:rgba(13,13,24,0.95);border-bottom:1px solid var(--border);flex-shrink:0">
+    <div style="display:flex;align-items:center;gap:12px;padding:calc(var(--safe-top) + 14px) 18px 12px;background:rgba(13,13,24,0.95);border-bottom:1px solid var(--border);flex-shrink:0">
       <button class="icon-btn" onclick="closeListView()">←</button>
       <div style="font-family:'Syne';font-weight:800;font-size:18px">זוגות זמינים</div>
       <div id="list-count" style="margin-right:auto;font-size:12px;color:var(--text3)"></div>
@@ -1418,12 +1418,11 @@ async function loadPlaces() {
     `node[${t.query}](${bbox});`
   ).join('');
 
-  const query = `[out:json][timeout:15];(${queries});out body 200;`;
+  const query = `[out:json][timeout:20];(${queries});out body 150;`;
 
   try {
-    const res = await fetch('https://overpass-api.de/api/interpreter', {
-      method: 'POST',
-      body: query,
+    const res = await fetch('https://overpass-api.de/api/interpreter?' + new URLSearchParams({data: query}), {
+      method: 'GET',
     });
     const data = await res.json();
 
