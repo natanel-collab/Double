@@ -173,6 +173,62 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
 
 <div id="app">
 
+
+<!-- ONBOARDING -->
+<div id="screen-onboarding" class="screen" style="background:radial-gradient(ellipse at 60% 20%,rgba(255,75,110,0.2) 0%,transparent 60%),radial-gradient(ellipse at 10% 80%,rgba(84,160,255,0.14) 0%,transparent 50%),#0d0d18;overflow:hidden">
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 28px;text-align:center">
+    <!-- Slides -->
+    <div id="onboard-slides" style="width:100%;position:relative">
+
+      <!-- Slide 1 -->
+      <div class="onboard-slide active" id="slide-0">
+        <div style="font-size:80px;margin-bottom:24px">💞</div>
+        <div style="font-family:'Syne';font-size:32px;font-weight:800;margin-bottom:12px;background:linear-gradient(135deg,var(--pink),var(--orange));-webkit-background-clip:text;-webkit-text-fill-color:transparent">Double</div>
+        <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:12px">מצאו זוגות לדאבל דייט</div>
+        <div style="font-size:15px;color:var(--text2);line-height:1.7">האפליקציה הראשונה בישראל<br/>שמחברת זוגות עם זוגות<br/>לחברויות ודאבל דייטים</div>
+      </div>
+
+      <!-- Slide 2 -->
+      <div class="onboard-slide" id="slide-1" style="display:none">
+        <div style="font-size:80px;margin-bottom:24px">🗺️</div>
+        <div style="font-size:22px;font-weight:800;font-family:'Syne';margin-bottom:12px">מפה חיה</div>
+        <div style="font-size:15px;color:var(--text2);line-height:1.7">ראו בזמן אמת אילו זוגות<br/>פעילים באזורכם<br/>ומחפשים דאבל דייט</div>
+      </div>
+
+      <!-- Slide 3 -->
+      <div class="onboard-slide" id="slide-2" style="display:none">
+        <div style="font-size:80px;margin-bottom:24px">💬</div>
+        <div style="font-size:22px;font-weight:800;font-family:'Syne';margin-bottom:12px">Double Shake</div>
+        <div style="font-size:15px;color:var(--text2);line-height:1.7">שלחו Shake לזוג שאהבתם<br/>ופתחו צ'את קבוצתי<br/>של 4 אנשים</div>
+      </div>
+
+      <!-- Slide 4 -->
+      <div class="onboard-slide" id="slide-3" style="display:none">
+        <div style="font-size:80px;margin-bottom:24px">🔥</div>
+        <div style="font-size:22px;font-weight:800;font-family:'Syne';margin-bottom:12px">פרסמו אירוע</div>
+        <div style="font-size:15px;color:var(--text2);line-height:1.7">ספרו לזוגות אחרים<br/>מה אתם מתכננים<br/>ומצאו מישהו להצטרף</div>
+      </div>
+
+    </div>
+
+    <!-- Dots -->
+    <div style="display:flex;gap:8px;margin:32px 0 28px">
+      <div class="onboard-dot active" id="dot-0" style="width:24px;height:8px;border-radius:100px;background:var(--pink);transition:all 0.3s"></div>
+      <div class="onboard-dot" id="dot-1" style="width:8px;height:8px;border-radius:100px;background:rgba(255,255,255,0.2);transition:all 0.3s"></div>
+      <div class="onboard-dot" id="dot-2" style="width:8px;height:8px;border-radius:100px;background:rgba(255,255,255,0.2);transition:all 0.3s"></div>
+      <div class="onboard-dot" id="dot-3" style="width:8px;height:8px;border-radius:100px;background:rgba(255,255,255,0.2);transition:all 0.3s"></div>
+    </div>
+
+    <button id="onboard-next-btn" class="btn-primary" style="max-width:320px" onclick="nextOnboardSlide()">המשך ←</button>
+    <div id="onboard-skip" onclick="finishOnboarding()" style="margin-top:16px;color:var(--text3);font-size:14px;cursor:pointer">דלג</div>
+  </div>
+</div>
+
+<style>
+.onboard-slide { animation: fadeSlide 0.4s ease; }
+@keyframes fadeSlide { from { opacity:0; transform:translateX(30px); } to { opacity:1; transform:translateX(0); } }
+</style>
+
 <!-- AUTH -->
 <div id="screen-auth" class="screen">
   <div class="auth-logo">Double 💞</div>
@@ -311,7 +367,7 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
 
 <!-- FEED -->
 <div id="screen-feed" class="screen scroll-screen" style="padding:calc(var(--safe-top) + 20px) 20px calc(var(--safe-bot) + 80px)">
-  <div style="font-family:'Syne';font-size:22px;font-weight:800;margin-bottom:6px">✨ סטטוסים</div>
+  <div style="font-family:'Syne';font-size:22px;font-weight:800;margin-bottom:6px">✨ פיד</div>
   <div style="color:var(--text2);font-size:13px;margin-bottom:16px">מה הזוגות עושים עכשיו</div>
   <div style="display:flex;gap:7px;overflow-x:auto;margin-bottom:16px;padding-bottom:4px;scrollbar-width:none">
     <button class="filter-chip active" data-feed-vibe="all" onclick="filterFeed('all')">✨ הכל</button>
@@ -385,7 +441,28 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
     </div>
   </div>
   <button class="btn-primary" onclick="saveProfile()">שמור שינויים ✅</button>
-  <button class="btn-secondary" style="margin-top:10px;color:var(--pink);border-color:rgba(255,75,110,0.3)" onclick="signOut()">🚪 יציאה מהחשבון</button>
+
+  <!-- Share button -->
+  <button onclick="shareApp()" style="width:100%;padding:13px;border:1px solid rgba(255,255,255,0.15);border-radius:12px;background:rgba(255,255,255,0.05);color:var(--text2);font-family:'Heebo';font-weight:600;font-size:15px;cursor:pointer;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:8px">
+    📤 שתפו Double עם חברים
+  </button>
+
+  <!-- Date history -->
+  <div style="margin-top:24px">
+    <div style="font-family:'Syne';font-size:18px;font-weight:800;margin-bottom:4px">📅 היסטוריית דייטים</div>
+    <div style="color:var(--text3);font-size:13px;margin-bottom:12px">הדייטים שעשיתם עם זוגות אחרים</div>
+    <div id="date-history-list"></div>
+    <button onclick="addDateHistory()" style="width:100%;padding:12px;border:2px dashed rgba(255,75,110,0.3);border-radius:12px;background:none;color:var(--pink);font-family:'Heebo';font-size:14px;font-weight:600;cursor:pointer;margin-top:8px">+ הוסף דייט שעשיתם</button>
+  </div>
+
+  <!-- Reviews received -->
+  <div style="margin-top:24px;margin-bottom:20px">
+    <div style="font-family:'Syne';font-size:18px;font-weight:800;margin-bottom:4px">⭐ המלצות עלינו</div>
+    <div style="color:var(--text3);font-size:13px;margin-bottom:12px">מה זוגות אחרים אומרים עליכם</div>
+    <div id="reviews-received-list"></div>
+  </div>
+
+  <button class="btn-secondary" style="margin-top:4px;color:var(--pink);border-color:rgba(255,75,110,0.3)" onclick="signOut()">🚪 יציאה מהחשבון</button>
   <p class="auth-err" id="profile-err"></p>
 </div>
 
@@ -395,7 +472,7 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
     <div class="nav-icon">🗺️</div><div class="nav-label">בית</div>
   </button>
   <button class="nav-item" data-nav="feed" onclick="navTo('feed')">
-    <div class="nav-icon">✨</div><div class="nav-label">סטטוסים</div>
+    <div class="nav-icon">✨</div><div class="nav-label">פיד</div>
   </button>
   <button class="nav-item" data-nav="chats" onclick="navTo('chats')">
     <div class="nav-icon">💬</div><div class="nav-label">צ&apos;אטים</div>
@@ -471,6 +548,35 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
 <div class="modal-overlay" id="roulette-modal" onclick="closeRoulette()">
   <div class="modal-box" onclick="event.stopPropagation()">
     <div id="roulette-content"><div style="font-size:56px">🎰</div><div style="font-family:'Syne';font-size:22px;font-weight:800;margin-top:14px">מחפשים...</div></div>
+  </div>
+</div>
+
+
+<!-- Review Modal -->
+<div class="modal-overlay" id="review-modal" onclick="closeReviewModal()">
+  <div class="modal-box" onclick="event.stopPropagation()" style="text-align:right">
+    <div style="font-family:'Syne';font-size:20px;font-weight:800;margin-bottom:6px">⭐ כתבו המלצה</div>
+    <div id="review-couple-name" style="color:var(--text2);font-size:14px;margin-bottom:16px"></div>
+    <textarea class="field-input" id="review-text" rows="4" placeholder="ספרו לזוגות אחרים על הדייט המשותף שלכם..." style="resize:none;margin-bottom:16px"></textarea>
+    <button class="btn-primary" onclick="submitReview()">שלחו המלצה ⭐</button>
+    <button class="btn-secondary" style="margin-top:8px" onclick="closeReviewModal()">ביטול</button>
+  </div>
+</div>
+
+<!-- Date History Modal -->
+<div class="modal-overlay" id="date-modal" onclick="closeDateModal()">
+  <div class="modal-box" onclick="event.stopPropagation()" style="text-align:right">
+    <div style="font-family:'Syne';font-size:20px;font-weight:800;margin-bottom:16px">📅 הוסף דייט</div>
+    <div style="margin-bottom:12px">
+      <label class="field-label">שם הזוג שנפגשתם</label>
+      <input class="field-input" id="date-couple-name" placeholder="דן ומיה"/>
+    </div>
+    <div style="margin-bottom:16px">
+      <label class="field-label">הערה קצרה</label>
+      <input class="field-input" id="date-note" placeholder="ערב נהדר בפאב בתל אביב!"/>
+    </div>
+    <button class="btn-primary" onclick="saveDateHistory()">שמור 📅</button>
+    <button class="btn-secondary" style="margin-top:8px" onclick="closeDateModal()">ביטול</button>
   </div>
 </div>
 
@@ -562,7 +668,9 @@ async function init() {
     currentUser = session.user;
     await loadMyProfile();
   } else {
-    hideLoading(); showScreen('auth');
+    hideLoading();
+    const onboarded = localStorage.getItem('double_onboarded');
+    if (!onboarded) { showScreen('onboarding'); } else { showScreen('auth'); }
   }
 }
 
@@ -649,6 +757,7 @@ async function initMap() {
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:18}).addTo(mapInstance);
   L.control.zoom({position:'bottomright'}).addTo(mapInstance);
   mapInstance.on('moveend', onMapMoveEnd);
+  startNearbyCheck();
   buildFilterBar();
   await loadCouples();
 }
@@ -819,6 +928,13 @@ function openCouplePanel(couple) {
     </div>
     ${couple.vibes?.length?`<div class="info-card"><div class="info-card-label">תחומי עניין</div><div class="tags-row" style="margin-top:8px">${(couple.vibes||[]).map(v=>`<span class="tag">${v}</span>`).join('')}</div></div>`:''}
   `;
+  // Load reviews for this couple
+  loadCoupleReviews(couple.id).then(reviewsHtml => {
+    if (reviewsHtml) {
+      document.getElementById('panel-body').innerHTML += reviewsHtml;
+    }
+  });
+
   document.getElementById('panel-overlay').classList.add('open');
   document.getElementById('couple-panel').classList.add('open');
   // Check shake status
@@ -1366,6 +1482,229 @@ function navTo(name) {
 }
 
 
+
+
+// ═══════════════════════════════════
+// ONBOARDING
+// ═══════════════════════════════════
+let onboardSlide = 0;
+const ONBOARD_TOTAL = 4;
+
+function nextOnboardSlide() {
+  document.getElementById('slide-' + onboardSlide).style.display = 'none';
+  document.getElementById('dot-' + onboardSlide).style.width = '8px';
+  document.getElementById('dot-' + onboardSlide).style.background = 'rgba(255,255,255,0.2)';
+  onboardSlide++;
+  if (onboardSlide >= ONBOARD_TOTAL) { finishOnboarding(); return; }
+  document.getElementById('slide-' + onboardSlide).style.display = 'block';
+  document.getElementById('dot-' + onboardSlide).style.width = '24px';
+  document.getElementById('dot-' + onboardSlide).style.background = 'var(--pink)';
+  if (onboardSlide === ONBOARD_TOTAL - 1) {
+    document.getElementById('onboard-next-btn').textContent = 'בואו נתחיל! 🚀';
+  }
+}
+
+function finishOnboarding() {
+  localStorage.setItem('double_onboarded', '1');
+  showScreen('auth');
+}
+
+// ═══════════════════════════════════
+// NEARBY COUPLES NOTIFICATION
+// ═══════════════════════════════════
+let nearbyCheckInterval = null;
+let lastNearbyAlert = {};
+
+function startNearbyCheck() {
+  if (nearbyCheckInterval) return;
+  nearbyCheckInterval = setInterval(() => {
+    checkNearbyCouples();
+  }, 60000); // check every minute
+  checkNearbyCouples(); // immediate first check
+}
+
+function checkNearbyCouples() {
+  if (!myProfile?.lat) return;
+  const refLat = userLat || myProfile.lat;
+  const refLng = userLng || myProfile.lng;
+  const nearbyKm = 5; // alert if within 5km
+
+  allCouples.forEach(c => {
+    if (!c.lat || !c.lng || c.id === currentUser.id) return;
+    if (c.status !== 'hot') return;
+    const dist = getDistanceKm(refLat, refLng, c.lat, c.lng);
+    if (dist <= nearbyKm) {
+      const key = c.id + '_' + c.status_text;
+      if (!lastNearbyAlert[key]) {
+        lastNearbyAlert[key] = true;
+        showToast(`📍 ${c.name} & ${c.partner_name || '?'} פעילים ${Math.round(dist * 10) / 10} ק"מ ממך!`);
+      }
+    }
+  });
+}
+
+// ═══════════════════════════════════
+// COUPLE VERIFICATION
+// ═══════════════════════════════════
+async function verifyCoupleLink() {
+  if (!myProfile?.partner_id) return;
+  const { data } = await sb.from('profiles').select('name,partner_confirmed').eq('id', myProfile.partner_id).single();
+  if (data?.partner_confirmed && myProfile.partner_confirmed) {
+    showToast('✅ הזוג מאומת!');
+  }
+}
+
+// ═══════════════════════════════════
+// SHARE APP
+// ═══════════════════════════════════
+function shareApp() {
+  const text = 'מצאתי אפליקציה מדהימה לדאבל דייטים! 💞 מצאו זוגות באזורכם ←';
+  const url = window.location.origin;
+  if (navigator.share) {
+    navigator.share({ title: 'Double 💞', text, url }).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(text + ' ' + url).then(() => showToast('קישור הועתק לשיתוף! 📤'));
+  }
+}
+
+// ═══════════════════════════════════
+// REVIEWS
+// ═══════════════════════════════════
+function openReviewModal() {
+  if (!selectedCouple) return;
+  document.getElementById('review-couple-name').textContent = selectedCouple.name + ' & ' + (selectedCouple.partner_name || '?');
+  document.getElementById('review-text').value = '';
+  document.getElementById('review-modal').classList.add('open');
+  closePanel();
+}
+
+function closeReviewModal() {
+  document.getElementById('review-modal').classList.remove('open');
+}
+
+async function submitReview() {
+  const text = document.getElementById('review-text').value.trim();
+  if (!text) { showToast('נא לכתוב המלצה'); return; }
+  const { error } = await sb.from('reviews').upsert({
+    from_id: currentUser.id,
+    to_id: selectedCouple.id,
+    text,
+  }, { onConflict: 'from_id,to_id' });
+  if (error) { showToast('שגיאה: ' + error.message); return; }
+
+  // Also mark as date history automatically
+  await sb.from('date_history').insert({
+    couple_a: currentUser.id,
+    couple_b: selectedCouple.id,
+    note: 'נפגשנו ו' + selectedCouple.name,
+  }).then(() => {});
+
+  closeReviewModal();
+  showToast('המלצה נשלחה! ⭐');
+}
+
+async function loadReviewsReceived() {
+  const { data } = await sb.from('reviews')
+    .select('*, from_profile:from_id(name,partner_name,photo_url)')
+    .eq('to_id', currentUser.id)
+    .order('created_at', { ascending: false });
+
+  const list = document.getElementById('reviews-received-list');
+  if (!list) return;
+  if (!data?.length) {
+    list.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:10px 0">עוד אין המלצות — צרו קשר עם זוגות!</div>';
+    return;
+  }
+  list.innerHTML = data.map(r => {
+    const p = r.from_profile;
+    return `<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,215,0,0.2);border-radius:14px;padding:14px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <div style="font-size:20px">⭐</div>
+        <span style="font-weight:700;font-size:14px">${p?.name || '?'} & ${p?.partner_name || '?'}</span>
+      </div>
+      <div style="font-size:14px;color:var(--text2);line-height:1.5">"${r.text}"</div>
+    </div>`;
+  }).join('');
+}
+
+// Load reviews when profile opens - hook into openProfile
+const _origOpenProfile = openProfile;
+function openProfile() {
+  _origOpenProfile();
+  loadReviewsReceived();
+  loadDateHistory();
+}
+
+// ═══════════════════════════════════
+// DATE HISTORY
+// ═══════════════════════════════════
+function addDateHistory() {
+  document.getElementById('date-couple-name').value = '';
+  document.getElementById('date-note').value = '';
+  document.getElementById('date-modal').classList.add('open');
+}
+
+function closeDateModal() {
+  document.getElementById('date-modal').classList.remove('open');
+}
+
+async function saveDateHistory() {
+  const coupleName = document.getElementById('date-couple-name').value.trim();
+  const note = document.getElementById('date-note').value.trim();
+  if (!coupleName) { showToast('נא להזין שם הזוג'); return; }
+
+  const { error } = await sb.from('date_history').insert({
+    couple_a: currentUser.id,
+    couple_b: currentUser.id, // self-reported
+    note: coupleName + (note ? ' — ' + note : ''),
+  });
+  if (error) { showToast('שגיאה: ' + error.message); return; }
+  closeDateModal();
+  showToast('דייט נשמר! 📅');
+  loadDateHistory();
+}
+
+async function loadDateHistory() {
+  const { data } = await sb.from('date_history')
+    .select('*')
+    .eq('couple_a', currentUser.id)
+    .order('date', { ascending: false })
+    .limit(10);
+
+  const list = document.getElementById('date-history-list');
+  if (!list) return;
+  if (!data?.length) {
+    list.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:10px 0">עוד אין דייטים — התחילו לצאת! 🎉</div>';
+    return;
+  }
+  list.innerHTML = data.map(d => {
+    const dateStr = new Date(d.date).toLocaleDateString('he-IL', { day:'numeric', month:'long', year:'numeric' });
+    return `<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,75,110,0.15);border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px">
+      <div style="font-size:22px">📅</div>
+      <div>
+        <div style="font-size:14px;font-weight:600">${d.note || 'דייט'}</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:2px">${dateStr}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════
+// SHOW REVIEWS ON COUPLE PANEL
+// ═══════════════════════════════════
+async function loadCoupleReviews(coupleId) {
+  const { data } = await sb.from('reviews')
+    .select('*, from_profile:from_id(name,partner_name)')
+    .eq('to_id', coupleId)
+    .order('created_at', { ascending: false })
+    .limit(3);
+
+  if (!data?.length) return '';
+  return `<div class="info-card">
+    <div class="info-card-label">⭐ המלצות</div>
+    ${data.map(r => `<div style="font-size:13px;color:var(--text2);padding:8px 0;border-bottom:1px solid var(--border)">"${r.text}" — ${r.from_profile?.name || '?'}</div>`).join('')}
+  </div>`;
+}
 
 // ═══════════════════════════════════
 // PLACES (מסעדות, פארקים, חופים...)
