@@ -11,6 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -232,11 +233,22 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
       <div class="header-live"><span class="live-dot"></span><span id="live-count">0</span> זוגות חמים עכשיו</div>
     </div>
     <div class="header-actions">
+      <button class="icon-btn" id="places-toggle-btn" onclick="togglePlaces()" title="אטרקציות">📍</button>
+      <button class="icon-btn" id="heat-toggle-btn" onclick="toggleHeatmap()" title="Heatmap">🌡️</button>
       <button class="icon-btn" id="view-toggle-btn" onclick="toggleListView()" title="תצוגת רשימה">📋</button>
       <div id="header-avatar" onclick="navTo('profile')" style="width:36px;height:36px;border-radius:10px;background:rgba(255,75,110,0.2);border:1px solid rgba(255,75,110,0.4);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;overflow:hidden;flex-shrink:0">👫</div>
     </div>
   </div>
   <div class="filter-bar" id="filter-bar"></div>
+  <div id="places-bar" style="display:none;gap:7px;padding:8px 16px;overflow-x:auto;background:rgba(13,13,24,0.9);border-bottom:1px solid rgba(255,255,255,0.06);scrollbar-width:none;flex-shrink:0">
+    <button class="filter-chip active" data-place="all" onclick="filterPlaces('all')" style="font-size:11px;padding:5px 12px">🌟 הכל</button>
+    <button class="filter-chip" data-place="restaurant" onclick="filterPlaces('restaurant')" style="font-size:11px;padding:5px 12px">🍽️ מסעדות</button>
+    <button class="filter-chip" data-place="bar" onclick="filterPlaces('bar')" style="font-size:11px;padding:5px 12px">🍺 ברים</button>
+    <button class="filter-chip" data-place="park" onclick="filterPlaces('park')" style="font-size:11px;padding:5px 12px">🌳 פארקים</button>
+    <button class="filter-chip" data-place="beach" onclick="filterPlaces('beach')" style="font-size:11px;padding:5px 12px">🏖️ חופים</button>
+    <button class="filter-chip" data-place="cafe" onclick="filterPlaces('cafe')" style="font-size:11px;padding:5px 12px">☕ קפה</button>
+    <button class="filter-chip" data-place="theatre" onclick="filterPlaces('theatre')" style="font-size:11px;padding:5px 12px">🎭 תרבות</button>
+  </div>
   <div id="map-container">
     <div id="map"></div>
     <div id="distance-filter">
@@ -636,6 +648,7 @@ async function initMap() {
   mapInstance = L.map('map',{zoomControl:false,attributionControl:false}).setView([31.5,35.0],8);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:18}).addTo(mapInstance);
   L.control.zoom({position:'bottomright'}).addTo(mapInstance);
+  mapInstance.on('moveend', onMapMoveEnd);
   buildFilterBar();
   await loadCouples();
 }
@@ -712,6 +725,7 @@ function renderMarkers() {
 
   updateLiveCount();
   if (document.getElementById('screen-feed')?.classList.contains('active')) renderFeed();
+  updateHeatmapIfOn();
 }
 
 function updateLiveCount() {
@@ -1349,6 +1363,219 @@ function navTo(name) {
   showScreen(name);
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav===name));
   if (name==='main'&&mapInstance) setTimeout(()=>mapInstance.invalidateSize(),100);
+}
+
+
+
+// ═══════════════════════════════════
+// PLACES (מסעדות, פארקים, חופים...)
+// ═══════════════════════════════════
+let placesOn = false;
+let placesMarkers = [];
+let placesData = {};
+let activePlaceFilter = 'all';
+let placesLoaded = false;
+
+const PLACE_TYPES = {
+  restaurant: { emoji: '🍽️', label: 'מסעדה',  color: '#ff9f43', query: 'amenity=restaurant' },
+  bar:        { emoji: '🍺', label: 'בר',      color: '#ff4b6e', query: 'amenity=bar' },
+  cafe:       { emoji: '☕', label: 'קפה',     color: '#a29bfe', query: 'amenity=cafe' },
+  park:       { emoji: '🌳', label: 'פארק',    color: '#1dd1a1', query: 'leisure=park' },
+  beach:      { emoji: '🏖️', label: 'חוף',     color: '#54a0ff', query: 'natural=beach' },
+  theatre:    { emoji: '🎭', label: 'תרבות',   color: '#fd79a8', query: 'amenity=theatre' },
+};
+
+async function togglePlaces() {
+  placesOn = !placesOn;
+  const btn = document.getElementById('places-toggle-btn');
+  const bar = document.getElementById('places-bar');
+  if (placesOn) {
+    btn.classList.add('active');
+    btn.textContent = '✕';
+    bar.style.display = 'flex';
+    if (!placesLoaded) await loadPlaces();
+    else renderPlaceMarkers(activePlaceFilter);
+  } else {
+    btn.classList.remove('active');
+    btn.textContent = '📍';
+    bar.style.display = 'none';
+    clearPlaceMarkers();
+  }
+}
+
+function clearPlaceMarkers() {
+  placesMarkers.forEach(m => mapInstance.removeLayer(m));
+  placesMarkers = [];
+}
+
+async function loadPlaces() {
+  showToast('טוען אטרקציות... 📍');
+  const bounds = mapInstance.getBounds();
+  const bbox = `${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()}`;
+
+  // Build Overpass query for all types
+  const queries = Object.entries(PLACE_TYPES).map(([key, t]) =>
+    `node[${t.query}](${bbox});`
+  ).join('');
+
+  const query = `[out:json][timeout:15];(${queries});out body 200;`;
+
+  try {
+    const res = await fetch('https://overpass-api.de/api/interpreter', {
+      method: 'POST',
+      body: query,
+    });
+    const data = await res.json();
+
+    // Categorize results
+    placesData = {};
+    Object.keys(PLACE_TYPES).forEach(k => placesData[k] = []);
+
+    data.elements.forEach(el => {
+      const tags = el.tags || {};
+      if (tags.amenity === 'restaurant') placesData.restaurant.push(el);
+      else if (tags.amenity === 'bar') placesData.bar.push(el);
+      else if (tags.amenity === 'cafe') placesData.cafe.push(el);
+      else if (tags.leisure === 'park') placesData.park.push(el);
+      else if (tags.natural === 'beach') placesData.beach.push(el);
+      else if (tags.amenity === 'theatre' || tags.amenity === 'cinema') placesData.theatre.push(el);
+    });
+
+    placesLoaded = true;
+    renderPlaceMarkers(activePlaceFilter);
+    showToast(`נטענו ${data.elements.length} אטרקציות! 🎉`);
+  } catch (e) {
+    showToast('שגיאה בטעינת אטרקציות');
+    console.error(e);
+  }
+}
+
+function filterPlaces(type) {
+  activePlaceFilter = type;
+  document.querySelectorAll('[data-place]').forEach(b =>
+    b.classList.toggle('active', b.dataset.place === type));
+  if (placesLoaded) renderPlaceMarkers(type);
+}
+
+function renderPlaceMarkers(filter) {
+  clearPlaceMarkers();
+  const types = filter === 'all' ? Object.keys(PLACE_TYPES) : [filter];
+
+  types.forEach(type => {
+    const meta = PLACE_TYPES[type];
+    const places = placesData[type] || [];
+    // Limit to 80 per type to avoid clutter
+    places.slice(0, 80).forEach(place => {
+      if (!place.lat || !place.lon) return;
+      const name = place.tags?.name || meta.label;
+      const icon = L.divIcon({
+        className: '',
+        html: `<div style="
+          width:30px;height:30px;border-radius:50%;
+          background:${meta.color}22;
+          border:2px solid ${meta.color};
+          display:flex;align-items:center;justify-content:center;
+          font-size:14px;cursor:pointer;
+          box-shadow:0 2px 8px rgba(0,0,0,0.3);
+          backdrop-filter:blur(4px);
+        ">${meta.emoji}</div>`,
+        iconSize: [30, 30],
+        iconAnchor: [15, 15],
+      });
+      const m = L.marker([place.lat, place.lon], { icon })
+        .addTo(mapInstance)
+        .bindPopup(`
+          <div style="font-family:'Heebo',sans-serif;direction:rtl;min-width:140px">
+            <div style="font-weight:700;font-size:14px;margin-bottom:4px">${meta.emoji} ${name}</div>
+            <div style="font-size:12px;color:#aaa">${meta.label}</div>
+            ${place.tags?.['addr:street'] ? `<div style="font-size:11px;color:#888;margin-top:4px">📍 ${place.tags['addr:street']}</div>` : ''}
+          </div>
+        `, { className: '' });
+      placesMarkers.push(m);
+    });
+  });
+}
+
+// Reload places when map moves significantly
+let placesReloadTimer = null;
+function onMapMoveEnd() {
+  if (!placesOn) return;
+  clearTimeout(placesReloadTimer);
+  placesReloadTimer = setTimeout(async () => {
+    placesLoaded = false;
+    await loadPlaces();
+  }, 1000);
+}
+
+// ═══════════════════════════════════
+// HEATMAP
+// ═══════════════════════════════════
+let heatLayer = null;
+let heatmapOn = false;
+
+function toggleHeatmap() {
+  heatmapOn = !heatmapOn;
+  const btn = document.getElementById('heat-toggle-btn');
+  if (heatmapOn) {
+    btn.classList.add('active');
+    btn.textContent = '🗺️';
+    renderHeatmap();
+    // Hide regular markers
+    Object.values(markers).forEach(m => m.setOpacity(0.15));
+  } else {
+    btn.classList.remove('active');
+    btn.textContent = '🌡️';
+    if (heatLayer) { mapInstance.removeLayer(heatLayer); heatLayer = null; }
+    Object.values(markers).forEach(m => m.setOpacity(1));
+  }
+}
+
+function renderHeatmap() {
+  if (heatLayer) mapInstance.removeLayer(heatLayer);
+
+  // Build heat points from all couples with location
+  // Weight by status: hot=1.0, warm=0.6, cold=0.2
+  const weights = { hot: 1.0, warm: 0.6, cold: 0.2 };
+  const points = allCouples
+    .filter(c => c.lat && c.lng)
+    .map(c => [c.lat, c.lng, weights[c.status || 'cold'] || 0.2]);
+
+  // Add user location as extra point if active
+  if (myProfile?.lat && myProfile?.status !== 'cold') {
+    points.push([myProfile.lat, myProfile.lng, weights[myProfile.status] || 0.2]);
+  }
+
+  if (!points.length) {
+    showToast('אין נתונים להצגת Heatmap');
+    heatmapOn = false;
+    document.getElementById('heat-toggle-btn').classList.remove('active');
+    document.getElementById('heat-toggle-btn').textContent = '🌡️';
+    return;
+  }
+
+  heatLayer = L.heatLayer(points, {
+    radius: 35,
+    blur: 25,
+    maxZoom: 14,
+    max: 1.0,
+    gradient: {
+      0.0: 'rgba(84,160,255,0)',
+      0.2: 'rgba(84,160,255,0.4)',
+      0.4: 'rgba(255,159,67,0.6)',
+      0.7: 'rgba(255,75,110,0.8)',
+      1.0: 'rgba(255,75,110,1.0)',
+    }
+  }).addTo(mapInstance);
+}
+
+// Update heatmap when data changes
+const _origRenderMarkers = renderMarkers;
+// We'll call updateHeatmapIfOn after renderMarkers
+function updateHeatmapIfOn() {
+  if (heatmapOn) {
+    renderHeatmap();
+    Object.values(markers).forEach(m => m.setOpacity(0.15));
+  }
 }
 
 // ═══════════════════════════════════
