@@ -704,7 +704,7 @@ async function loadMyProfile() {
     showScreen('setup'); initSetupScreen();
   } else {
     showScreen('main'); initNav(); updateProfileNavIcon();
-    await initMap(); subscribeRealtime(); subscribeNewMessages();
+    await initMap(); subscribeRealtime(); subscribeNewMessages(); subscribeShakes();
     await checkInviteCode();
   }
 }
@@ -1440,9 +1440,9 @@ async function handlePhotoUpload(input) {
   showToast('מעלה תמונה...');
   const ext=file.name.split('.').pop();
   const path=`${currentUser.id}/couple.${ext}`;
-  const {error:upErr} = await sb.storage.from('photos').upload(path,file,{upsert:true});
+  const {error:upErr} = await sb.storage.from('PHOTOS').upload(path,file,{upsert:true});
   if (upErr) {showToast('שגיאה בהעלאה: '+upErr.message);return;}
-  const {data:{publicUrl}} = sb.storage.from('photos').getPublicUrl(path);
+  const {data:{publicUrl}} = sb.storage.from('PHOTOS').getPublicUrl(path);
   await sb.from('profiles').update({photo_url:publicUrl}).eq('id',currentUser.id);
   myProfile={...myProfile,photo_url:publicUrl};
   const preview=document.getElementById('profile-photo-preview');
