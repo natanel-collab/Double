@@ -1806,60 +1806,53 @@ function clearPlaceMarkers() {
 async function loadPlaces() {
   showToast('טוען אטרקציות... 📍');
   const center = mapInstance.getCenter();
-  const lat = center.lat.toFixed(4);
-  const lng = center.lng.toFixed(4);
+  const ll = `${center.lat.toFixed(4)},${center.lng.toFixed(4)}`;
+  const radius = 2000; // 2km radius
 
-  const typeMap = {
-    restaurant: { amenity: 'restaurant', emoji: '🍽️', color: '#ff9f43' },
-    bar:        { amenity: 'bar',        emoji: '🍺', color: '#ff4b6e' },
-    cafe:       { amenity: 'cafe',       emoji: '☕', color: '#a29bfe' },
-    park:       { leisure: 'park',       emoji: '🌳', color: '#1dd1a1' },
-    beach:      { natural: 'beach',      emoji: '🏖️', color: '#54a0ff' },
-    theatre:    { amenity: 'theatre',    emoji: '🎭', color: '#fd79a8' },
+  const categoryMap = {
+    restaurant: '13065',
+    bar:        '13003',
+    cafe:       '13032',
+    park:       '16032',
+    beach:      '16019',
+    theatre:    '10027',
   };
 
+  placesData = { restaurant:[], bar:[], cafe:[], park:[], beach:[], theatre:[] };
+
   try {
-    // Use Overpass with a different mirror
-    const bounds = mapInstance.getBounds();
-    const b = `${bounds.getSouth().toFixed(3)},${bounds.getWest().toFixed(3)},${bounds.getNorth().toFixed(3)},${bounds.getEast().toFixed(3)}`;
-
-    const parts = [
-      `node["amenity"="restaurant"](${b});`,
-      `node["amenity"="bar"](${b});`,
-      `node["amenity"="cafe"](${b});`,
-      `node["leisure"="park"](${b});`,
-      `node["natural"="beach"](${b});`,
-      `node["amenity"="theatre"](${b});`,
-      `node["amenity"="cinema"](${b});`,
-    ].join('');
-
-    const query = `[out:json][timeout:25];(${parts});out 300;`;
-    const url = `https://overpass.kumi.systems/api/interpreter?data=${encodeURIComponent(query)}`;
-
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json();
-
-    placesData = { restaurant:[], bar:[], cafe:[], park:[], beach:[], theatre:[] };
-    data.elements.forEach(el => {
-      const t = el.tags || {};
-      if (t.amenity === 'restaurant') placesData.restaurant.push(el);
-      else if (t.amenity === 'bar') placesData.bar.push(el);
-      else if (t.amenity === 'cafe') placesData.cafe.push(el);
-      else if (t.leisure === 'park') placesData.park.push(el);
-      else if (t.natural === 'beach') placesData.beach.push(el);
-      else if (t.amenity === 'theatre' || t.amenity === 'cinema') placesData.theatre.push(el);
-    });
+    const cats = Object.entries(categoryMap);
+    await Promise.all(cats.map(async ([type, catId]) => {
+      const url = `https://api.foursquare.com/v3/places/search?ll=${ll}&radius=${radius}&categories=${catId}&limit=50&fields=name,geocodes,location,categories`;
+      const res = await fetch(url, {
+        headers: {
+          'Authorization': 'NCZRJ3DVVJ13WU2KBGVS3K5CF5VBIUNHACFE0NQ45AGXCGPH',
+          'Accept': 'application/json'
+        }
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      (data.results || []).forEach(p => {
+        if (p.geocodes?.main) {
+          placesData[type].push({
+            lat: p.geocodes.main.latitude,
+            lon: p.geocodes.main.longitude,
+            tags: { name: p.name, addr: p.location?.address || '' }
+          });
+        }
+      });
+    }));
 
     placesLoaded = true;
     renderPlaceMarkers(activePlaceFilter);
-    const total = data.elements.length;
-    showToast(total > 0 ? `נטענו ${total} אטרקציות! 🎉` : 'זום פנימה לראות אטרקציות');
+    const total = Object.values(placesData).reduce((s,a) => s+a.length, 0);
+    showToast(total > 0 ? `נטענו ${total} אטרקציות! 🎉` : 'לא נמצאו אטרקציות באזור');
   } catch(e) {
     console.error('Places error:', e);
-    showToast('לא ניתן לטעון אטרקציות כרגע');
+    showToast('שגיאה בטעינת אטרקציות');
   }
 }
+
 
 function filterPlaces(type) {
   activePlaceFilter = type;
