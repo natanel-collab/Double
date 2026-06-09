@@ -242,6 +242,7 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
       <div class="field-group"><label class="field-label">אימייל</label><input class="field-input" type="email" id="login-email" placeholder="your@email.com" dir="ltr"/></div>
       <div class="field-group"><label class="field-label">סיסמה</label><input class="field-input" type="password" id="login-pass" placeholder="••••••••" dir="ltr"/></div>
       <button class="btn-primary" onclick="doLogin()">כניסה</button>
+      <div onclick="forgotPassword()" style="text-align:center;color:var(--text3);font-size:13px;margin-top:12px;cursor:pointer;text-decoration:underline">שכחתי סיסמה</div>
       <p class="auth-err" id="login-err"></p>
     </div>
     <div id="auth-register" style="display:none">
@@ -1698,6 +1699,19 @@ async function loadCoupleReviews(coupleId) {
     <div class="info-card-label">⭐ המלצות</div>
     ${data.map(r => `<div style="font-size:13px;color:var(--text2);padding:8px 0;border-bottom:1px solid var(--border)">"${r.text}" — ${r.from_profile?.name || '?'}</div>`).join('')}
   </div>`;
+}
+
+
+// ═══ FORGOT PASSWORD ═══
+async function forgotPassword() {
+  const email = document.getElementById('login-email').value.trim();
+  if (!email) { document.getElementById('login-err').textContent = 'נא להזין אימייל קודם'; return; }
+  const { error } = await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin,
+  });
+  if (error) { document.getElementById('login-err').textContent = 'שגיאה: ' + error.message; return; }
+  document.getElementById('login-err').style.color = 'var(--green)';
+  document.getElementById('login-err').textContent = '✅ נשלח אימייל לאיפוס סיסמה!';
 }
 
 // ═══════════════════════════════════
