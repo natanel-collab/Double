@@ -601,8 +601,8 @@
         <div class="header-live"><span class="live-dot"></span><span id="live-count">0</span> זוגות חמים עכשיו</div>
       </div>
       <div class="header-actions">
-        <button class="icon-btn" onclick="openMyStatus()" title="הסטטוס שלי">📍</button>
         <button class="icon-btn" id="view-toggle-btn" onclick="toggleListView()" title="תצוגת רשימה">📋</button>
+        <div id="header-avatar" onclick="openProfile()" style="width:36px;height:36px;border-radius:10px;background:rgba(255,75,110,0.2);border:1px solid rgba(255,75,110,0.4);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;overflow:hidden;flex-shrink:0">👫</div>
       </div>
     </div>
 
@@ -1361,7 +1361,7 @@ function spinRoulette() {
   `;
   document.getElementById('roulette-content').querySelector('.modal-emoji').style.animation = 'spin 0.5s linear infinite';
 
-  const hotCouples = allCouples.filter(c => c.status === 'hot' || c.status === 'warm');
+  const hotCouples = allCouples.filter(c => c.id !== currentUser.id && (c.status === 'hot' || c.status === 'warm'));
   setTimeout(() => {
     if (!hotCouples.length) {
       document.getElementById('roulette-content').innerHTML = `
@@ -1470,11 +1470,15 @@ async function handlePhotoUpload(input) {
 
 function updateProfileNavIcon() {
   const navIcon = document.getElementById('nav-profile-icon');
-  if (!navIcon) return;
+  const headerAvatar = document.getElementById('header-avatar');
   if (myProfile?.photo_url) {
-    navIcon.innerHTML = `<img src="${myProfile.photo_url}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;border:2px solid var(--pink)" />`;
+    const imgHtml = `<img src="${myProfile.photo_url}" style="width:100%;height:100%;object-fit:cover" />`;
+    if (navIcon) navIcon.innerHTML = `<img src="${myProfile.photo_url}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;border:2px solid var(--pink)" />`;
+    if (headerAvatar) headerAvatar.innerHTML = imgHtml;
   } else {
-    navIcon.textContent = '👫';
+    const initials = myProfile?.name ? myProfile.name[0] : '👫';
+    if (navIcon) navIcon.textContent = '👫';
+    if (headerAvatar) headerAvatar.textContent = initials;
   }
 }
 
