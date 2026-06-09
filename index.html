@@ -444,7 +444,7 @@
       flex-shrink: 0; z-index: 350;
     }
     .nav-item {
-      flex: 1; display: flex; flex-direction: column; align-items: center;
+      flex: 1; display: flex; flex-direction: column; align-items: center; position: relative;
       padding: 10px 4px; cursor: pointer; transition: all 0.15s;
       border: none; background: none; color: var(--text3); gap: 4px;
     }
@@ -746,6 +746,14 @@
     <p class="auth-err" id="profile-err"></p>
   </div>
 
+
+  <!-- ══ SHAKES ══ -->
+  <div id="screen-shakes" class="screen scroll-screen" style="padding: calc(var(--safe-top) + 20px) 20px calc(var(--safe-bot) + 80px);">
+    <div style="font-family:'Syne';font-size:22px;font-weight:800;margin-bottom:6px">💞 Double Shake</div>
+    <div style="color:var(--text2);font-size:13px;margin-bottom:24px">זוגות שרוצים להתחבר אתכם</div>
+    <div id="shakes-list"></div>
+  </div>
+
 </div><!-- /#app -->
 
 <!-- Bottom Nav (shared) -->
@@ -755,6 +763,10 @@
   </button>
   <button class="nav-item" data-nav="status" onclick="navTo('status')">
     <div class="nav-icon">📍</div><div class="nav-label">הסטטוס שלי</div>
+  </button>
+  <button class="nav-item" data-nav="shakes" onclick="navTo('shakes')">
+    <div class="nav-icon">💞</div><div class="nav-label">Shake</div>
+    <div id="shake-badge" style="display:none;position:absolute;top:6px;right:calc(50% - 18px);width:8px;height:8px;background:var(--pink);border-radius:50%"></div>
   </button>
   <button class="nav-item" data-nav="profile" onclick="navTo('profile')">
     <div class="nav-icon" id="nav-profile-icon">👫</div><div class="nav-label">פרופיל</div>
@@ -770,7 +782,8 @@
   </div>
   <div class="panel-body" id="panel-body"></div>
   <div class="panel-footer">
-    <button class="shake-btn" id="shake-btn" onclick="openChat()">💞 Double Shake!</button>
+    <button class="shake-btn" id="shake-btn" onclick="sendShake()">💞 Double Shake!</button>
+    <button class="btn-secondary" style="margin-top:8px" onclick="openChat()">💬 פתחו צ'אט</button>
     <div class="shake-hint">נפתח צ'אט קבוצתי של 4 אנשים</div>
   </div>
 </div>
@@ -921,6 +934,7 @@ async function loadMyProfile() {
     await initMap();
     subscribeRealtime();
     await checkInviteCode();
+    subscribeShakes();
   }
 }
 
@@ -1214,6 +1228,14 @@ function openCouplePanel(couple) {
 
   document.getElementById('panel-overlay').classList.add('open');
   document.getElementById('couple-panel').classList.add('open');
+  // Check if already shook
+  sb.from('shakes').select('status').eq('from_id', currentUser.id).eq('to_id', couple.id).single().then(({data}) => {
+    const btn = document.getElementById('shake-btn');
+    if (!btn) return;
+    if (data?.status === 'pending') { btn.textContent = '⏳ Shake נשלח'; btn.disabled = true; btn.style.opacity = '0.7'; }
+    else if (data?.status === 'accepted') { btn.textContent = '✅ מחוברים!'; btn.disabled = true; btn.style.opacity = '0.7'; }
+    else { btn.textContent = '💞 Double Shake!'; btn.disabled = false; btn.style.opacity = '1'; }
+  });
 }
 
 function closePanel() {
@@ -1479,6 +1501,7 @@ function initNav() {
 
 function navTo(name) {
   if (name === 'profile') { openProfile(); return; }
+  if (name === 'shakes') { showScreen('shakes'); document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav===name)); loadShakes(); return; }
   showScreen(name);
   document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.nav === name));
   if (name === 'main' && mapInstance) setTimeout(() => mapInstance.invalidateSize(), 100);
@@ -1756,7 +1779,7 @@ async function saveProfile() {
   }).eq('id', currentUser.id);
 
   if (error) { err.textContent = error.message; return; }
-  myProfile = { ...myProfile, name, partner_name: partnerName, role_him: roleHim, role_her: roleHer, city, vibes: profileSelectedVibes };
+  myProfile = { ...myProfile, name, partner_name: partnerName, role_him: roleHim, role_her: roleHer, city, vibes: newVibesArr };
   err.textContent = '';
   showToast('פרופיל עודכן! ✅');
   navTo('main');
@@ -1856,6 +1879,109 @@ async function saveEvent() {
   if (mapInstance && lat && lng) mapInstance.flyTo([lat, lng], 13, { duration: 1.5 });
 }
 
+
+
+// ═══════════════════════════════════════════
+// DOUBLE SHAKE
+// ═══════════════════════════════════════════
+async function sendShake() {
+  if (!selectedCouple) return;
+  const { error } = await sb.from('shakes').upsert({
+    from_id: currentUser.id,
+    to_id: selectedCouple.id,
+    status: 'pending',
+  }, { onConflict: 'from_id,to_id' });
+
+  if (error) { showToast('שגיאה: ' + error.message); return; }
+  showToast('💞 Double Shake נשלח!');
+  closePanel();
+
+  // Update shake button
+  const btn = document.getElementById('shake-btn');
+  if (btn) { btn.textContent = '✅ Shake נשלח!'; btn.disabled = true; btn.style.opacity = '0.7'; }
+}
+
+async function loadShakes() {
+  const { data } = await sb.from('shakes')
+    .select('*, from_profile:from_id(name,partner_name,photo_url,city,vibes,status_text,status)')
+    .eq('to_id', currentUser.id)
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false });
+
+  const list = document.getElementById('shakes-list');
+  if (!list) return;
+
+  // Update badge
+  const badge = document.getElementById('shake-badge');
+  if (badge) badge.style.display = data?.length ? 'block' : 'none';
+
+  if (!data?.length) {
+    list.innerHTML = `<div style="text-align:center;padding:60px 20px;color:var(--text3)">
+      <div style="font-size:48px;margin-bottom:16px">💤</div>
+      <div style="font-size:16px;font-weight:700;margin-bottom:8px">אין Shake חדש</div>
+      <div style="font-size:13px">כשזוג ישלח לכם Shake הוא יופיע כאן</div>
+    </div>`;
+    return;
+  }
+
+  list.innerHTML = data.map(s => {
+    const p = s.from_profile;
+    const photoEl = p?.photo_url
+      ? `<img src="${p.photo_url}" style="width:56px;height:56px;border-radius:14px;object-fit:cover;flex-shrink:0;border:2px solid var(--pink)" />`
+      : `<div style="width:56px;height:56px;border-radius:14px;background:rgba(255,75,110,0.15);border:2px solid rgba(255,75,110,0.3);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">💞</div>`;
+    return `
+    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,75,110,0.2);border-radius:18px;padding:16px;margin-bottom:12px">
+      <div style="display:flex;gap:12px;align-items:center;margin-bottom:14px">
+        ${photoEl}
+        <div style="flex:1">
+          <div style="font-family:'Syne';font-weight:800;font-size:16px">${p?.name||'?'} & ${p?.partner_name||'?'}</div>
+          <div style="color:var(--text3);font-size:12px;margin-top:2px">${p?.city||'ישראל'}</div>
+          ${p?.status_text ? `<div style="color:var(--text2);font-size:13px;margin-top:4px">"${p.status_text}"</div>` : ''}
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button onclick="respondShake(${s.id},'accepted','${p?.name||''}')" 
+          style="flex:1;padding:12px;background:linear-gradient(135deg,var(--pink),var(--pink2));border:none;color:white;border-radius:12px;font-family:'Heebo';font-weight:700;font-size:14px;cursor:pointer">
+          💞 קבלו!
+        </button>
+        <button onclick="respondShake(${s.id},'declined','')"
+          style="flex:1;padding:12px;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text2);border-radius:12px;font-family:'Heebo';font-weight:600;font-size:14px;cursor:pointer">
+          לא עכשיו
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function respondShake(shakeId, status, fromName) {
+  await sb.from('shakes').update({ status }).eq('id', shakeId);
+  if (status === 'accepted') {
+    showToast(`💞 קיבלתם את ה-Shake של ${fromName}!`);
+    // Open chat with them
+    const { data } = await sb.from('shakes').select('from_id').eq('id', shakeId).single();
+    if (data) {
+      const { data: profile } = await sb.from('profiles').select('*').eq('id', data.from_id).single();
+      if (profile) { selectedCouple = profile; openChat(); }
+    }
+  } else {
+    showToast('Shake נדחה');
+  }
+  loadShakes();
+}
+
+// Subscribe to new shakes
+function subscribeShakes() {
+  sb.channel('shakes:' + currentUser.id)
+    .on('postgres_changes', {
+      event: 'INSERT', schema: 'public', table: 'shakes',
+      filter: `to_id=eq.${currentUser.id}`
+    }, () => {
+      showToast('💞 קיבלתם Double Shake חדש!');
+      const badge = document.getElementById('shake-badge');
+      if (badge) badge.style.display = 'block';
+    })
+    .subscribe();
+}
 
 // ═══════════════════════════════════════════
 // DISTANCE FILTER
