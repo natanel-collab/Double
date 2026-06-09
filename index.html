@@ -327,11 +327,6 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
   </div>
   <div id="map-container">
     <div id="map"></div>
-    <div id="distance-filter">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <span style="font-size:11px;color:var(--text3);font-family:'Heebo'">מרחק מקסימלי</span>
-        <span id="dist-label" style="font-size:12px;color:var(--pink);font-weight:700;font-family:'Heebo'">הכל</span>
-      </div>
       <input type="range" id="dist-slider" min="0" max="5" value="5" step="1" oninput="updateDistanceFilter(this.value)" style="width:100%;accent-color:var(--pink);cursor:pointer"/>
       <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);font-family:'Heebo';margin-top:3px">
         <span>2ק"מ</span><span>10</span><span>25</span><span>50</span><span>100</span><span>הכל</span>
@@ -1850,6 +1845,8 @@ async function loadPlaces() {
   });
 
   placesLoaded = true;
+  const counts = Object.entries(placesData).map(([k,v])=>k+':'+v.length).join(', ');
+  console.log('placesData counts:', counts);
   renderPlaceMarkers(activePlaceFilter);
   const total = data.elements.length;
   showToast(total > 0 ? `נטענו ${total} אטרקציות! 🎉` : 'זומו פנימה לראות אטרקציות');
@@ -1867,9 +1864,11 @@ function renderPlaceMarkers(filter) {
   clearPlaceMarkers();
   const types = filter === 'all' ? Object.keys(PLACE_TYPES) : [filter];
 
+  console.log('rendering types:', types);
   types.forEach(type => {
     const meta = PLACE_TYPES[type];
     const places = placesData[type] || [];
+    console.log(type, places.length, 'places');
     // Limit to 80 per type to avoid clutter
     places.slice(0, 80).forEach(place => {
       if (!place.lat || !place.lon) return;
