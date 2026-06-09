@@ -1903,13 +1903,22 @@ function renderPlaceMarkers(filter) {
 
 // Reload places when map moves significantly
 let placesReloadTimer = null;
+let lastPlacesCenter = null;
+
 function onMapMoveEnd() {
   if (!placesOn) return;
   clearTimeout(placesReloadTimer);
   placesReloadTimer = setTimeout(async () => {
+    const center = mapInstance.getCenter();
+    // Only reload if moved more than 0.5km from last load
+    if (lastPlacesCenter) {
+      const dist = getDistanceKm(lastPlacesCenter.lat, lastPlacesCenter.lng, center.lat, center.lng);
+      if (dist < 0.5) return;
+    }
+    lastPlacesCenter = center;
     placesLoaded = false;
     await loadPlaces();
-  }, 1000);
+  }, 1500);
 }
 
 // ═══════════════════════════════════
