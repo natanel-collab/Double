@@ -672,8 +672,10 @@ function renderMarkers() {
   const filtered = all.filter(c=>{
     if (selectedVibeFilter==='hot'&&c.status!=='hot') return false;
     if (selectedVibeFilter!=='all'&&selectedVibeFilter!=='hot'&&!(c.vibes||[]).includes(selectedVibeFilter)) return false;
-    if (maxDistanceKm<99999&&myProfile?.lat&&c.lat) {
-      if (getDistanceKm(myProfile.lat,myProfile.lng,c.lat,c.lng)>maxDistanceKm) return false;
+    if (maxDistanceKm<99999&&c.lat) {
+      const refLat = userLat || myProfile?.lat;
+      const refLng = userLng || myProfile?.lng;
+      if (refLat && getDistanceKm(refLat,refLng,c.lat,c.lng)>maxDistanceKm) return false;
     }
     return true;
   });
@@ -716,11 +718,33 @@ function updateLiveCount() {
   document.getElementById('live-count').textContent = allCouples.filter(c=>c.status==='hot').length;
 }
 
+let userLat = null, userLng = null;
+
 function updateDistanceFilter(val) {
   const idx=parseInt(val);
   maxDistanceKm=DIST_VALUES[idx];
   document.getElementById('dist-label').textContent=DIST_LABELS[idx];
-  renderMarkers();
+  if (maxDistanceKm < 99999 && !userLat) {
+    // Get real location first
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(pos => {
+        userLat = pos.coords.latitude;
+        userLng = pos.coords.longitude;
+        renderMarkers();
+      }, () => {
+        // fallback to profile location
+        userLat = myProfile?.lat || 32.08;
+        userLng = myProfile?.lng || 34.78;
+        renderMarkers();
+      }, {timeout:5000});
+    } else {
+      userLat = myProfile?.lat || 32.08;
+      userLng = myProfile?.lng || 34.78;
+      renderMarkers();
+    }
+  } else {
+    renderMarkers();
+  }
 }
 
 // ═══════════════════════════════════
