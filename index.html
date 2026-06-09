@@ -2,7 +2,7 @@
 <html lang="he" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Double 💞</title>
   <meta name="description" content="מצאו זוגות לדאבל דייט" />
   <meta name="theme-color" content="#0d0d18" />
@@ -238,7 +238,7 @@
 
     /* Map FAB */
     .map-fab {
-      position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%);
+      position: absolute; bottom: calc(70px + var(--safe-bot)); left: 50%; transform: translateX(-50%);
       z-index: 500; display: flex; gap: 10px;
     }
     .fab-btn {
@@ -610,13 +610,13 @@
     <div id="map-container">
       <div id="map"></div>
       <div class="map-fab">
-        <button class="fab-btn" onclick="openEventModal()" style="background:linear-gradient(135deg,#1dd1a1,#00b894);box-shadow:0 4px 24px rgba(29,209,161,0.35)">➕ אירוע</button><button class="fab-btn roulette" onclick="spinRoulette()">🎰 Double רולטה</button>
-        <button class="fab-btn" onclick="openMyStatus()">📍 הסטטוס שלי</button>
+        <button class="fab-btn" id="event-fab" onclick="openEventModal()" style="background:linear-gradient(135deg,#1dd1a1,#00b894);box-shadow:0 4px 24px rgba(29,209,161,0.35)">➕ אירוע</button>
+        <button class="fab-btn roulette" onclick="spinRoulette()">🎰 רולטה</button>
       </div>
     </div>
 
     <!-- List View Overlay -->
-    <div id="list-overlay" style="display:none;position:absolute;inset:0;background:var(--bg2);overflow-y:auto;z-index:300;padding:12px 16px 80px">
+    <div id="list-overlay" style="display:none;position:absolute;inset:0;background:var(--bg2);overflow-y:auto;z-index:300;padding:12px 16px calc(140px + var(--safe-bot))">
       <div id="list-couples"></div>
     </div>
   </div>
@@ -637,7 +637,7 @@
       placeholder='לדוגמה: "אנחנו בפאב ברוטשילד, מי מצטרף?" או "מתכננים פיקניק בשבת"'></textarea>
 
     <button class="btn-primary" style="margin-top:16px" onclick="saveMyStatus()">עדכון סטטוס 🚀</button>
-    <button class="btn-secondary" style="margin-top:10px" onclick="clearMyStatus()">🔕 כיבוי סטטוס</button>
+    <button class="btn-secondary" style="margin-top:10px" onclick="clearMyStatus()">🔕 כיבוי סטטוס / ביטול אירוע</button>
     <p class="auth-err" id="status-err"></p>
   </div>
 
@@ -706,7 +706,7 @@
     <div class="nav-icon">📍</div><div class="nav-label">הסטטוס שלי</div>
   </button>
   <button class="nav-item" data-nav="profile" onclick="navTo('profile')">
-    <div class="nav-icon">👫</div><div class="nav-label">הפרופיל שלנו</div>
+    <div class="nav-icon" id="nav-profile-icon">👫</div><div class="nav-label">פרופיל</div>
   </button>
 </div>
 
@@ -866,6 +866,7 @@ async function loadMyProfile() {
   } else {
     showScreen('main');
     initNav();
+    updateProfileNavIcon();
     await initMap();
     subscribeRealtime();
   }
@@ -1030,13 +1031,27 @@ function renderMarkers() {
     return (c.vibes || []).includes(selectedVibeFilter);
   });
 
+// Update event FAB to show active state
+  const fab = document.getElementById('event-fab');
+  if (fab && myProfile?.status === 'hot') {
+    fab.textContent = '🔴 אירוע פעיל';
+    fab.style.background = 'linear-gradient(135deg,#ff4b6e,#ff6b9d)';
+    fab.onclick = () => {
+      if (confirm('לבטל את האירוע הפעיל?')) clearMyStatus();
+    };
+  } else if (fab) {
+    fab.textContent = '➕ אירוע';
+    fab.style.background = 'linear-gradient(135deg,#1dd1a1,#00b894)';
+    fab.onclick = openEventModal;
+  }
+
   filtered.forEach(couple => {
     if (!couple.lat || !couple.lng) return;
 
     const status = couple.status || 'cold';
     const meta   = STATUS_META[status] || STATUS_META.cold;
     const vibe   = (couple.vibes || [])[0] || 'בית';
-    const emoji  = VIBES_LIST.find(v => v.id === vibe)?.label.split(' ')[0] || '💞';
+    const emoji  = vibeEmoji(vibe);
 
     const icon = L.divIcon({
       className: '',
@@ -1307,7 +1322,7 @@ function spinRoulette() {
     }
     const picked = hotCouples[Math.floor(Math.random() * hotCouples.length)];
     const vibe = (picked.vibes||[])[0];
-    const emoji = VIBES_LIST.find(v=>v.id===vibe)?.label.split(' ')[0] || '💞';
+    const emoji = vibeEmoji(vibe);
     document.getElementById('roulette-content').innerHTML = `
       <div class="modal-emoji">${emoji}</div>
       <div class="modal-title">${picked.name} & ${picked.partner_name || '?'}</div>
@@ -1366,6 +1381,13 @@ function showToast(msg) {
 
 
 
+
+// ─── Vibe emoji helper ───
+function vibeEmoji(vibeId) {
+  const map = { 'פאב':'🍺', 'מסעדה':'🍷', 'טבע':'🥾', 'בית':'🎲', 'ים':'🌊', 'תרבות':'🎭' };
+  return map[vibeId] || '💞';
+}
+
 // ═══════════════════════════════════════════
 // PHOTO UPLOAD
 // ═══════════════════════════════════════════
@@ -1389,6 +1411,17 @@ async function handlePhotoUpload(input) {
   const preview = document.getElementById('profile-photo-preview');
   preview.innerHTML = `<img src="${publicUrl}" style="width:100%;height:100%;object-fit:cover" />`;
   showToast('תמונה עודכנה! 📸');
+  updateProfileNavIcon();
+}
+
+function updateProfileNavIcon() {
+  const navIcon = document.getElementById('nav-profile-icon');
+  if (!navIcon) return;
+  if (myProfile?.photo_url) {
+    navIcon.innerHTML = `<img src="${myProfile.photo_url}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;border:2px solid var(--pink)" />`;
+  } else {
+    navIcon.textContent = '👫';
+  }
 }
 
 // ═══════════════════════════════════════════
@@ -1421,7 +1454,7 @@ function renderListView() {
   container.innerHTML = filtered.map(c => {
     const meta = STATUS_META[c.status || 'cold'];
     const vibe = (c.vibes||[])[0];
-    const emoji = VIBES_LIST.find(v=>v.id===vibe)?.label.split(' ')[0] || '💞';
+    const emoji = vibeEmoji(vibe);
     return `
       <div onclick="openCouplePanel(${JSON.stringify(c).replace(/"/g,'&quot;')});toggleListView()"
         style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:16px;margin-bottom:10px;cursor:pointer;display:flex;gap:12px;align-items:flex-start">
@@ -1514,7 +1547,8 @@ function openProfile() {
   document.getElementById('profile-invite-link').value =
     window.location.origin + '?invite=' + currentUser.id;
 
-  // Load photo if exists
+  // Load photo
+  updateProfileNavIcon();
   const preview = document.getElementById('profile-photo-preview');
   if (myProfile?.photo_url) {
     preview.innerHTML = `<img src="${myProfile.photo_url}" style="width:100%;height:100%;object-fit:cover" />`;
