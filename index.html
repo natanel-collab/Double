@@ -1389,6 +1389,8 @@ function openProfile() {
     else sc.style.display='none';
   }
   renderStatusOptions();
+  loadReviewsReceived();
+  loadDateHistory();
 }
 
 async function saveProfile() {
@@ -1627,13 +1629,7 @@ async function loadReviewsReceived() {
   }).join('');
 }
 
-// Load reviews when profile opens - hook into openProfile
-const _origOpenProfile = openProfile;
-function openProfile() {
-  _origOpenProfile();
-  loadReviewsReceived();
-  loadDateHistory();
-}
+
 
 // ═══════════════════════════════════
 // DATE HISTORY
