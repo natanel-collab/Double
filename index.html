@@ -142,6 +142,8 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
 .nav-item.active{color:var(--pink)}
 .nav-icon{font-size:22px;line-height:1}
 .nav-label{font-size:10px;font-weight:600;font-family:'Heebo'}
+.vibe-chip{background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:8px 14px;border-radius:100px;cursor:pointer;font-size:13px;transition:all 0.15s;user-select:none;display:inline-block}
+.vibe-chip.selected{background:rgba(255,75,110,0.2);border-color:rgba(255,75,110,0.5);color:var(--pink)}
 .nav-badge{position:absolute;top:6px;right:calc(50% - 20px);width:8px;height:8px;background:var(--pink);border-radius:50%;display:none}
 
 /* MODALS */
@@ -307,12 +309,7 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
   </div>
   <div id="map-container">
     <div id="map"></div>
-    <div id="distance-filter">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <span style="font-size:11px;color:var(--text3);font-family:'Heebo'">מרחק מקסימלי</span>
-        <span id="dist-label" style="font-size:12px;color:var(--pink);font-weight:700;font-family:'Heebo'">הכל</span>
-      </div>
-      <input type="range" id="dist-slider" min="0" max="5" value="5" step="1" oninput="updateDistanceFilter(this.value)" style="width:100%;accent-color:var(--pink);cursor:pointer"/>
+    <input type="range" id="dist-slider" min="0" max="5" value="5" step="1" oninput="updateDistanceFilter(this.value)" style="width:100%;accent-color:var(--pink);cursor:pointer"/>
       <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);font-family:'Heebo';margin-top:3px">
         <span>2ק"מ</span><span>10</span><span>25</span><span>50</span><span>100</span><span>הכל</span>
       </div>
@@ -495,7 +492,10 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
   <div class="panel-body" id="panel-body"></div>
   <div class="panel-footer">
     <button class="shake-btn" id="shake-btn" onclick="sendShake()">💞 Double Shake!</button>
-    <button class="btn-secondary" style="margin-top:8px" onclick="openChat()">💬 פתחו צ&apos;אט</button>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn-secondary" style="flex:1" onclick="openChat()">💬 צ&apos;אט</button>
+      <button class="btn-secondary" style="flex:1" onclick="openReviewModal()">⭐ המלצה</button>
+    </div>
     <div style="text-align:center;color:var(--text3);font-size:12px;margin-top:8px">נפתח צ&apos;אט קבוצתי של 4 אנשים</div>
   </div>
 </div>
@@ -614,8 +614,6 @@ const ICEBREAKERS = [
   'מהי ארוחת הערב המושלמת בעיניכם?',
   'מה הדבר שאתם הכי לא מסכימים עליו? 🤔',
 ];
-const DIST_VALUES = [2,10,25,50,100,99999];
-const DIST_LABELS = ['2 ק"מ','10 ק"מ','25 ק"מ','50 ק"מ','100 ק"מ','הכל'];
 const STATUS_OPTIONS = [
   {id:'hot',icon:'🔥',title:'חמים עכשיו!',desc:'מחפשים דאבל ספונטני היום'},
   {id:'warm',icon:'📅',title:'מתכננים',desc:'יש לנו תוכניות לימים הקרובים'},
@@ -628,7 +626,6 @@ const STATUS_OPTIONS = [
 let currentUser = null, myProfile = null, allCouples = [];
 let mapInstance = null, markers = {};
 let selectedVibeFilter = 'all', selectedCouple = null;
-let maxDistanceKm = 99999;
 let currentRoomId = null, chatChannel = null;
 let selectedStatusOption = 'cold';
 let eventSelectedVibe = '', eventLat = null, eventLng = null;
@@ -794,11 +791,6 @@ function renderMarkers() {
   const filtered = all.filter(c=>{
     if (selectedVibeFilter==='hot'&&c.status!=='hot') return false;
     if (selectedVibeFilter!=='all'&&selectedVibeFilter!=='hot'&&!(c.vibes||[]).includes(selectedVibeFilter)) return false;
-    if (maxDistanceKm<99999&&c.lat) {
-      const refLat = userLat || myProfile?.lat;
-      const refLng = userLng || myProfile?.lng;
-      if (refLat && getDistanceKm(refLat,refLng,c.lat,c.lng)>maxDistanceKm) return false;
-    }
     return true;
   });
 
@@ -839,35 +831,6 @@ function renderMarkers() {
 
 function updateLiveCount() {
   document.getElementById('live-count').textContent = allCouples.filter(c=>c.status==='hot').length;
-}
-
-let userLat = null, userLng = null;
-
-function updateDistanceFilter(val) {
-  const idx=parseInt(val);
-  maxDistanceKm=DIST_VALUES[idx];
-  document.getElementById('dist-label').textContent=DIST_LABELS[idx];
-  if (maxDistanceKm < 99999 && !userLat) {
-    // Get real location first
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(pos => {
-        userLat = pos.coords.latitude;
-        userLng = pos.coords.longitude;
-        renderMarkers();
-      }, () => {
-        // fallback to profile location
-        userLat = myProfile?.lat || 32.08;
-        userLng = myProfile?.lng || 34.78;
-        renderMarkers();
-      }, {timeout:5000});
-    } else {
-      userLat = myProfile?.lat || 32.08;
-      userLng = myProfile?.lng || 34.78;
-      renderMarkers();
-    }
-  } else {
-    renderMarkers();
-  }
 }
 
 // ═══════════════════════════════════
@@ -1009,7 +972,7 @@ async function sendMsg() {
 // CHATS LIST
 // ═══════════════════════════════════
 async function loadChats() {
-  const {data:sent} = await sb.from('messages').select('room_id,text,created_at,sender_name,sender_id').order('created_at',{ascending:false});
+  const {data:sent} = await sb.from('messages').select('room_id,text,created_at,sender_name,sender_id').ilike('room_id','%'+currentUser.id+'%').order('created_at',{ascending:false});
   const list=document.getElementById('chats-list');
   if (!sent?.length) {
     list.innerHTML='<div style="text-align:center;padding:60px 20px;color:var(--text3)"><div style="font-size:48px;margin-bottom:16px">💬</div><div style="font-size:16px;font-weight:700;margin-bottom:8px">אין צ\u0027אטים עדיין</div><div style="font-size:13px">שלחו Double Shake לזוג כדי להתחיל שיחה</div></div>';
@@ -1774,7 +1737,7 @@ async function loadPlaces() {
     ].join('');
 
     const query = `[out:json][timeout:25];(${parts});out 300;`;
-    const url = `https://lz4.overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
+    const url = `https://overpass.kumi.systems/api/interpreter?data=${encodeURIComponent(query)}`;
 
     const res = await fetch(url);
     if (!res.ok) throw new Error('HTTP ' + res.status);
