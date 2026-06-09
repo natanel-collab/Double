@@ -607,17 +607,16 @@
 
     <div class="filter-bar" id="filter-bar"></div>
 
-    <div id="map-container">
+    <div id="map-container" style="flex:1;position:relative;overflow:hidden">
       <div id="map"></div>
       <div class="map-fab">
         <button class="fab-btn" id="event-fab" onclick="openEventModal()" style="background:linear-gradient(135deg,#1dd1a1,#00b894);box-shadow:0 4px 24px rgba(29,209,161,0.35)">➕ אירוע</button>
         <button class="fab-btn roulette" onclick="spinRoulette()">🎰 רולטה</button>
       </div>
-    </div>
-
-    <!-- List View Overlay -->
-    <div id="list-overlay" style="display:none;position:absolute;inset:0;background:var(--bg2);overflow-y:auto;z-index:300;padding:12px 16px calc(140px + var(--safe-bot))">
-      <div id="list-couples"></div>
+      <!-- List View Overlay -->
+      <div id="list-overlay" style="display:none;position:absolute;inset:0;background:var(--bg2);overflow-y:auto;z-index:300;padding:12px 16px calc(140px + var(--safe-bot))">
+        <div id="list-couples"></div>
+      </div>
     </div>
   </div>
 
@@ -644,10 +643,26 @@
 
   <!-- ══ PROFILE ══ -->
   <div id="screen-profile" class="screen" style="overflow-y:auto; padding: calc(var(--safe-top) + 20px) 20px calc(var(--safe-bot) + 80px);">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
       <button class="icon-btn" onclick="navTo('main')" style="flex-shrink:0">←</button>
       <div style="font-family:'Syne';font-size:22px;font-weight:800">הפרופיל שלנו 👫</div>
     </div>
+
+    <!-- Active event card -->
+    <div id="active-event-card" style="display:none;background:rgba(255,75,110,0.12);border:1px solid rgba(255,75,110,0.35);border-radius:16px;padding:16px;margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:8px;height:8px;border-radius:50%;background:var(--pink);animation:blink 1.4s infinite"></div>
+          <span style="font-weight:700;font-size:14px;color:var(--pink)">אירוע פעיל עכשיו</span>
+        </div>
+        <button onclick="cancelActiveEvent()" style="background:rgba(255,75,110,0.2);border:1px solid rgba(255,75,110,0.4);color:var(--pink);padding:5px 12px;border-radius:100px;cursor:pointer;font-size:12px;font-family:'Heebo';font-weight:700">ביטול אירוע</button>
+      </div>
+      <div id="active-event-text" style="font-size:14px;color:var(--text2);line-height:1.4"></div>
+    </div>
+
+    <!-- Add new event button -->
+    <button id="add-event-profile-btn" onclick="openEventModal()" style="width:100%;padding:13px;border:2px dashed rgba(29,209,161,0.4);border-radius:14px;background:rgba(29,209,161,0.06);color:#1dd1a1;font-family:'Heebo';font-weight:700;font-size:15px;cursor:pointer;margin-bottom:20px;transition:all 0.2s">➕ הוסף אירוע חדש למפה</button>
+
     <div style="background:linear-gradient(135deg,rgba(255,75,110,0.12),rgba(255,159,67,0.08));border:1px solid rgba(255,75,110,0.2);border-radius:20px;padding:24px;text-align:center;margin-bottom:20px">
       <!-- Photo upload -->
       <div style="position:relative;display:inline-block;margin-bottom:14px">
@@ -1112,9 +1127,12 @@ function openCouplePanel(couple) {
   document.getElementById('panel-title').textContent = `${couple.name} & ${couple.partner_name || '?'}`;
 
   const body = document.getElementById('panel-body');
+  const photoHtml = couple.photo_url
+    ? `<img src="${couple.photo_url}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid ${meta.color};box-shadow:0 0 20px ${meta.color}44;margin-bottom:12px" />`
+    : `<div style="width:80px;height:80px;border-radius:50%;background:rgba(255,75,110,0.15);border:2px solid ${meta.color};display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 12px">${vibeEmoji((couple.vibes||[])[0])}</div>`;
   body.innerHTML = `
     <div class="couple-hero">
-      <div class="couple-emoji">${(couple.vibes||[])[0] ? VIBES_LIST.find(v=>v.id===couple.vibes[0])?.label.split(' ')[0] || '💞' : '💞'}</div>
+      ${photoHtml}
       <div class="couple-name">${couple.name} & ${couple.partner_name || '?'}</div>
       <div class="couple-city">${couple.city || 'ישראל'}</div>
       <div class="status-badge" style="background:${meta.color}22;color:${meta.color}">
@@ -1285,6 +1303,23 @@ async function saveMyStatus() {
   showToast('סטטוס עודכן! 🚀');
   showScreen('main');
   navTo('main');
+}
+
+
+async function cancelActiveEvent() {
+  await sb.from('profiles').update({ status: 'cold', status_text: '' }).eq('id', currentUser.id);
+  myProfile = { ...myProfile, status: 'cold', status_text: '' };
+  // update FAB and map
+  const fab = document.getElementById('event-fab');
+  if (fab) { fab.textContent = '➕ אירוע'; fab.style.background = 'linear-gradient(135deg,#1dd1a1,#00b894)'; fab.onclick = openEventModal; }
+  const card = document.getElementById('active-event-card');
+  if (card) card.style.display = 'none';
+  const addBtn = document.getElementById('add-event-profile-btn');
+  if (addBtn) addBtn.style.display = 'block';
+  // remove self from map
+  allCouples = allCouples.filter(c => c.id !== currentUser.id);
+  renderMarkers(); updateLiveCount();
+  showToast('האירוע בוטל 🔕');
 }
 
 async function clearMyStatus() {
@@ -1458,7 +1493,10 @@ function renderListView() {
     return `
       <div onclick="openCouplePanel(${JSON.stringify(c).replace(/"/g,'&quot;')});toggleListView()"
         style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:16px;margin-bottom:10px;cursor:pointer;display:flex;gap:12px;align-items:flex-start">
-        <div style="width:52px;height:52px;border-radius:12px;background:rgba(255,75,110,0.12);border:1px solid ${meta.color}44;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">${emoji}</div>
+        ${c.photo_url
+          ? `<img src="${c.photo_url}" style="width:52px;height:52px;border-radius:12px;object-fit:cover;border:1px solid ${meta.color}44;flex-shrink:0" />`
+          : `<div style="width:52px;height:52px;border-radius:12px;background:rgba(255,75,110,0.12);border:1px solid ${meta.color}44;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">${emoji}</div>`
+        }
         <div style="flex:1;min-width:0">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
             <span style="font-family:'Syne';font-weight:700;font-size:16px">${c.name} & ${c.partner_name||'?'}</span>
@@ -1670,6 +1708,12 @@ async function saveEvent() {
   myProfile = { ...myProfile, status: 'hot', status_text: statusText, lat, lng };
   closeEventModal();
   showToast('האירוע פורסם על המפה! 🗺️');
+  // update profile active event card if visible
+  const card = document.getElementById('active-event-card');
+  const txt  = document.getElementById('active-event-text');
+  const addBtn = document.getElementById('add-event-profile-btn');
+  if (card) { card.style.display = 'block'; txt.textContent = '"' + statusText + '"'; }
+  if (addBtn) addBtn.style.display = 'none';
   // Add self to map
   const selfExists = allCouples.findIndex(c => c.id === currentUser.id);
   if (selfExists > -1) allCouples[selfExists] = myProfile;
