@@ -1039,7 +1039,8 @@ function renderMarkers() {
   Object.values(markers).forEach(m => m.remove());
   markers = {};
 
-  const allWithSelf = myProfile?.lat ? [...allCouples.filter(c=>c.id!==currentUser.id), myProfile] : allCouples;
+  const selfActive = myProfile?.lat && (myProfile?.status === 'hot' || myProfile?.status === 'warm');
+  const allWithSelf = selfActive ? [...allCouples.filter(c=>c.id!==currentUser.id), myProfile] : allCouples.filter(c=>c.id!==currentUser.id);
   const filtered = allWithSelf.filter(c => {
     if (selectedVibeFilter === 'all') return true;
     if (selectedVibeFilter === 'hot') return c.status === 'hot';
@@ -1307,25 +1308,25 @@ async function saveMyStatus() {
 
 
 async function cancelActiveEvent() {
-  await sb.from('profiles').update({ status: 'cold', status_text: '' }).eq('id', currentUser.id);
+  const { error } = await sb.from('profiles').update({ status: 'cold', status_text: '' }).eq('id', currentUser.id);
+  if (error) { showToast('שגיאה: ' + error.message); return; }
   myProfile = { ...myProfile, status: 'cold', status_text: '' };
-  // update FAB and map
+  // update FAB
   const fab = document.getElementById('event-fab');
   if (fab) { fab.textContent = '➕ אירוע'; fab.style.background = 'linear-gradient(135deg,#1dd1a1,#00b894)'; fab.onclick = openEventModal; }
+  // update profile screen
   const card = document.getElementById('active-event-card');
   if (card) card.style.display = 'none';
   const addBtn = document.getElementById('add-event-profile-btn');
   if (addBtn) addBtn.style.display = 'block';
-  // remove self from map
-  allCouples = allCouples.filter(c => c.id !== currentUser.id);
-  renderMarkers(); updateLiveCount();
+  // redraw map - selfActive=false now so self won't appear
+  renderMarkers();
+  updateLiveCount();
   showToast('האירוע בוטל 🔕');
 }
 
 async function clearMyStatus() {
-  await sb.from('profiles').update({ status: 'cold', status_text: '' }).eq('id', currentUser.id);
-  myProfile = { ...myProfile, status: 'cold', status_text: '' };
-  showToast('סטטוס כובה');
+  await cancelActiveEvent();
   showScreen('main');
   navTo('main');
 }
@@ -1474,7 +1475,8 @@ function toggleListView() {
 
 function renderListView() {
   const container = document.getElementById('list-couples');
-  const allWithSelf = myProfile?.lat ? [...allCouples.filter(c=>c.id!==currentUser.id), myProfile] : allCouples;
+  const selfActive = myProfile?.lat && (myProfile?.status === 'hot' || myProfile?.status === 'warm');
+  const allWithSelf = selfActive ? [...allCouples.filter(c=>c.id!==currentUser.id), myProfile] : allCouples.filter(c=>c.id!==currentUser.id);
   const filtered = allWithSelf.filter(c =>
     selectedVibeFilter === 'all' ? true :
     selectedVibeFilter === 'hot' ? c.status === 'hot' :
@@ -1571,7 +1573,8 @@ let profileSelectedVibes = [];
 
 function openProfile() {
   showScreen('profile');
-  navTo('profile');
+  document.getElementById('bottom-nav').style.display = 'flex';
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.nav === 'profile'));
   profileSelectedVibes = [...(myProfile?.vibes || [])];
 
   document.getElementById('profile-name').value        = myProfile?.name || '';
@@ -1697,15 +1700,18 @@ async function saveEvent() {
   }
 
   const statusText = document.getElementById('event-desc').value.trim() || title;
+  const newVibes = eventSelectedVibe 
+    ? [eventSelectedVibe, ...(myProfile?.vibes||[]).filter(v=>v!==eventSelectedVibe)]
+    : (myProfile?.vibes || []);
   const { error } = await sb.from('profiles').update({
     status: 'hot',
     status_text: statusText,
-    vibes: eventSelectedVibe ? [eventSelectedVibe, ...(myProfile?.vibes||[]).filter(v=>v!==eventSelectedVibe)] : myProfile?.vibes,
+    vibes: newVibes,
     lat, lng,
   }).eq('id', currentUser.id);
 
   if (error) { showToast('שגיאה: ' + error.message); console.error(error); return; }
-  myProfile = { ...myProfile, status: 'hot', status_text: statusText, lat, lng };
+  myProfile = { ...myProfile, status: 'hot', status_text: statusText, lat, lng, vibes: newVibes };
   closeEventModal();
   showToast('האירוע פורסם על המפה! 🗺️');
   // update profile active event card if visible
