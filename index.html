@@ -1410,42 +1410,59 @@ function clearPlaceMarkers() {
 
 async function loadPlaces() {
   showToast('טוען אטרקציות... 📍');
-  const bounds = mapInstance.getBounds();
-  const bbox = `${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()}`;
+  const center = mapInstance.getCenter();
+  const lat = center.lat.toFixed(4);
+  const lng = center.lng.toFixed(4);
 
-  // Build Overpass query for all types
-  const queries = Object.entries(PLACE_TYPES).map(([key, t]) =>
-    `node[${t.query}](${bbox});`
-  ).join('');
-
-  const query = `[out:json][timeout:20];(${queries});out body 150;`;
+  const typeMap = {
+    restaurant: { amenity: 'restaurant', emoji: '🍽️', color: '#ff9f43' },
+    bar:        { amenity: 'bar',        emoji: '🍺', color: '#ff4b6e' },
+    cafe:       { amenity: 'cafe',       emoji: '☕', color: '#a29bfe' },
+    park:       { leisure: 'park',       emoji: '🌳', color: '#1dd1a1' },
+    beach:      { natural: 'beach',      emoji: '🏖️', color: '#54a0ff' },
+    theatre:    { amenity: 'theatre',    emoji: '🎭', color: '#fd79a8' },
+  };
 
   try {
-    const res = await fetch('https://overpass-api.de/api/interpreter?' + new URLSearchParams({data: query}), {
-      method: 'GET',
-    });
+    // Use Overpass with a different mirror
+    const bounds = mapInstance.getBounds();
+    const b = `${bounds.getSouth().toFixed(3)},${bounds.getWest().toFixed(3)},${bounds.getNorth().toFixed(3)},${bounds.getEast().toFixed(3)}`;
+
+    const parts = [
+      `node["amenity"="restaurant"](${b});`,
+      `node["amenity"="bar"](${b});`,
+      `node["amenity"="cafe"](${b});`,
+      `node["leisure"="park"](${b});`,
+      `node["natural"="beach"](${b});`,
+      `node["amenity"="theatre"](${b});`,
+      `node["amenity"="cinema"](${b});`,
+    ].join('');
+
+    const query = `[out:json][timeout:25];(${parts});out 300;`;
+    const url = `https://lz4.overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
+
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
 
-    // Categorize results
-    placesData = {};
-    Object.keys(PLACE_TYPES).forEach(k => placesData[k] = []);
-
+    placesData = { restaurant:[], bar:[], cafe:[], park:[], beach:[], theatre:[] };
     data.elements.forEach(el => {
-      const tags = el.tags || {};
-      if (tags.amenity === 'restaurant') placesData.restaurant.push(el);
-      else if (tags.amenity === 'bar') placesData.bar.push(el);
-      else if (tags.amenity === 'cafe') placesData.cafe.push(el);
-      else if (tags.leisure === 'park') placesData.park.push(el);
-      else if (tags.natural === 'beach') placesData.beach.push(el);
-      else if (tags.amenity === 'theatre' || tags.amenity === 'cinema') placesData.theatre.push(el);
+      const t = el.tags || {};
+      if (t.amenity === 'restaurant') placesData.restaurant.push(el);
+      else if (t.amenity === 'bar') placesData.bar.push(el);
+      else if (t.amenity === 'cafe') placesData.cafe.push(el);
+      else if (t.leisure === 'park') placesData.park.push(el);
+      else if (t.natural === 'beach') placesData.beach.push(el);
+      else if (t.amenity === 'theatre' || t.amenity === 'cinema') placesData.theatre.push(el);
     });
 
     placesLoaded = true;
     renderPlaceMarkers(activePlaceFilter);
-    showToast(`נטענו ${data.elements.length} אטרקציות! 🎉`);
-  } catch (e) {
-    showToast('שגיאה בטעינת אטרקציות');
-    console.error(e);
+    const total = data.elements.length;
+    showToast(total > 0 ? `נטענו ${total} אטרקציות! 🎉` : 'זום פנימה לראות אטרקציות');
+  } catch(e) {
+    console.error('Places error:', e);
+    showToast('לא ניתן לטעון אטרקציות כרגע');
   }
 }
 
