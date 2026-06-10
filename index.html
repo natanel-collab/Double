@@ -1158,6 +1158,7 @@ function renderFeed() {
   if (!list) return;
   const couples=allCouples.filter(c=>{
     if (c.id===currentUser.id) return false;
+    if (c.status==='cold') return false;
     if (feedVibeFilter==='hot') return c.status==='hot';
     if (feedVibeFilter!=='all') return (c.vibes||[]).includes(feedVibeFilter);
     return true;
