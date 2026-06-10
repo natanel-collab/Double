@@ -701,6 +701,7 @@ async function loadMyProfile() {
     showScreen('main'); initNav(); updateProfileNavIcon();
     await initMap(); subscribeRealtime(); subscribeNewMessages(); subscribeShakes();
     await checkInviteCode();
+    document.getElementById('bottom-nav').style.display='flex';
   }
 }
 
@@ -774,7 +775,7 @@ async function initMap() {
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:18}).addTo(mapInstance);
   L.control.zoom({position:'bottomright'}).addTo(mapInstance);
   mapInstance.on('moveend', onMapMoveEnd);
-  startNearbyCheck();
+  try { startNearbyCheck(); } catch(e) { console.log('nearby error:', e); }
   buildFilterBar();
   await loadCouples();
 }
@@ -1485,7 +1486,7 @@ function showScreen(name) {
   document.getElementById('bottom-nav').style.display=showNav?'flex':'none';
 }
 
-function initNav() { document.getElementById('bottom-nav').style.display='flex'; }
+function initNav() { const nav=document.getElementById('bottom-nav'); if(nav){nav.style.display='flex';nav.style.visibility='visible';nav.style.opacity='1';} }
 
 function navTo(name) {
   if (name==='profile') {openProfile();return;}
