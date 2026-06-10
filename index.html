@@ -965,8 +965,9 @@ function subscribeRealtime() {
       const updated=payload.new;
       if (!updated||updated.id===currentUser.id) return;
       const idx=allCouples.findIndex(c=>c.id===updated.id);
-      if (payload.eventType==='DELETE') { if(idx>-1) allCouples.splice(idx,1); }
-      else if (idx>-1) allCouples[idx]=updated;
+      if (payload.eventType==='DELETE'||(updated.status==='cold'||!updated.status)) {
+        if(idx>-1) allCouples.splice(idx,1);
+      } else if (idx>-1) allCouples[idx]=updated;
       else allCouples.push(updated);
       renderMarkers(); updateLiveCount();
       if (payload.eventType==='UPDATE'&&updated.status==='hot') showToast(`${updated.name} מחפשים דאבל! 🔥`);
