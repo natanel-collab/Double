@@ -871,9 +871,10 @@ function renderMarkers() {
       iconSize:[46,46],iconAnchor:[23,23],
     });
     // fix: use data attribute for emoji
+    const verifiedDot = couple.partner_confirmed ? '<div style="position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;border-radius:50%;background:#1dd1a1;border:2px solid white;display:flex;align-items:center;justify-content:center;font-size:8px;color:white">✓</div>' : '';
     const markerEl = L.divIcon({
       className:'',
-      html:`<div class="double-marker ${status}" style="font-size:20px">${status==='hot'?'<div class="pulse-ring"></div>':''}<span>${emoji}</span></div>`,
+      html:`<div class="double-marker ${status}" style="font-size:20px;position:relative">${status==='hot'?'<div class="pulse-ring"></div>':''}<span>${emoji}</span>${verifiedDot}</div>`,
       iconSize:[46,46],iconAnchor:[23,23],
     });
     const m=L.marker([couple.lat,couple.lng],{icon:markerEl}).addTo(mapInstance).on('click',()=>openCouplePanel(couple));
@@ -964,9 +965,12 @@ function openCouplePanel(couple) {
       ${photoHtml}
       <div class="couple-name">${couple.name} <span style="font-family:'Heebo',sans-serif;font-weight:400;opacity:0.7">&</span> ${couple.partner_name||'?'}</div>
       <div class="couple-city">${couple.city||'ישראל'}</div>
-      <div class="status-badge" style="background:${meta.color}22;color:${meta.color}">
-        <div class="status-dot" style="background:${meta.color}"></div>
-        ${meta.label}
+      <div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:10px">
+        <div class="status-badge" style="background:${meta.color}22;color:${meta.color}">
+          <div class="status-dot" style="background:${meta.color}"></div>
+          ${meta.label}
+        </div>
+        ${couple.partner_confirmed?`<div style="display:inline-flex;align-items:center;gap:4px;background:rgba(29,209,161,0.12);border:1px solid rgba(29,209,161,0.3);color:#1dd1a1;padding:4px 10px;border-radius:100px;font-size:11px;font-weight:700">✅ מאומת</div>`:''}
       </div>
     </div>
     ${couple.lat && couple.lng ? `<div style="margin-bottom:12px"><button onclick="navigateToCouple(${couple.lat},${couple.lng})" style="width:100%;padding:11px;border:1px solid rgba(84,160,255,0.3);border-radius:12px;background:rgba(84,160,255,0.08);color:#54a0ff;font-family:'Heebo';font-weight:600;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">🗺️ נווט למיקום הדייט</button></div>` : ''}
@@ -1434,7 +1438,7 @@ function openProfile() {
   document.getElementById('profile-couple-city').textContent=myProfile?.city||'';
   document.getElementById('profile-invite-link').value=window.location.origin+'?invite='+(myProfile?.invite_code||currentUser.id);
   const partnerStatus=document.getElementById('partner-link-status');
-  if (partnerStatus) partnerStatus.innerHTML=myProfile?.partner_id&&myProfile?.partner_confirmed?'<span style="color:var(--green)">✅ זוג מחובר</span>':'<span style="color:var(--orange)">⏳ ממתין לחיבור בן/בת הזוג</span>';
+  if (partnerStatus) partnerStatus.innerHTML=myProfile?.partner_id&&myProfile?.partner_confirmed?'<span style="display:inline-flex;align-items:center;gap:6px;background:rgba(29,209,161,0.12);border:1px solid rgba(29,209,161,0.3);color:#1dd1a1;padding:6px 14px;border-radius:100px;font-size:13px;font-weight:700">✅ זוג מאומת</span>':'<span style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,159,67,0.12);border:1px solid rgba(255,159,67,0.3);color:#ff9f43;padding:6px 14px;border-radius:100px;font-size:13px;font-weight:700">⏳ ממתין לחיבור בן/בת הזוג</span>';
   // event card
   const card=document.getElementById('active-event-card');
   const txt=document.getElementById('active-event-text');
