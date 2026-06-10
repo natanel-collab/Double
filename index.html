@@ -371,7 +371,11 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
 <!-- FEED -->
 <div id="screen-feed" class="screen scroll-screen" style="padding:calc(var(--safe-top) + 20px) 20px calc(var(--safe-bot) + 80px)">
   <div style="font-family:'Syne';font-size:22px;font-weight:800;margin-bottom:6px">✨ פיד</div>
-  <div style="color:var(--text2);font-size:13px;margin-bottom:16px">מה הזוגות עושים עכשיו</div>
+  <div style="color:var(--text2);font-size:13px;margin-bottom:12px">מה הזוגות עושים עכשיו</div>
+  <div style="display:flex;align-items:center;gap:10px;background:var(--bg3);border:1px solid var(--border);border-radius:100px;padding:10px 16px;margin-bottom:14px">
+    <span style="font-size:15px">🔍</span>
+    <input id="feed-search" type="text" placeholder="חפשו לפי שם או עיר..." style="flex:1;background:none;border:none;outline:none;color:var(--text);font-family:'Heebo';font-size:14px;direction:rtl" oninput="filterFeedSearch(this.value)"/>
+  </div>
   <div style="display:flex;gap:7px;overflow-x:auto;margin-bottom:16px;padding-bottom:4px;scrollbar-width:none">
     <button class="filter-chip active" data-feed-vibe="all" onclick="filterFeed('all')">✨ הכל</button>
     <button class="filter-chip" data-feed-vibe="hot" onclick="filterFeed('hot')">🔥 חמים</button>
@@ -1140,7 +1144,13 @@ async function loadChats() {
       :`<div style="width:54px;height:54px;border-radius:50%;background:rgba(255,75,110,0.15);border:2px solid rgba(255,75,110,0.3);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${vibeEmoji((profile.vibes||[])[0])}</div>`;
     const time=new Date(lastMsg.created_at).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
     const isMine=lastMsg.sender_id===currentUser.id;
-    return `<div onclick="openChatById('${profile.id}')" style="display:flex;gap:12px;align-items:center;padding:14px 16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;margin-bottom:10px;cursor:pointer" onmouseenter="this.style.background='rgba(255,75,110,0.08)'" onmouseleave="this.style.background='rgba(255,255,255,0.04)'">${photoEl}<div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><span style="font-family:'Syne';font-weight:700;font-size:15px">${profile.name} & ${profile.partner_name||'?'}</span><span style="font-size:11px;color:var(--text3)">${time}</span></div><div style="font-size:13px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${isMine?'אתם: ':''}${lastMsg.text}</div></div><div style="font-size:18px;flex-shrink:0">›</div></div>`;
+    return `<div style="position:relative;overflow:hidden;border-radius:16px;margin-bottom:10px">
+      <div style="position:absolute;left:0;top:0;bottom:0;width:72px;background:#ff4b6e;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;border-radius:16px 0 0 16px" onclick="deleteChat('${profile.id}','${roomId}')">
+        <div style="font-size:18px">🗑️</div>
+        <div style="font-size:10px;color:white;font-weight:700">מחק</div>
+      </div>
+      <div class="chat-row-inner" onclick="openChatById('${profile.id}')" style="display:flex;gap:12px;align-items:center;padding:14px 16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;cursor:pointer;transition:transform 0.2s ease;position:relative" ontouchstart="chatSwipeStart(event,this)" ontouchmove="chatSwipeMove(event,this)" ontouchend="chatSwipeEnd(event,this)">${photoEl}<div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><span style="font-family:'Syne';font-weight:700;font-size:15px">${profile.name} & ${profile.partner_name||'?'}</span><span style="font-size:11px;color:var(--text3)">${time}</span></div><div style="font-size:13px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${isMine?'אתם: ':''}${lastMsg.text}</div></div><div style="font-size:18px;flex-shrink:0">›</div></div>
+    </div>`;
   }).join('');
 }
 
@@ -1159,14 +1169,23 @@ function filterFeed(vibe) {
   renderFeed();
 }
 
-function renderFeed() {
+function filterFeedSearch(q) {
+  renderFeed(q);
+}
+
+function renderFeed(searchQ) {
   const list=document.getElementById('feed-list');
   if (!list) return;
+  const q = (searchQ || document.getElementById('feed-search')?.value || '').trim().toLowerCase();
   const couples=allCouples.filter(c=>{
     if (c.id===currentUser.id) return false;
     if (c.status==='cold') return false;
     if (feedVibeFilter==='hot') return c.status==='hot';
     if (feedVibeFilter!=='all') return (c.vibes||[]).includes(feedVibeFilter);
+    if (q) {
+      const name = (c.name+' '+(c.partner_name||'')+' '+(c.city||'')).toLowerCase();
+      if (!name.includes(q)) return false;
+    }
     return true;
   });
   couples.sort((a,b)=>({hot:0,warm:1,cold:2}[a.status||'cold']||0)-({hot:0,warm:1,cold:2}[b.status||'cold']||0));
@@ -2050,6 +2069,37 @@ function closeFullProfile() {
   showScreen('main');
   document.getElementById('bottom-nav').style.display = 'flex';
   document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.nav === 'main'));
+}
+
+
+// ═══ CHAT SWIPE TO DELETE ═══
+let _chatSwipeX = 0;
+function chatSwipeStart(e, el) { _chatSwipeX = e.touches[0].clientX; }
+function chatSwipeMove(e, el) {
+  const diff = e.touches[0].clientX - _chatSwipeX;
+  if (diff < 0) el.style.transform = `translateX(${Math.max(diff,-72)}px)`;
+  else if (diff > 0 && el.style.transform) el.style.transform = `translateX(${Math.min(diff,0)}px)`;
+}
+function chatSwipeEnd(e, el) {
+  const diff = e.changedTouches[0].clientX - _chatSwipeX;
+  if (diff < -40) el.style.transform = 'translateX(-72px)';
+  else el.style.transform = 'translateX(0)';
+}
+
+async function deleteChat(profileId, roomId) {
+  if (!confirm('למחוק את השיחה עם זוג זה?')) return;
+  await sb.from('messages').delete().eq('room_id', roomId);
+  showToast('השיחה נמחקה 🗑️');
+  loadChats();
+}
+
+
+async function deleteMsg(msgId) {
+  if (!confirm('למחוק הודעה זו?')) return;
+  await sb.from('messages').delete().eq('id', msgId).eq('sender_id', currentUser.id);
+  showToast('הודעה נמחקה');
+  const {data} = await sb.from('messages').select('*').eq('room_id',currentRoomId).order('created_at',{ascending:true}).limit(100);
+  renderRealChat(data||[], null);
 }
 
 // ═══════════════════════════════════
