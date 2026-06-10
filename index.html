@@ -918,13 +918,14 @@ function openCouplePanel(couple) {
   document.getElementById('panel-body').innerHTML=`
     <div class="couple-hero">
       ${photoHtml}
-      <div class="couple-name">${couple.name} & ${couple.partner_name||'?'}</div>
+      <div class="couple-name">${couple.name} <span style="font-family:'Heebo',sans-serif;font-weight:400;opacity:0.7">&</span> ${couple.partner_name||'?'}</div>
       <div class="couple-city">${couple.city||'ישראל'}</div>
       <div class="status-badge" style="background:${meta.color}22;color:${meta.color}">
         <div class="status-dot" style="background:${meta.color}"></div>
         ${meta.label}
       </div>
     </div>
+    ${couple.lat && couple.lng ? `<div style="margin-bottom:12px"><button onclick="navigateToCouple(${couple.lat},${couple.lng})" style="width:100%;padding:11px;border:1px solid rgba(84,160,255,0.3);border-radius:12px;background:rgba(84,160,255,0.08);color:#54a0ff;font-family:'Heebo';font-weight:600;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">🗺️ נווט למיקום הדייט</button></div>` : ''}
     ${couple.status_text?`<div class="info-card"><div class="info-card-label">הם מחפשים</div><div style="font-size:14px;color:var(--text2)">"${couple.status_text}"</div></div>`:''}
     <div class="people-row">
       <div class="person-card"><div class="person-name">${couple.name}</div><div class="person-role">${couple.role_him||''}</div></div>
@@ -1705,6 +1706,13 @@ async function loadCoupleReviews(coupleId) {
     <div class="info-card-label">⭐ המלצות</div>
     ${data.map(r => `<div style="font-size:13px;color:var(--text2);padding:8px 0;border-bottom:1px solid var(--border)">"${r.text}" — ${r.from_profile?.name || '?'}</div>`).join('')}
   </div>`;
+}
+
+
+// ═══ NAVIGATION ═══
+function navigateToCouple(lat, lng) {
+  const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
+  window.open(url, '_blank');
 }
 
 // ═══════════════════════════════════
