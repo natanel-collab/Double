@@ -875,6 +875,7 @@ function renderMarkers() {
   const selfActive=myProfile?.lat&&(myProfile?.status==='hot'||myProfile?.status==='warm');
   const all = selfActive ? [...allCouples.filter(c=>c.id!==currentUser.id),myProfile] : allCouples.filter(c=>c.id!==currentUser.id);
   const filtered = all.filter(c=>{
+    if (!c.status||c.status==='cold') return false;
     if (selectedVibeFilter==='hot'&&c.status!=='hot') return false;
     if (selectedVibeFilter!=='all'&&selectedVibeFilter!=='hot'&&!(c.vibes||[]).includes(selectedVibeFilter)) return false;
     if (maxDistanceKm<99999&&c.lat) {
