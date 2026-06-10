@@ -540,14 +540,13 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
     <div style="font-family:'Syne';font-weight:700;font-size:16px" id="panel-title">פרופיל זוג</div>
   </div>
   <div class="panel-body" id="panel-body"></div>
-  <div class="panel-footer">
+  <div class="panel-footer" id="couple-panel-footer">
     <button class="shake-btn" id="shake-btn" onclick="sendShake()">💞 Double Shake!</button>
     <div style="display:flex;gap:8px;margin-top:8px">
       <button class="btn-secondary" style="flex:1" onclick="openChat()">💬 צ&apos;אט</button>
       <button class="btn-secondary" style="flex:1" onclick="openReviewModal()">⭐ המלצה</button>
-      <button class="btn-secondary" style="flex:1;color:#ff8fa8;border-color:rgba(255,75,110,0.25)" onclick="openFullProfile()">👤 פרופיל</button>
     </div>
-    <div style="text-align:center;color:var(--text3);font-size:12px;margin-top:8px">נפתח צ&apos;אט קבוצתי של 4 אנשים</div>
+    <button onclick="openFullProfile()" style="width:100%;padding:10px;border:1px solid rgba(255,75,110,0.2);border-radius:12px;background:rgba(255,75,110,0.06);color:#ff8fa8;font-family:'Heebo';font-weight:600;font-size:13px;cursor:pointer;margin-top:8px">👤 פרופיל מלא</button>
   </div>
 </div>
 
@@ -1043,8 +1042,7 @@ function openCouplePanel(couple) {
 
   // Hide action buttons if viewing own profile
   const isOwn = couple.id === currentUser.id;
-  const shakeBtn = document.getElementById('shake-btn');
-  const panelFooter = document.querySelector('.panel-footer');
+  const panelFooter = document.getElementById('couple-panel-footer');
   if (panelFooter) panelFooter.style.display = isOwn ? 'none' : 'flex';
 
   document.getElementById('panel-overlay').classList.add('open');
