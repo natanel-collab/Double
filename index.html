@@ -428,6 +428,28 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
   <div style="margin-bottom:14px"><label class="field-label">עיסוק שלך</label><input class="field-input" id="profile-role-him" placeholder="מפתח, מורה..."/></div>
   <div style="margin-bottom:14px"><label class="field-label">עיסוק בן/בת הזוג</label><input class="field-input" id="profile-role-her" placeholder="רופאה, סטודנטית..."/></div>
   <div style="margin-bottom:14px"><label class="field-label">עיר מגורים</label><input class="field-input" id="profile-city-input" placeholder="תל אביב, חיפה..."/></div>
+  <div style="display:flex;gap:10px;margin-bottom:14px">
+    <div style="flex:1"><label class="field-label">הגיל שלך</label><input class="field-input" type="number" id="profile-age-him" placeholder="28"/></div>
+    <div style="flex:1"><label class="field-label">גיל בן/בת הזוג</label><input class="field-input" type="number" id="profile-age-her" placeholder="26"/></div>
+  </div>
+  <div style="margin-bottom:14px"><label class="field-label">כמה זמן ביחד?</label><input class="field-input" id="profile-together" placeholder='לדוגמה: "שנה וחצי", "3 שנים"'/></div>
+  <div style="margin-bottom:16px">
+    <label class="field-label" style="display:block;margin-bottom:8px">ילדים?</label>
+    <div style="display:flex;flex-wrap:wrap;gap:8px" id="kids-chips">
+      <div class="vibe-chip" data-kids="יש לנו ילדים" onclick="selectKids(this)">👶 יש לנו ילדים</div>
+      <div class="vibe-chip" data-kids="אין ילדים" onclick="selectKids(this)">🙅 אין ילדים</div>
+      <div class="vibe-chip" data-kids="מעדיפים לא לציין" onclick="selectKids(this)">🤐 לא לציין</div>
+    </div>
+  </div>
+  <div style="margin-bottom:16px">
+    <label class="field-label" style="display:block;margin-bottom:8px">מה אתם מחפשים?</label>
+    <div style="display:flex;flex-wrap:wrap;gap:8px" id="looking-chips">
+      <div class="vibe-chip" data-looking="דייט חד פעמי" onclick="selectLooking(this)">✨ דייט חד פעמי</div>
+      <div class="vibe-chip" data-looking="חברות ארוכת טווח" onclick="selectLooking(this)">💛 חברות ארוכת טווח</div>
+      <div class="vibe-chip" data-looking="שניהם" onclick="selectLooking(this)">🔄 שניהם</div>
+    </div>
+  </div>
+  <div style="margin-bottom:14px"><label class="field-label">תארו את עצמכם במשפט</label><input class="field-input" id="profile-bio" placeholder='זוג שאוהב לגלות מסעדות חדשות...'/></div>
   <div style="margin-bottom:16px">
     <label class="field-label">תחומי עניין משותפים</label>
     <input class="field-input" id="profile-vibes-input" placeholder="בורד גיימס, יין, טיולים..." style="margin-top:6px"/>
@@ -928,10 +950,19 @@ function openCouplePanel(couple) {
     ${couple.lat && couple.lng ? `<div style="margin-bottom:12px"><button onclick="navigateToCouple(${couple.lat},${couple.lng})" style="width:100%;padding:11px;border:1px solid rgba(84,160,255,0.3);border-radius:12px;background:rgba(84,160,255,0.08);color:#54a0ff;font-family:'Heebo';font-weight:600;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">🗺️ נווט למיקום הדייט</button></div>` : ''}
     ${couple.status_text?`<div class="info-card"><div class="info-card-label">הם מחפשים</div><div style="font-size:14px;color:var(--text2)">"${couple.status_text}"</div></div>`:''}
     <div class="people-row">
-      <div class="person-card"><div class="person-name">${couple.name}</div><div class="person-role">${couple.role_him||''}</div></div>
-      <div class="person-card"><div class="person-name">${couple.partner_name||'?'}</div><div class="person-role">${couple.role_her||''}</div></div>
+      <div class="person-card"><div class="person-name">${couple.name}</div><div class="person-role">${[couple.role_him,couple.age_him?'גיל '+couple.age_him:''].filter(Boolean).join(' · ')||''}</div></div>
+      <div class="person-card"><div class="person-name">${couple.partner_name||'?'}</div><div class="person-role">${[couple.role_her,couple.age_her?'גיל '+couple.age_her:''].filter(Boolean).join(' · ')||''}</div></div>
     </div>
     ${couple.vibes?.length?`<div class="info-card"><div class="info-card-label">תחומי עניין</div><div class="tags-row" style="margin-top:8px">${(couple.vibes||[]).map(v=>`<span class="tag">${v}</span>`).join('')}</div></div>`:''}
+    ${(couple.together_since||couple.has_kids||couple.looking_for||couple.bio)?`<div class="info-card">
+      <div class="info-card-label">על הזוג</div>
+      ${couple.bio?`<div style="font-size:14px;color:var(--text2);font-style:italic;padding:8px 10px;background:rgba(255,255,255,0.03);border-radius:8px;border-right:3px solid var(--pink);margin-bottom:8px">"${couple.bio}"</div>`:''}
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
+        ${couple.together_since?`<span style="background:rgba(255,159,67,0.12);color:#ff9f43;padding:4px 12px;border-radius:100px;font-size:12px;border:1px solid rgba(255,159,67,0.25)">❤️ ביחד ${couple.together_since}</span>`:''}
+        ${couple.has_kids?`<span style="background:rgba(29,209,161,0.12);color:#1dd1a1;padding:4px 12px;border-radius:100px;font-size:12px;border:1px solid rgba(29,209,161,0.25)">${couple.has_kids}</span>`:''}
+        ${couple.looking_for?`<span style="background:rgba(84,160,255,0.12);color:#54a0ff;padding:4px 12px;border-radius:100px;font-size:12px;border:1px solid rgba(84,160,255,0.25)">🔍 ${couple.looking_for}</span>`:''}
+      </div>
+    </div>`:''}
   `;
   // Load reviews for this couple
   loadCoupleReviews(couple.id).then(reviewsHtml => {
@@ -1364,6 +1395,18 @@ function openProfile() {
   document.getElementById('profile-role-him').value=myProfile?.role_him||'';
   document.getElementById('profile-role-her').value=myProfile?.role_her||'';
   document.getElementById('profile-city-input').value=myProfile?.city||'';
+  document.getElementById('profile-age-him').value=myProfile?.age_him||'';
+  document.getElementById('profile-age-her').value=myProfile?.age_her||'';
+  document.getElementById('profile-together').value=myProfile?.together_since||'';
+  document.getElementById('profile-bio').value=myProfile?.bio||'';
+  // Set kids chip
+  document.querySelectorAll('#kids-chips .vibe-chip').forEach(c=>{
+    c.classList.toggle('selected', c.dataset.kids===myProfile?.has_kids);
+  });
+  // Set looking chip
+  document.querySelectorAll('#looking-chips .vibe-chip').forEach(c=>{
+    c.classList.toggle('selected', c.dataset.looking===myProfile?.looking_for);
+  });
   document.getElementById('profile-vibes-input').value=(myProfile?.vibes||[]).join(', ');
   document.getElementById('profile-couple-name').textContent=`${myProfile?.name||'?'} & ${myProfile?.partner_name||'?'}`;
   document.getElementById('profile-couple-city').textContent=myProfile?.city||'';
@@ -1409,9 +1452,15 @@ async function saveProfile() {
   if (!name) {err.textContent='נא להזין שם';return;}
   const vibesRaw=document.getElementById('profile-vibes-input').value||'';
   const newVibesArr=vibesRaw.split(',').map(v=>v.trim()).filter(Boolean);
-  const {error} = await sb.from('profiles').update({name,partner_name:partnerName,role_him:roleHim,role_her:roleHer,city,vibes:newVibesArr}).eq('id',currentUser.id);
+  const ageHim=parseInt(document.getElementById('profile-age-him').value)||null;
+  const ageHer=parseInt(document.getElementById('profile-age-her').value)||null;
+  const together=document.getElementById('profile-together').value.trim();
+  const bio=document.getElementById('profile-bio').value.trim();
+  const hasKids=document.querySelector('#kids-chips .vibe-chip.selected')?.dataset.kids||'';
+  const lookingFor=document.querySelector('#looking-chips .vibe-chip.selected')?.dataset.looking||'';
+  const {error} = await sb.from('profiles').update({name,partner_name:partnerName,role_him:roleHim,role_her:roleHer,city,vibes:newVibesArr,age_him:ageHim,age_her:ageHer,together_since:together,bio,has_kids:hasKids,looking_for:lookingFor}).eq('id',currentUser.id);
   if (error) {err.textContent=error.message;return;}
-  myProfile={...myProfile,name,partner_name:partnerName,role_him:roleHim,role_her:roleHer,city,vibes:newVibesArr};
+  myProfile={...myProfile,name,partner_name:partnerName,role_him:roleHim,role_her:roleHer,city,vibes:newVibesArr,age_him:ageHim,age_her:ageHer,together_since:together,bio,has_kids:hasKids,looking_for:lookingFor};
   err.textContent=''; showToast('פרופיל עודכן! ✅'); navTo('main');
 }
 
@@ -1713,6 +1762,17 @@ async function loadCoupleReviews(coupleId) {
 function navigateToCouple(lat, lng) {
   const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
   window.open(url, '_blank');
+}
+
+
+// ═══ EXTENDED PROFILE ═══
+function selectKids(el) {
+  document.querySelectorAll('#kids-chips .vibe-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function selectLooking(el) {
+  document.querySelectorAll('#looking-chips .vibe-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
 }
 
 // ═══════════════════════════════════
