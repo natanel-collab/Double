@@ -206,7 +206,7 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
         <div class="ob-slide" style="width:25%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 28px;text-align:center">
           <div style="font-size:72px;margin-bottom:20px">💞</div>
           <div style="font-family:'Syne';font-size:24px;font-weight:800;margin-bottom:12px">Double Shake</div>
-          <div style="font-size:15px;color:var(--text2);line-height:1.7">שלחו Shake לזוג שאהבתם<br/>ופתחו צ'את קבוצתי</div>
+          <div style="font-size:15px;color:var(--text2);line-height:1.7">שלחו Shake לזוג שאהבתם<br/>ופתחו צ'אט קבוצתי</div>
         </div>
         <div class="ob-slide" style="width:25%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 28px;text-align:center">
           <div style="font-size:72px;margin-bottom:20px">🔥</div>
@@ -518,7 +518,7 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
   <div style="padding:16px 18px;border-top:1px solid var(--border);background:var(--bg);position:sticky;bottom:0;display:flex;flex-direction:column;gap:8px">
     <button class="shake-btn" onclick="sendShake()">💞 Double Shake!</button>
     <div style="display:flex;gap:8px">
-      <button class="btn-secondary" style="flex:1" onclick="openChat()">💬 צ'את</button>
+      <button class="btn-secondary" style="flex:1" onclick="openChat()">💬 צ'אט</button>
       <button class="btn-secondary" style="flex:1;color:#54a0ff;border-color:rgba(84,160,255,0.3)" id="fp-nav-btn">🗺️ נווט</button>
     </div>
   </div>
@@ -650,6 +650,19 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
       <button class="btn-secondary" style="flex:1" onclick="closeCropModal()">ביטול</button>
       <button class="btn-primary" style="flex:2;margin:0" onclick="confirmCrop()">✅ אשרו תמונה</button>
     </div>
+  </div>
+</div>
+
+
+<!-- Shake Approved Modal -->
+<div class="modal-overlay" id="shake-approved-modal">
+  <div class="modal-box" style="text-align:center">
+    <div style="font-size:64px;margin-bottom:16px;animation:ldPulse 1.5s ease-in-out infinite">🎉</div>
+    <div style="font-family:'Syne';font-size:22px;font-weight:800;margin-bottom:8px">Double Shake אושר!</div>
+    <div id="shake-approved-name" style="font-size:15px;color:var(--text2);margin-bottom:6px"></div>
+    <div style="font-size:13px;color:var(--text3);margin-bottom:24px">עכשיו תוכלו לפתוח צ'אט ולתאם דאבל דייט 🥂</div>
+    <button class="btn-primary" onclick="openChatFromShake()">💬 פתחו צ'אט עכשיו</button>
+    <button class="btn-secondary" style="margin-top:8px" onclick="document.getElementById('shake-approved-modal').classList.remove('open')">אחר כך</button>
   </div>
 </div>
 
@@ -1031,7 +1044,8 @@ function openCouplePanel(couple) {
     const btn=document.getElementById('shake-btn');
     if (!btn) return;
     if (data?.status==='pending') {btn.textContent='⏳ Shake נשלח';btn.disabled=true;btn.style.opacity='0.7';}
-    else if (data?.status==='accepted') {btn.textContent='✅ מחוברים!';btn.disabled=true;btn.style.opacity='0.7';}
+    else if (data?.status==='accepted') {btn.textContent='✅ מחוברים! פתחו צ\u0027אט';btn.disabled=false;btn.style.opacity='1';btn.onclick=()=>{closePanel();openChat();};}
+    else if (data?.status==='declined') {btn.textContent='💞 שלחו Shake שוב';btn.disabled=false;btn.style.opacity='1';}
     else {btn.textContent='💞 Double Shake!';btn.disabled=false;btn.style.opacity='1';}
   });
 }
@@ -1216,14 +1230,22 @@ async function loadShakes() {
 async function respondShake(shakeId,status,fromName) {
   await sb.from('shakes').update({status}).eq('id',shakeId);
   if (status==='accepted') {
-    showToast(`💞 קיבלתם את ה-Shake של ${fromName}!`);
     const {data} = await sb.from('shakes').select('from_id').eq('id',shakeId).single();
     if (data) {
       const {data:profile} = await sb.from('profiles').select('*').eq('id',data.from_id).single();
-      if (profile) {selectedCouple=profile;openChat();}
+      if (profile) {
+        selectedCouple = profile;
+        document.getElementById('shake-approved-name').textContent = profile.name + ' & ' + (profile.partner_name||'?') + ' קיבלו את ה-Shake שלכם';
+        document.getElementById('shake-approved-modal').classList.add('open');
+      }
     }
   } else showToast('Shake נדחה');
   loadShakes();
+}
+
+function openChatFromShake() {
+  document.getElementById('shake-approved-modal').classList.remove('open');
+  if (selectedCouple) openChat();
 }
 
 function subscribeShakes() {
