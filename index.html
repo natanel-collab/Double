@@ -164,6 +164,108 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
 .loading-spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--pink);border-radius:50%;animation:spin 0.8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}@keyframes ldFloat{0%,100%{transform:translateY(0) scale(1);opacity:0.3}50%{transform:translateY(-18px) scale(1.2);opacity:0.6}}@keyframes ldEntrance{from{opacity:0;transform:scale(0.75) translateY(16px)}to{opacity:1;transform:scale(1) translateY(0)}}@keyframes ldPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}@keyframes ldProgress{0%{width:0%;margin-right:100%}50%{width:55%;margin-right:0%}100%{width:0%;margin-right:0%}}@keyframes ldBlink{0%,100%{opacity:0.5}50%{opacity:1}}
 @keyframes pulseRing{0%{transform:scale(1);opacity:0.8}100%{transform:scale(2.2);opacity:0}}
+
+/* ═══════════════════════════════════════════
+   ✨ PREMIUM DESIGN SYSTEM v2 — OVERRIDE LAYER
+   Additive layer: restyles, never removes logic
+   ═══════════════════════════════════════════ */
+
+:root{
+  --bg:#0B0B14;
+  --bg2:rgba(20,20,35,0.65);
+  --bg3:#141423;
+  --border:rgba(255,255,255,0.08);
+  --pink:#FF6B6B;
+  --purple:#6C5CE7;
+  --grad:linear-gradient(135deg,#FF6B6B 0%,#6C5CE7 100%);
+}
+
+body{background:#0B0B14}
+
+/* ── Glassmorphism: headers, panels, modals, cards ── */
+.top-bar, .panel, .modal-box, .panel-header,
+#distance-filter, .vibes-bar, .places-bar{
+  backdrop-filter:blur(16px) !important;
+  -webkit-backdrop-filter:blur(16px) !important;
+  background:rgba(20,20,35,0.65) !important;
+  border-color:rgba(255,255,255,0.08) !important;
+}
+.panel{box-shadow:0 12px 40px 0 rgba(0,0,0,0.5) !important}
+.modal-box{box-shadow:0 12px 40px 0 rgba(0,0,0,0.5) !important;border-radius:24px !important}
+
+/* ── Geometry: soft rounded corners ── */
+.info-card, .person-card, .couple-hero, .feed-card,
+.chat-row-inner, .field-input, .btn-secondary{
+  border-radius:20px !important;
+}
+.shake-btn, .btn-primary{border-radius:18px !important}
+
+/* ── Primary buttons: premium gradient + glow ── */
+.shake-btn, .btn-primary, #event-fab{
+  background:linear-gradient(135deg,#FF6B6B 0%,#6C5CE7 100%) !important;
+  box-shadow:0 8px 28px rgba(108,92,231,0.4), 0 4px 14px rgba(255,107,107,0.3) !important;
+  border:none !important;
+}
+
+/* ── Tactile micro-interactions ── */
+button, .nav-item, .vibe-chip, .feed-card, .chat-row-inner, .tag{
+  transition:transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease !important;
+}
+button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
+  transform:scale(0.96);
+}
+
+/* ── Inputs: glowing focus ── */
+.field-input, input, textarea, select{
+  transition:border-color 0.25s ease, box-shadow 0.25s ease !important;
+}
+.field-input:focus, input:focus, textarea:focus{
+  border-color:rgba(108,92,231,0.6) !important;
+  box-shadow:0 0 0 3px rgba(108,92,231,0.18), 0 0 20px rgba(255,107,107,0.12) !important;
+  outline:none !important;
+}
+
+/* ── Map markers: smooth premium pulse ── */
+.double-marker{
+  box-shadow:0 6px 20px rgba(0,0,0,0.45) !important;
+  border-width:2px !important;
+}
+.pulse-ring{
+  animation:premiumPulse 2.2s cubic-bezier(0.4,0,0.2,1) infinite !important;
+  border:2px solid rgba(255,107,107,0.55) !important;
+}
+@keyframes premiumPulse{
+  0%{transform:scale(1);opacity:0.8}
+  70%{transform:scale(1.9);opacity:0}
+  100%{transform:scale(1.9);opacity:0}
+}
+
+/* ── Bottom nav: floating glass dock ── */
+#bottom-nav{
+  backdrop-filter:blur(20px) !important;
+  -webkit-backdrop-filter:blur(20px) !important;
+  background:rgba(11,11,20,0.82) !important;
+  border-top:1px solid rgba(255,255,255,0.08) !important;
+}
+.nav-item.active .nav-icon{filter:drop-shadow(0 0 8px rgba(255,107,107,0.6))}
+
+/* ── Status badges / chips refinement ── */
+.vibe-chip.selected, [data-place].active, [data-vibe].active{
+  background:linear-gradient(135deg,rgba(255,107,107,0.25),rgba(108,92,231,0.25)) !important;
+  border-color:rgba(255,107,107,0.5) !important;
+}
+
+/* ── Toast: floating glass ── */
+#toast{
+  backdrop-filter:blur(16px) !important;
+  background:rgba(20,20,35,0.85) !important;
+  border:1px solid rgba(255,255,255,0.1) !important;
+  border-radius:100px !important;
+  box-shadow:0 8px 30px rgba(0,0,0,0.5) !important;
+}
+
+/* ── Scrollbars hidden for native feel ── */
+.panel-body::-webkit-scrollbar, #fp-body::-webkit-scrollbar{display:none}
 </style>
 </head>
 <body>
