@@ -29,6 +29,15 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
 #app{display:flex;flex-direction:column;height:100dvh}
 .screen{display:none;flex-direction:column;flex:1;overflow:hidden}
 .screen.active{display:flex}
+.screen.slide-in-right{animation:slideInRight 0.32s cubic-bezier(0.4,0,0.2,1) forwards}
+.screen.slide-in-left{animation:slideInLeft 0.32s cubic-bezier(0.4,0,0.2,1) forwards}
+.screen.slide-out-left{animation:slideOutLeft 0.32s cubic-bezier(0.4,0,0.2,1) forwards}
+.screen.slide-out-right{animation:slideOutRight 0.32s cubic-bezier(0.4,0,0.2,1) forwards}
+@keyframes slideInRight{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes slideInLeft{from{transform:translateX(-40%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes slideOutLeft{from{transform:translateX(0);opacity:1}to{transform:translateX(-40%);opacity:0}}
+@keyframes slideOutRight{from{transform:translateX(0);opacity:1}to{transform:translateX(100%);opacity:0}}
+.screen.active{display:flex}
 .scroll-screen.active{display:block;overflow-y:auto}
 
 /* AUTH */
@@ -1553,15 +1562,52 @@ function showScreen(name) {
 
 function initNav() { document.getElementById('bottom-nav').style.display='flex'; }
 
+const NAV_ORDER = {main:0, feed:1, chats:2, profile:3};
+let currentNavScreen = 'main';
+
 function navTo(name) {
-  if (name==='profile') {openProfile();return;}
-  if (name==='feed') {showScreen('feed');document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav===name));loadFeed();return;}
-  if (name==='chats') {showScreen('chats');document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav===name));loadChats();return;}
-  if (name==='shakes') {showScreen('shakes');document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav===name));loadShakes();return;}
-  if (name==='status') {showScreen('status');document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav===name));selectedStatusOption=myProfile?.status||'cold';document.getElementById('status-text').value=myProfile?.status_text||'';renderStatusOptions();return;}
-  showScreen(name);
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav===name));
-  if (name==='main'&&mapInstance) setTimeout(()=>mapInstance.invalidateSize(),100);
+  const callbacks = {
+    profile: () => openProfile(),
+    feed: () => loadFeed(),
+    chats: () => loadChats(),
+    shakes: () => loadShakes(),
+    status: () => { selectedStatusOption=myProfile?.status||'cold'; document.getElementById('status-text').value=myProfile?.status_text||''; renderStatusOptions(); },
+    main: () => { if (mapInstance) setTimeout(()=>mapInstance.invalidateSize(),100); }
+  };
+
+  if (name === 'profile') { openProfile(); return; }
+
+  const goingRight = (NAV_ORDER[name]||0) > (NAV_ORDER[currentNavScreen]||0);
+  const oldScreen = document.getElementById('screen-' + currentNavScreen);
+  const newScreen = document.getElementById('screen-' + name);
+
+  if (!newScreen) { showScreen(name); return; }
+
+  // Animate old screen out
+  if (oldScreen && oldScreen.classList.contains('active')) {
+    oldScreen.classList.add(goingRight ? 'slide-out-left' : 'slide-out-right');
+    setTimeout(() => {
+      oldScreen.classList.remove('active','slide-out-left','slide-out-right');
+    }, 320);
+  }
+
+  // Animate new screen in
+  newScreen.style.display = 'flex';
+  newScreen.classList.add(goingRight ? 'slide-in-right' : 'slide-in-left');
+  setTimeout(() => {
+    newScreen.classList.add('active');
+    newScreen.classList.remove('slide-in-right','slide-in-left');
+  }, 20);
+
+  document.getElementById('bottom-nav').style.display = 'flex';
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.nav === name));
+
+  // Nav icon bounce
+  const navBtn = document.querySelector('[data-nav="'+name+'"] .nav-icon');
+  if (navBtn) { navBtn.style.transform='scale(1.3)'; setTimeout(()=>navBtn.style.transform='',200); }
+
+  currentNavScreen = name;
+  if (callbacks[name]) callbacks[name]();
 }
 
 
