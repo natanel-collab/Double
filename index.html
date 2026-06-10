@@ -641,6 +641,28 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
   </div>
 </div>
 
+
+<!-- Crop Modal -->
+<div class="modal-overlay" id="crop-modal" style="z-index:950">
+  <div class="modal-box" style="padding:0;overflow:hidden;max-width:360px;width:100%">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border)">
+      <div style="font-family:'Syne';font-weight:700;font-size:16px">✂️ חתכו את התמונה</div>
+      <div style="font-size:12px;color:var(--text3)">גררו למיקום הרצוי</div>
+    </div>
+    <div id="crop-area" style="position:relative;background:#000;height:300px;overflow:hidden;touch-action:none">
+      <img id="crop-img" style="position:absolute;transform-origin:center;cursor:move;max-width:none"/>
+      <div style="position:absolute;inset:0;pointer-events:none">
+        <div id="crop-circle" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:220px;height:220px;border-radius:50%;border:3px solid #ff4b6e;box-shadow:0 0 0 9999px rgba(0,0,0,0.6)"></div>
+      </div>
+      <div style="position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-size:12px;color:rgba(255,255,255,0.6);background:rgba(0,0,0,0.5);padding:4px 12px;border-radius:100px;pointer-events:none;white-space:nowrap">👆 גררו את התמונה</div>
+    </div>
+    <div style="display:flex;gap:10px;padding:14px 16px">
+      <button class="btn-secondary" style="flex:1" onclick="closeCropModal()">ביטול</button>
+      <button class="btn-primary" style="flex:2;margin:0" onclick="confirmCrop()">✅ אשרו תמונה</button>
+    </div>
+  </div>
+</div>
+
 <!-- Toast -->
 <div id="toast"></div>
 
@@ -1507,22 +1529,120 @@ function copyProfileInvite() {
   navigator.clipboard.writeText(document.getElementById('profile-invite-link').value).then(()=>showToast('קישור הועתק! 📋'));
 }
 
-async function handlePhotoUpload(input) {
-  const file=input.files[0];
+// ═══ IMAGE CROP + COMPRESS ═══
+let _cropImgEl, _cropDx=0, _cropDy=0, _cropScale=1, _cropStartX, _cropStartY, _cropStartDx, _cropStartDy;
+
+function handlePhotoUpload(input) {
+  const file = input.files[0];
   if (!file) return;
-  if (file.size>5*1024*1024) {showToast('תמונה גדולה מדי (מקסימום 5MB)');return;}
+  const reader = new FileReader();
+  reader.onload = e => openCropModal(e.target.result);
+  reader.readAsDataURL(file);
+}
+
+function openCropModal(src) {
+  const modal = document.getElementById('crop-modal');
+  const img = document.getElementById('crop-img');
+  const area = document.getElementById('crop-area');
+  modal.classList.add('open');
+  img.src = src;
+  _cropDx = 0; _cropDy = 0;
+
+  img.onload = () => {
+    // Scale image to fill the crop area
+    const aW = area.offsetWidth, aH = area.offsetHeight;
+    const r = Math.max(aW / img.naturalWidth, aH / img.naturalHeight);
+    _cropScale = r;
+    img.style.width = img.naturalWidth * r + 'px';
+    img.style.height = img.naturalHeight * r + 'px';
+    positionCropImg();
+  };
+
+  // Touch drag
+  area.ontouchstart = e => {
+    _cropStartX = e.touches[0].clientX;
+    _cropStartY = e.touches[0].clientY;
+    _cropStartDx = _cropDx; _cropStartDy = _cropDy;
+  };
+  area.ontouchmove = e => {
+    e.preventDefault();
+    _cropDx = _cropStartDx + e.touches[0].clientX - _cropStartX;
+    _cropDy = _cropStartDy + e.touches[0].clientY - _cropStartY;
+    positionCropImg();
+  };
+  // Mouse drag
+  area.onmousedown = e => {
+    _cropStartX = e.clientX; _cropStartY = e.clientY;
+    _cropStartDx = _cropDx; _cropStartDy = _cropDy;
+    area.onmousemove = e2 => {
+      _cropDx = _cropStartDx + e2.clientX - _cropStartX;
+      _cropDy = _cropStartDy + e2.clientY - _cropStartY;
+      positionCropImg();
+    };
+    area.onmouseup = () => { area.onmousemove = null; area.onmouseup = null; };
+  };
+}
+
+function positionCropImg() {
+  const img = document.getElementById('crop-img');
+  const area = document.getElementById('crop-area');
+  const aW = area.offsetWidth, aH = area.offsetHeight;
+  const iW = parseFloat(img.style.width), iH = parseFloat(img.style.height);
+  // Clamp so image stays within crop circle
+  _cropDx = Math.min(0, Math.max(_cropDx, aW - iW));
+  _cropDy = Math.min(0, Math.max(_cropDy, aH - iH));
+  img.style.left = _cropDx + 'px';
+  img.style.top = _cropDy + 'px';
+}
+
+function closeCropModal() {
+  document.getElementById('crop-modal').classList.remove('open');
+}
+
+async function confirmCrop() {
+  const area = document.getElementById('crop-area');
+  const img = document.getElementById('crop-img');
+  const circle = document.getElementById('crop-circle');
+  const areaRect = area.getBoundingClientRect();
+  const circleRect = circle.getBoundingClientRect();
+
+  // Draw cropped circle onto canvas
+  const size = 400;
+  const canvas = document.createElement('canvas');
+  canvas.width = size; canvas.height = size;
+  const ctx = canvas.getContext('2d');
+
+  // Circle clip
+  ctx.beginPath();
+  ctx.arc(size/2, size/2, size/2, 0, Math.PI*2);
+  ctx.clip();
+
+  // Calculate source crop
+  const scaleX = img.naturalWidth / parseFloat(img.style.width);
+  const scaleY = img.naturalHeight / parseFloat(img.style.height);
+  const offsetX = (circleRect.left - areaRect.left - _cropDx) * scaleX;
+  const offsetY = (circleRect.top - areaRect.top - _cropDy) * scaleY;
+  const cropW = circleRect.width * scaleX;
+  const cropH = circleRect.height * scaleY;
+
+  ctx.drawImage(img, offsetX, offsetY, cropW, cropH, 0, 0, size, size);
+
+  closeCropModal();
   showToast('מעלה תמונה...');
-  const ext=file.name.split('.').pop();
-  const path=`${currentUser.id}/couple.${ext}`;
-  const {error:upErr} = await sb.storage.from('Photos').upload(path,file,{upsert:true});
-  if (upErr) {showToast('שגיאה בהעלאה: '+upErr.message);return;}
-  const {data:{publicUrl}} = sb.storage.from('Photos').getPublicUrl(path);
-  await sb.from('profiles').update({photo_url:publicUrl}).eq('id',currentUser.id);
-  myProfile={...myProfile,photo_url:publicUrl};
-  const preview=document.getElementById('profile-photo-preview');
-  preview.innerHTML=`<img src="${publicUrl}" style="width:100%;height:100%;object-fit:cover"/>`;
-  updateProfileNavIcon();
-  showToast('תמונה עודכנה! 📸');
+
+  // Convert to blob and upload
+  canvas.toBlob(async blob => {
+    const path = `${currentUser.id}/couple.jpg`;
+    const {error:upErr} = await sb.storage.from('Photos').upload(path, blob, {upsert:true, contentType:'image/jpeg'});
+    if (upErr) {showToast('שגיאה בהעלאה: '+upErr.message); return;}
+    const {data:{publicUrl}} = sb.storage.from('Photos').getPublicUrl(path);
+    await sb.from('profiles').update({photo_url:publicUrl}).eq('id',currentUser.id);
+    myProfile={...myProfile, photo_url:publicUrl};
+    const preview = document.getElementById('profile-photo-preview');
+    preview.innerHTML=`<img src="${publicUrl}" style="width:100%;height:100%;object-fit:cover"/>`;
+    updateProfileNavIcon();
+    showToast('תמונה עודכנה! 📸');
+  }, 'image/jpeg', 0.85);
 }
 
 function updateProfileNavIcon() {
