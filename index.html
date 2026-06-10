@@ -1857,7 +1857,15 @@ function filterPlaces(type) {
   activePlaceFilter = type;
   document.querySelectorAll('[data-place]').forEach(b =>
     b.classList.toggle('active', b.dataset.place === type));
-  if (placesLoaded) renderPlaceMarkers(type);
+  if (placesLoaded) {
+    renderPlaceMarkers(type);
+    const count = type === 'all'
+      ? Object.values(placesData).reduce((s,a)=>s+a.length,0)
+      : (placesData[type]||[]).length;
+    showToast((PLACE_TYPES[type]?.emoji||'✨') + ' ' + count + ' מקומות');
+  } else {
+    loadPlaces();
+  }
 }
 
 function renderPlaceMarkers(filter) {
