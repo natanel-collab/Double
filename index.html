@@ -511,6 +511,10 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
     <span id="chat-emoji" style="font-size:24px">💞</span>
   </div>
   <div class="chat-messages" id="chat-messages"></div>
+  <div id="chat-review-bar" style="display:none;background:rgba(255,215,0,0.08);border:1px solid rgba(255,215,0,0.2);border-radius:12px;padding:10px 14px;margin-bottom:8px;display:none;align-items:center;justify-content:space-between;gap:10px">
+    <span style="font-size:13px;color:var(--text2)">🎉 היה כיף? השאירו המלצה!</span>
+    <button onclick="openReviewModal()" style="background:rgba(255,215,0,0.15);border:1px solid rgba(255,215,0,0.3);color:#ffd700;padding:6px 14px;border-radius:100px;font-family:'Heebo';font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">⭐ המלצה</button>
+  </div>
   <div class="chat-input-row">
     <input class="chat-input" id="chat-input" placeholder="כתבו הודעה..." onkeydown="if(event.key==='Enter')sendMsg()"/>
     <button class="chat-send" onclick="sendMsg()">↑</button>
@@ -994,6 +998,9 @@ function renderRealChat(msgs,icebreaker) {
     html+=`<div class="msg-wrapper ${self?'self':'other'}"><div class="msg-from">${self?'אתם':msg.sender_name} · ${time}</div><div class="msg-bubble ${self?'self':'other'}">${msg.text}</div></div>`;
   });
   c.innerHTML=html; c.scrollTop=c.scrollHeight;
+  // Show review bar if there are messages (meaning they've chatted)
+  const bar = document.getElementById('chat-review-bar');
+  if (bar) bar.style.display = msgs.length > 0 ? 'flex' : 'none';
 }
 
 async function sendMsg() {
