@@ -162,13 +162,27 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
 #loading{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:16px}
 .loading-logo{font-family:'Syne';font-size:42px;font-weight:800;background:linear-gradient(135deg,var(--pink),var(--orange));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .loading-spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--pink);border-radius:50%;animation:spin 0.8s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes spin{to{transform:rotate(360deg)}}@keyframes ldFloat{0%,100%{transform:translateY(0) scale(1);opacity:0.3}50%{transform:translateY(-18px) scale(1.2);opacity:0.6}}@keyframes ldEntrance{from{opacity:0;transform:scale(0.75) translateY(16px)}to{opacity:1;transform:scale(1) translateY(0)}}@keyframes ldPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}@keyframes ldProgress{0%{width:0%;margin-right:100%}50%{width:55%;margin-right:0%}100%{width:0%;margin-right:0%}}@keyframes ldBlink{0%,100%{opacity:0.5}50%{opacity:1}}
 @keyframes pulseRing{0%{transform:scale(1);opacity:0.8}100%{transform:scale(2.2);opacity:0}}
 </style>
 </head>
 <body>
 
-<div id="loading"><div class="loading-logo">Double</div><div class="loading-spinner"></div></div>
+<div id="loading" style="position:fixed;inset:0;background:radial-gradient(ellipse at 50% 40%,rgba(255,75,110,0.2) 0%,transparent 65%),#0d0d18;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:0">
+  <div style="width:6px;height:6px;border-radius:50%;background:rgba(255,75,110,0.35);position:absolute;top:22%;left:14%;animation:ldFloat 3s ease-in-out infinite"></div>
+  <div style="width:4px;height:4px;border-radius:50%;background:rgba(255,75,110,0.3);position:absolute;top:28%;right:16%;animation:ldFloat 3s ease-in-out 0.5s infinite"></div>
+  <div style="width:5px;height:5px;border-radius:50%;background:rgba(255,75,110,0.25);position:absolute;bottom:26%;left:18%;animation:ldFloat 3s ease-in-out 1s infinite"></div>
+  <div style="width:4px;height:4px;border-radius:50%;background:rgba(255,75,110,0.25);position:absolute;bottom:28%;right:14%;animation:ldFloat 3s ease-in-out 1.5s infinite"></div>
+  <div style="animation:ldEntrance 0.8s cubic-bezier(0.34,1.4,0.64,1) forwards;display:flex;flex-direction:column;align-items:center">
+    <div style="font-size:68px;margin-bottom:12px;animation:ldPulse 2s ease-in-out infinite">💞</div>
+    <div class="loading-logo" style="margin-bottom:8px">Double</div>
+    <div style="font-size:14px;color:#aaaacc;margin-bottom:44px">מצאו זוגות לדאבל דייט</div>
+  </div>
+  <div style="width:160px;height:3px;background:rgba(255,255,255,0.1);border-radius:100px;overflow:hidden;margin-bottom:14px">
+    <div style="height:100%;background:linear-gradient(90deg,#ff4b6e,#ff9f43);border-radius:100px;animation:ldProgress 1.8s ease-in-out infinite"></div>
+  </div>
+  <div style="font-size:13px;color:#666688;animation:ldBlink 1.5s ease-in-out infinite">מתחברים...</div>
+</div>
 
 <div id="app">
 
