@@ -1041,6 +1041,12 @@ function openCouplePanel(couple) {
     }
   });
 
+  // Hide action buttons if viewing own profile
+  const isOwn = couple.id === currentUser.id;
+  const shakeBtn = document.getElementById('shake-btn');
+  const panelFooter = document.querySelector('.panel-footer');
+  if (panelFooter) panelFooter.style.display = isOwn ? 'none' : 'flex';
+
   document.getElementById('panel-overlay').classList.add('open');
   document.getElementById('couple-panel').classList.add('open');
   // Check shake status
@@ -1119,7 +1125,7 @@ async function sendMsg() {
 // CHATS LIST
 // ═══════════════════════════════════
 async function loadChats() {
-  const {data:sent} = await sb.from('messages').select('room_id,text,created_at,sender_name,sender_id').ilike('room_id','%'+currentUser.id+'%').order('created_at',{ascending:false});
+  const {data:sent} = await sb.from('messages').select('room_id,text,created_at,sender_name,sender_id').order('created_at',{ascending:false}).limit(500);
   const list=document.getElementById('chats-list');
   if (!sent?.length) {
     list.innerHTML='<div style="text-align:center;padding:60px 20px;color:var(--text3)"><div style="font-size:48px;margin-bottom:16px">💬</div><div style="font-size:16px;font-weight:700;margin-bottom:8px">אין צ\u0027אטים עדיין</div><div style="font-size:13px">שלחו Double Shake לזוג כדי להתחיל שיחה</div></div>';
