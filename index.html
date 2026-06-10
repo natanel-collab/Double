@@ -28,7 +28,6 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--pink);border-radius:2px}
 #app{display:flex;flex-direction:column;height:100dvh}
 .screen{display:none;flex-direction:column;flex:1;overflow:hidden}
-.screen.active{display:flex}
 .screen.slide-in-right{animation:slideInRight 0.32s cubic-bezier(0.4,0,0.2,1) forwards}
 .screen.slide-in-left{animation:slideInLeft 0.32s cubic-bezier(0.4,0,0.2,1) forwards}
 .screen.slide-out-left{animation:slideOutLeft 0.32s cubic-bezier(0.4,0,0.2,1) forwards}
@@ -37,7 +36,6 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
 @keyframes slideInLeft{from{transform:translateX(-40%);opacity:0}to{transform:translateX(0);opacity:1}}
 @keyframes slideOutLeft{from{transform:translateX(0);opacity:1}to{transform:translateX(-40%);opacity:0}}
 @keyframes slideOutRight{from{transform:translateX(0);opacity:1}to{transform:translateX(100%);opacity:0}}
-.screen.active{display:flex}
 .scroll-screen.active{display:block;overflow-y:auto}
 
 /* AUTH */
@@ -1583,21 +1581,11 @@ function navTo(name) {
 
   if (!newScreen) { showScreen(name); return; }
 
-  // Animate old screen out
-  if (oldScreen && oldScreen.classList.contains('active')) {
-    oldScreen.classList.add(goingRight ? 'slide-out-left' : 'slide-out-right');
-    setTimeout(() => {
-      oldScreen.classList.remove('active','slide-out-left','slide-out-right');
-    }, 320);
-  }
-
-  // Animate new screen in
-  newScreen.style.display = 'flex';
+  // Simple transition: hide old, show new
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  newScreen.classList.add('active');
   newScreen.classList.add(goingRight ? 'slide-in-right' : 'slide-in-left');
-  setTimeout(() => {
-    newScreen.classList.add('active');
-    newScreen.classList.remove('slide-in-right','slide-in-left');
-  }, 20);
+  setTimeout(() => newScreen.classList.remove('slide-in-right','slide-in-left'), 350);
 
   document.getElementById('bottom-nav').style.display = 'flex';
   document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.nav === name));
