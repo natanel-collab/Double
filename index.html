@@ -266,6 +266,43 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
 
 /* ── Scrollbars hidden for native feel ── */
 .panel-body::-webkit-scrollbar, #fp-body::-webkit-scrollbar{display:none}
+
+/* ═══ NATIVE LAYOUT v2 ═══ */
+.bottom-nav, #bottom-nav{
+  position:fixed !important; bottom:0 !important; left:0 !important; right:0 !important;
+  z-index:50 !important;
+  display:flex; align-items:stretch; justify-content:space-around;
+  padding:8px 6px calc(var(--safe-bot) + 8px);
+}
+#bottom-nav .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;cursor:pointer}
+#bottom-nav .nav-label{font-size:10px;font-weight:600;white-space:nowrap}
+
+/* Screens leave room for fixed nav */
+.screen{padding-bottom:calc(64px + var(--safe-bot))}
+#screen-main{padding-bottom:0}
+
+/* Full-bleed map; header & vibes float over it as glass */
+#screen-main{position:relative}
+#map-container{position:absolute !important;inset:0 !important;flex:none !important}
+#map{width:100% !important;height:100% !important}
+#screen-main .app-header{
+  position:absolute;top:0;left:0;right:0;z-index:30;
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  background:rgba(11,11,20,0.55);border-bottom:1px solid rgba(255,255,255,0.08);
+}
+#screen-main .vibes-bar{
+  position:absolute;top:calc(var(--safe-top) + 64px);left:0;right:0;z-index:29;
+  background:rgba(11,11,20,0.45) !important;border-bottom:none !important;
+}
+#screen-main .places-bar{
+  position:absolute;top:calc(var(--safe-top) + 112px);left:0;right:0;z-index:28;
+  background:rgba(11,11,20,0.35) !important;border-bottom:none !important;
+}
+/* Leaflet attribution clear of nav */
+.leaflet-bottom{bottom:calc(64px + var(--safe-bot)) !important}
+
+/* Buttery page transition: fade + slight rise */
+@keyframes fadeScaleIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 </style>
 </head>
 <body>
@@ -600,17 +637,17 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
 <!-- Bottom Nav -->
 <div class="bottom-nav" id="bottom-nav" style="display:none">
   <button class="nav-item active" data-nav="main" onclick="navTo('main')">
-    <div class="nav-icon">🗺️</div><div class="nav-label">בית</div>
+    <div class="nav-icon">🗺️</div><div class="nav-label">מפה</div>
   </button>
   <button class="nav-item" data-nav="feed" onclick="navTo('feed')">
-    <div class="nav-icon">✨</div><div class="nav-label">פיד</div>
+    <div class="nav-icon">👥</div><div class="nav-label">זוגות בסביבה</div>
   </button>
   <button class="nav-item" data-nav="chats" onclick="navTo('chats')">
     <div class="nav-icon">💬</div><div class="nav-label">צ&apos;אטים</div>
     <div class="nav-badge" id="chats-badge"></div>
   </button>
   <button class="nav-item" data-nav="profile" onclick="navTo('profile')">
-    <div class="nav-icon" id="nav-profile-icon">👫</div><div class="nav-label">פרופיל</div>
+    <div class="nav-icon" id="nav-profile-icon">⚙️</div><div class="nav-label">הפרופיל שלנו</div>
   </button>
 </div>
 
@@ -1145,7 +1182,7 @@ function openCouplePanel(couple) {
   // Hide action buttons if viewing own profile
   const isOwn = couple.id === currentUser.id;
   const panelFooter = document.getElementById('couple-panel-footer');
-  if (panelFooter) panelFooter.style.display = isOwn ? 'none' : 'flex';
+  if (panelFooter) panelFooter.style.display = isOwn ? 'none' : 'block';
 
   document.getElementById('panel-overlay').classList.add('open');
   document.getElementById('couple-panel').classList.add('open');
@@ -1243,7 +1280,7 @@ async function loadChats() {
   }));
   const valid=profiles.filter(Boolean).sort((a,b)=>b.lastMsg.created_at.localeCompare(a.lastMsg.created_at));
   if (!valid.length) {list.innerHTML='<div style="text-align:center;padding:60px 20px;color:var(--text3)"><div style="font-size:48px">💬</div><div style="margin-top:16px;font-size:15px">אין צ\u0027אטים פעילים</div></div>';return;}
-  list.innerHTML=valid.map(({lastMsg,profile})=>{
+  list.innerHTML=valid.map(({roomId,lastMsg,profile})=>{
     if (!profile) return '';
     const photoEl=profile.photo_url
       ?`<img src="${profile.photo_url}" style="width:54px;height:54px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,75,110,0.4);flex-shrink:0"/>`
