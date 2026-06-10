@@ -188,59 +188,49 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
 
 
 <!-- ONBOARDING -->
-<div id="screen-onboarding" class="screen" style="background:radial-gradient(ellipse at 60% 20%,rgba(255,75,110,0.2) 0%,transparent 60%),radial-gradient(ellipse at 10% 80%,rgba(84,160,255,0.14) 0%,transparent 50%),#0d0d18;overflow:hidden">
-  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 28px;text-align:center">
-    <!-- Slides -->
-    <div id="onboard-slides" style="width:100%;position:relative">
-
-      <!-- Slide 1 -->
-      <div class="onboard-slide active" id="slide-0">
-        <div style="font-size:80px;margin-bottom:24px">💞</div>
-        <div style="font-family:'Syne';font-size:32px;font-weight:800;margin-bottom:12px;background:linear-gradient(135deg,var(--pink),var(--orange));-webkit-background-clip:text;-webkit-text-fill-color:transparent">Double</div>
-        <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:12px">מצאו זוגות לדאבל דייט</div>
-        <div style="font-size:15px;color:var(--text2);line-height:1.7">האפליקציה הראשונה בישראל<br/>שמחברת זוגות עם זוגות<br/>לחברויות ודאבל דייטים</div>
+<div id="screen-onboarding" class="screen" style="background:radial-gradient(ellipse at 60% 20%,rgba(255,75,110,0.2) 0%,transparent 60%),#0d0d18;overflow:hidden">
+  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+    <!-- Slides container -->
+    <div id="onboard-slides-wrap" style="flex:1;overflow:hidden;position:relative">
+      <div id="onboard-slides-inner" style="display:flex;width:400%;height:100%;transition:transform 0.35s cubic-bezier(0.4,0,0.2,1)">
+        <div class="ob-slide" style="width:25%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 28px;text-align:center">
+          <div style="font-size:72px;margin-bottom:20px">💞</div>
+          <div style="font-family:'Syne';font-size:32px;font-weight:800;margin-bottom:12px;background:linear-gradient(135deg,var(--pink),var(--orange));-webkit-background-clip:text;-webkit-text-fill-color:transparent">Double</div>
+          <div style="font-size:15px;color:var(--text2);line-height:1.7">האפליקציה הראשונה בישראל<br/>שמחברת זוגות עם זוגות</div>
+        </div>
+        <div class="ob-slide" style="width:25%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 28px;text-align:center">
+          <div style="font-size:72px;margin-bottom:20px">🗺️</div>
+          <div style="font-family:'Syne';font-size:24px;font-weight:800;margin-bottom:12px">מפה חיה</div>
+          <div style="font-size:15px;color:var(--text2);line-height:1.7">ראו בזמן אמת אילו זוגות<br/>פעילים באזורכם</div>
+        </div>
+        <div class="ob-slide" style="width:25%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 28px;text-align:center">
+          <div style="font-size:72px;margin-bottom:20px">💞</div>
+          <div style="font-family:'Syne';font-size:24px;font-weight:800;margin-bottom:12px">Double Shake</div>
+          <div style="font-size:15px;color:var(--text2);line-height:1.7">שלחו Shake לזוג שאהבתם<br/>ופתחו צ'את קבוצתי</div>
+        </div>
+        <div class="ob-slide" style="width:25%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 28px;text-align:center">
+          <div style="font-size:72px;margin-bottom:20px">🔥</div>
+          <div style="font-family:'Syne';font-size:24px;font-weight:800;margin-bottom:12px">פרסמו אירוע</div>
+          <div style="font-size:15px;color:var(--text2);line-height:1.7">ספרו מה אתם מתכננים<br/>ומצאו זוג להצטרף</div>
+        </div>
       </div>
-
-      <!-- Slide 2 -->
-      <div class="onboard-slide" id="slide-1" style="display:none">
-        <div style="font-size:80px;margin-bottom:24px">🗺️</div>
-        <div style="font-size:22px;font-weight:800;font-family:'Syne';margin-bottom:12px">מפה חיה</div>
-        <div style="font-size:15px;color:var(--text2);line-height:1.7">ראו בזמן אמת אילו זוגות<br/>פעילים באזורכם<br/>ומחפשים דאבל דייט</div>
-      </div>
-
-      <!-- Slide 3 -->
-      <div class="onboard-slide" id="slide-2" style="display:none">
-        <div style="font-size:80px;margin-bottom:24px">💬</div>
-        <div style="font-size:22px;font-weight:800;font-family:'Syne';margin-bottom:12px">Double Shake</div>
-        <div style="font-size:15px;color:var(--text2);line-height:1.7">שלחו Shake לזוג שאהבתם<br/>ופתחו צ'את קבוצתי<br/>של 4 אנשים</div>
-      </div>
-
-      <!-- Slide 4 -->
-      <div class="onboard-slide" id="slide-3" style="display:none">
-        <div style="font-size:80px;margin-bottom:24px">🔥</div>
-        <div style="font-size:22px;font-weight:800;font-family:'Syne';margin-bottom:12px">פרסמו אירוע</div>
-        <div style="font-size:15px;color:var(--text2);line-height:1.7">ספרו לזוגות אחרים<br/>מה אתם מתכננים<br/>ומצאו מישהו להצטרף</div>
-      </div>
-
     </div>
 
     <!-- Dots -->
-    <div style="display:flex;gap:8px;margin:32px 0 28px">
-      <div class="onboard-dot active" id="dot-0" style="width:24px;height:8px;border-radius:100px;background:var(--pink);transition:all 0.3s"></div>
-      <div class="onboard-dot" id="dot-1" style="width:8px;height:8px;border-radius:100px;background:rgba(255,255,255,0.2);transition:all 0.3s"></div>
-      <div class="onboard-dot" id="dot-2" style="width:8px;height:8px;border-radius:100px;background:rgba(255,255,255,0.2);transition:all 0.3s"></div>
-      <div class="onboard-dot" id="dot-3" style="width:8px;height:8px;border-radius:100px;background:rgba(255,255,255,0.2);transition:all 0.3s"></div>
+    <div style="display:flex;justify-content:center;gap:8px;padding:16px 0">
+      <div id="ob-dot-0" style="width:24px;height:8px;border-radius:100px;background:var(--pink);transition:all 0.3s"></div>
+      <div id="ob-dot-1" style="width:8px;height:8px;border-radius:100px;background:rgba(255,255,255,0.2);transition:all 0.3s"></div>
+      <div id="ob-dot-2" style="width:8px;height:8px;border-radius:100px;background:rgba(255,255,255,0.2);transition:all 0.3s"></div>
+      <div id="ob-dot-3" style="width:8px;height:8px;border-radius:100px;background:rgba(255,255,255,0.2);transition:all 0.3s"></div>
     </div>
 
-    <button id="onboard-next-btn" class="btn-primary" style="max-width:320px" onclick="nextOnboardSlide()">המשך ←</button>
-    <div id="onboard-skip" onclick="finishOnboarding()" style="margin-top:16px;color:var(--text3);font-size:14px;cursor:pointer">דלג</div>
+    <!-- Footer -->
+    <div style="padding:8px 28px calc(var(--safe-bot) + 24px);display:flex;flex-direction:column;align-items:center;gap:12px">
+      <button id="onboard-next-btn" class="btn-primary" style="max-width:320px" onclick="nextOnboardSlide()">המשך →</button>
+      <div onclick="finishOnboarding()" style="color:var(--text3);font-size:14px;cursor:pointer">דלג</div>
+    </div>
   </div>
 </div>
-
-<style>
-.onboard-slide { animation: fadeSlide 0.4s ease; }
-@keyframes fadeSlide { from { opacity:0; transform:translateX(30px); } to { opacity:1; transform:translateX(0); } }
-</style>
 
 <!-- AUTH -->
 <div id="screen-auth" class="screen">
@@ -1723,23 +1713,42 @@ function navTo(name) {
 let onboardSlide = 0;
 const ONBOARD_TOTAL = 4;
 
-function nextOnboardSlide() {
-  document.getElementById('slide-' + onboardSlide).style.display = 'none';
-  document.getElementById('dot-' + onboardSlide).style.width = '8px';
-  document.getElementById('dot-' + onboardSlide).style.background = 'rgba(255,255,255,0.2)';
-  onboardSlide++;
-  if (onboardSlide >= ONBOARD_TOTAL) { finishOnboarding(); return; }
-  document.getElementById('slide-' + onboardSlide).style.display = 'block';
-  document.getElementById('dot-' + onboardSlide).style.width = '24px';
-  document.getElementById('dot-' + onboardSlide).style.background = 'var(--pink)';
-  if (onboardSlide === ONBOARD_TOTAL - 1) {
-    document.getElementById('onboard-next-btn').textContent = 'בואו נתחיל! 🚀';
+let _obCur = 0;
+const _obTotal = 4;
+let _obStartX = 0;
+
+function _obGoTo(n) {
+  if (n < 0 || n >= _obTotal) return;
+  _obCur = n;
+  document.getElementById('onboard-slides-inner').style.transform = `translateX(${_obCur * 25}%)`;
+  for (let i = 0; i < _obTotal; i++) {
+    const dot = document.getElementById('ob-dot-' + i);
+    if (!dot) continue;
+    dot.style.width = i === _obCur ? '24px' : '8px';
+    dot.style.background = i === _obCur ? 'var(--pink)' : 'rgba(255,255,255,0.2)';
   }
+  document.getElementById('onboard-next-btn').textContent = _obCur === _obTotal - 1 ? 'בואו נתחיל! 🚀' : 'המשך →';
+}
+
+function nextOnboardSlide() {
+  if (_obCur === _obTotal - 1) { finishOnboarding(); return; }
+  _obGoTo(_obCur + 1);
 }
 
 function finishOnboarding() {
   localStorage.setItem('double_onboarded', '1');
   showScreen('auth');
+  // Init swipe on next render
+}
+
+function _obInitSwipe() {
+  const wrap = document.getElementById('onboard-slides-wrap');
+  if (!wrap) return;
+  wrap.addEventListener('touchstart', e => { _obStartX = e.touches[0].clientX; }, {passive:true});
+  wrap.addEventListener('touchend', e => {
+    const diff = _obStartX - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 40) _obGoTo(_obCur + (diff < 0 ? 1 : -1));
+  }, {passive:true});
 }
 
 // ═══════════════════════════════════
