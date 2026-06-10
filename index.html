@@ -507,6 +507,23 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
 </div><!-- /#app -->
 
 
+
+<!-- FULL COUPLE PROFILE -->
+<div id="screen-full-profile" class="screen scroll-screen" style="padding:0 0 calc(var(--safe-bot) + 80px)">
+  <div style="display:flex;align-items:center;gap:12px;padding:calc(var(--safe-top) + 14px) 18px 14px;border-bottom:1px solid var(--border);background:var(--bg2);position:sticky;top:0;z-index:10">
+    <button class="icon-btn" onclick="closeFullProfile()">←</button>
+    <div style="font-family:'Syne';font-weight:700;font-size:17px" id="fp-title">פרופיל הזוג</div>
+  </div>
+  <div style="padding:20px 18px;display:flex;flex-direction:column;gap:14px" id="fp-body"></div>
+  <div style="padding:16px 18px;border-top:1px solid var(--border);background:var(--bg);position:sticky;bottom:0;display:flex;flex-direction:column;gap:8px">
+    <button class="shake-btn" onclick="sendShake()">💞 Double Shake!</button>
+    <div style="display:flex;gap:8px">
+      <button class="btn-secondary" style="flex:1" onclick="openChat()">💬 צ'את</button>
+      <button class="btn-secondary" style="flex:1;color:#54a0ff;border-color:rgba(84,160,255,0.3)" id="fp-nav-btn">🗺️ נווט</button>
+    </div>
+  </div>
+</div>
+
 <!-- Panel Overlay -->
 <div class="panel-overlay" id="panel-overlay" onclick="closePanel()"></div>
 <div class="panel" id="couple-panel">
@@ -517,7 +534,8 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
   <div class="panel-body" id="panel-body"></div>
   <div class="panel-footer">
     <button class="shake-btn" id="shake-btn" onclick="sendShake()">💞 Double Shake!</button>
-    <button class="btn-secondary" style="margin-top:8px" onclick="openChat()">💬 פתחו צ&apos;אט</button>
+    <div style="display:flex;gap:8px;margin-top:8px"><button class="btn-secondary" style="flex:1" onclick="openChat()">💬 צ&apos;אט</button><button class="btn-secondary" style="flex:1" onclick="openReviewModal()">⭐ המלצה</button></div>
+    <button onclick="openFullProfile()" style="width:100%;padding:11px;border:1px solid rgba(255,75,110,0.25);border-radius:12px;background:rgba(255,75,110,0.06);color:#ff8fa8;font-family:'Heebo';font-weight:600;font-size:13px;cursor:pointer;margin-top:0">👤 פרופיל מלא</button>
     <div style="text-align:center;color:var(--text3);font-size:12px;margin-top:8px">נפתח צ&apos;אט קבוצתי של 4 אנשים</div>
   </div>
 </div>
@@ -1773,6 +1791,76 @@ function selectKids(el) {
 function selectLooking(el) {
   document.querySelectorAll('#looking-chips .vibe-chip').forEach(c => c.classList.remove('selected'));
   el.classList.add('selected');
+}
+
+
+// ═══ FULL COUPLE PROFILE ═══
+function openFullProfile() {
+  if (!selectedCouple) return;
+  const c = selectedCouple;
+  const meta = STATUS_META[c.status||'cold'];
+
+  document.getElementById('fp-title').textContent = c.name + ' & ' + (c.partner_name||'?');
+
+  // Nav button
+  const navBtn = document.getElementById('fp-nav-btn');
+  if (c.lat && c.lng) {
+    navBtn.style.display = 'block';
+    navBtn.onclick = () => navigateToCouple(c.lat, c.lng);
+  } else {
+    navBtn.style.display = 'none';
+  }
+
+  const photoEl = c.photo_url
+    ? `<img src="${c.photo_url}" style="width:90px;height:90px;border-radius:50%;object-fit:cover;border:3px solid ${meta.color};margin:0 auto 14px;display:block"/>`
+    : `<div style="width:90px;height:90px;border-radius:50%;background:${meta.color}20;border:2px solid ${meta.color}44;display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 14px">${vibeEmoji((c.vibes||[])[0])}</div>`;
+
+  document.getElementById('fp-body').innerHTML = `
+    <div style="background:linear-gradient(135deg,rgba(255,75,110,0.15),rgba(255,159,67,0.08));border:1px solid rgba(255,75,110,0.2);border-radius:20px;padding:28px 20px;text-align:center">
+      ${photoEl}
+      <div style="font-family:'Syne';font-size:22px;font-weight:800;margin-bottom:4px">${c.name} <span style="font-family:'Heebo';font-weight:400;opacity:0.6">&</span> ${c.partner_name||'?'}</div>
+      <div style="color:var(--text2);font-size:13px;margin-bottom:10px">${c.city||'ישראל'}</div>
+      <div style="display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:100px;font-size:12px;font-weight:700;background:${meta.color}22;color:${meta.color}">
+        <div style="width:7px;height:7px;border-radius:50%;background:${meta.color}"></div>
+        ${meta.label}
+      </div>
+    </div>
+
+    ${c.bio ? `<div class="info-card"><div class="info-card-label">על הזוג</div><div style="font-size:14px;color:var(--text2);font-style:italic;padding:10px 14px;background:rgba(255,255,255,0.03);border-radius:8px;border-right:3px solid var(--pink);line-height:1.6">"${c.bio}"</div></div>` : ''}
+
+    <div class="info-card">
+      <div class="info-card-label">הזוג</div>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <div style="flex:1;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center">
+          <div style="font-size:15px;font-weight:700;margin-bottom:3px">${c.name}</div>
+          <div style="font-size:12px;color:var(--text3)">${[c.role_him, c.age_him?'גיל '+c.age_him:''].filter(Boolean).join(' · ')||'—'}</div>
+        </div>
+        <div style="flex:1;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center">
+          <div style="font-size:15px;font-weight:700;margin-bottom:3px">${c.partner_name||'?'}</div>
+          <div style="font-size:12px;color:var(--text3)">${[c.role_her, c.age_her?'גיל '+c.age_her:''].filter(Boolean).join(' · ')||'—'}</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        ${c.together_since?`<span style="background:rgba(255,159,67,0.12);color:#ff9f43;padding:5px 12px;border-radius:100px;font-size:12px;border:1px solid rgba(255,159,67,0.25)">❤️ ביחד ${c.together_since}</span>`:''}
+        ${c.has_kids?`<span style="background:rgba(29,209,161,0.12);color:#1dd1a1;padding:5px 12px;border-radius:100px;font-size:12px;border:1px solid rgba(29,209,161,0.25)">${c.has_kids}</span>`:''}
+        ${c.looking_for?`<span style="background:rgba(84,160,255,0.12);color:#54a0ff;padding:5px 12px;border-radius:100px;font-size:12px;border:1px solid rgba(84,160,255,0.25)">🔍 ${c.looking_for}</span>`:''}
+      </div>
+    </div>
+
+    ${c.vibes?.length ? `<div class="info-card"><div class="info-card-label">תחומי עניין</div><div class="tags-row" style="margin-top:8px">${(c.vibes||[]).map(v=>`<span class="tag">${v}</span>`).join('')}</div></div>` : ''}
+
+    ${c.status_text ? `<div class="info-card"><div class="info-card-label">הם מחפשים</div><div style="font-size:14px;color:var(--text2)">"${c.status_text}"</div></div>` : ''}
+  `;
+
+  closePanel();
+  showScreen('full-profile');
+  document.getElementById('bottom-nav').style.display = 'none';
+}
+
+function closeFullProfile() {
+  showScreen('main');
+  document.getElementById('bottom-nav').style.display = 'flex';
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.nav === 'main'));
 }
 
 // ═══════════════════════════════════
