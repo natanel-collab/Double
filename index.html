@@ -1164,7 +1164,19 @@ function renderFeed() {
   });
   couples.sort((a,b)=>({hot:0,warm:1,cold:2}[a.status||'cold']||0)-({hot:0,warm:1,cold:2}[b.status||'cold']||0));
   if (!couples.length) {
-    list.innerHTML='<div style="text-align:center;padding:60px 20px;color:var(--text3)"><div style="font-size:48px;margin-bottom:16px">😴</div><div style="font-size:16px;font-weight:700;margin-bottom:8px">אין זוגות פעילים</div><div style="font-size:13px">כשזוגות יפרסמו אירועים הם יופיעו כאן</div></div>';
+    list.innerHTML=`<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:20px;overflow:hidden">
+  <div style="padding:36px 24px 24px;text-align:center;background:radial-gradient(ellipse at 50% 0%,rgba(255,75,110,0.12),transparent 70%)">
+    <div style="font-size:64px;margin-bottom:14px;display:block;animation:emptyFloat 3s ease-in-out infinite">💞</div>
+    <div style="font-family:'Syne';font-size:20px;font-weight:800;margin-bottom:10px">אין זוגות פעילים עכשיו</div>
+    <div style="font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:20px">היו הראשונים!<br/>פרסמו אירוע ותופיעו בפיד של זוגות אחרים</div>
+    <button onclick="navTo('main');openEventModal()" style="display:inline-flex;align-items:center;gap:8px;padding:13px 24px;border:none;border-radius:100px;background:linear-gradient(135deg,#ff4b6e,#ff6b9d);color:white;font-family:'Heebo';font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 20px rgba(255,75,110,0.35)">🔥 פרסמו אירוע עכשיו</button>
+  </div>
+  <div style="padding:0 16px 16px;display:flex;flex-direction:column;gap:8px">
+    <div style="display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,0.03);border-radius:12px;padding:12px 14px"><div style="font-size:18px;flex-shrink:0">📍</div><div style="font-size:13px;color:var(--text2);line-height:1.5"><strong>פרסמו מיקום</strong> — ספרו לזוגות אחרים איפה אתם ומה אתם מחפשים</div></div>
+    <div style="display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,0.03);border-radius:12px;padding:12px 14px"><div style="font-size:18px;flex-shrink:0">🔔</div><div style="font-size:13px;color:var(--text2);line-height:1.5"><strong>חזרו מאוחר יותר</strong> — הפיד מתעדכן בזמן אמת</div></div>
+    <div style="display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,0.03);border-radius:12px;padding:12px 14px"><div style="font-size:18px;flex-shrink:0">📤</div><div style="font-size:13px;color:var(--text2);line-height:1.5"><strong>שתפו עם חברים</strong> — ככל שיש יותר זוגות, יותר כיף!</div></div>
+  </div>
+</div>`;
     return;
   }
   list.innerHTML=couples.map(c=>{
