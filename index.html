@@ -229,25 +229,6 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
 @keyframes fadeSlide { from { opacity:0; transform:translateX(30px); } to { opacity:1; transform:translateX(0); } }
 </style>
 
-
-<!-- RESET PASSWORD -->
-<div id="screen-reset" class="screen" style="align-items:center;justify-content:center;background:var(--bg);padding:24px">
-  <div style="width:100%;max-width:380px">
-    <div style="font-family:'Syne';font-size:26px;font-weight:800;margin-bottom:6px;text-align:center">סיסמה חדשה 🔐</div>
-    <div style="color:var(--text2);font-size:14px;margin-bottom:24px;text-align:center">הזינו סיסמה חדשה לחשבונכם</div>
-    <div class="field-group">
-      <label class="field-label">סיסמה חדשה</label>
-      <input class="field-input" type="password" id="new-pass" placeholder="לפחות 6 תווים" dir="ltr"/>
-    </div>
-    <div class="field-group">
-      <label class="field-label">אימות סיסמה</label>
-      <input class="field-input" type="password" id="new-pass-confirm" placeholder="הזינו שוב" dir="ltr"/>
-    </div>
-    <button class="btn-primary" onclick="doResetPassword()">שמור סיסמה</button>
-    <p class="auth-err" id="reset-err"></p>
-  </div>
-</div>
-
 <!-- AUTH -->
 <div id="screen-auth" class="screen">
   <div class="auth-logo">Double 💞</div>
@@ -261,7 +242,6 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
       <div class="field-group"><label class="field-label">אימייל</label><input class="field-input" type="email" id="login-email" placeholder="your@email.com" dir="ltr"/></div>
       <div class="field-group"><label class="field-label">סיסמה</label><input class="field-input" type="password" id="login-pass" placeholder="••••••••" dir="ltr"/></div>
       <button class="btn-primary" onclick="doLogin()">כניסה</button>
-      <div onclick="forgotPassword()" style="text-align:center;color:var(--text3);font-size:13px;margin-top:12px;cursor:pointer;text-decoration:underline">שכחתי סיסמה</div>
       <p class="auth-err" id="login-err"></p>
     </div>
     <div id="auth-register" style="display:none">
@@ -327,6 +307,11 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
   </div>
   <div id="map-container">
     <div id="map"></div>
+    <div id="distance-filter">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-size:11px;color:var(--text3);font-family:'Heebo'">מרחק מקסימלי</span>
+        <span id="dist-label" style="font-size:12px;color:var(--pink);font-weight:700;font-family:'Heebo'">הכל</span>
+      </div>
       <input type="range" id="dist-slider" min="0" max="5" value="5" step="1" oninput="updateDistanceFilter(this.value)" style="width:100%;accent-color:var(--pink);cursor:pointer"/>
       <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);font-family:'Heebo';margin-top:3px">
         <span>2ק"מ</span><span>10</span><span>25</span><span>50</span><span>100</span><span>הכל</span>
@@ -676,8 +661,6 @@ function hideLoading() { document.getElementById('loading').style.display='none'
 // INIT
 // ═══════════════════════════════════
 async function init() {
-  await checkResetToken();
-  if (document.getElementById('screen-reset').classList.contains('active')) return;
   const safetyTimer = setTimeout(()=>{hideLoading();showScreen('auth');},6000);
   const {data:{session}} = await sb.auth.getSession();
   clearTimeout(safetyTimer);
@@ -699,9 +682,8 @@ async function loadMyProfile() {
     showScreen('setup'); initSetupScreen();
   } else {
     showScreen('main'); initNav(); updateProfileNavIcon();
-    await initMap(); subscribeRealtime(); subscribeNewMessages(); subscribeShakes();
+    await initMap(); subscribeRealtime(); subscribeNewMessages();
     await checkInviteCode();
-    document.getElementById('bottom-nav').style.display='flex';
   }
 }
 
@@ -775,7 +757,7 @@ async function initMap() {
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:18}).addTo(mapInstance);
   L.control.zoom({position:'bottomright'}).addTo(mapInstance);
   mapInstance.on('moveend', onMapMoveEnd);
-  try { startNearbyCheck(); } catch(e) { console.log('nearby error:', e); }
+  startNearbyCheck();
   buildFilterBar();
   await loadCouples();
 }
@@ -1436,9 +1418,9 @@ async function handlePhotoUpload(input) {
   showToast('מעלה תמונה...');
   const ext=file.name.split('.').pop();
   const path=`${currentUser.id}/couple.${ext}`;
-  const {error:upErr} = await sb.storage.from('Photos').upload(path,file,{upsert:true});
+  const {error:upErr} = await sb.storage.from('photos').upload(path,file,{upsert:true});
   if (upErr) {showToast('שגיאה בהעלאה: '+upErr.message);return;}
-  const {data:{publicUrl}} = sb.storage.from('Photos').getPublicUrl(path);
+  const {data:{publicUrl}} = sb.storage.from('photos').getPublicUrl(path);
   await sb.from('profiles').update({photo_url:publicUrl}).eq('id',currentUser.id);
   myProfile={...myProfile,photo_url:publicUrl};
   const preview=document.getElementById('profile-photo-preview');
@@ -1486,7 +1468,7 @@ function showScreen(name) {
   document.getElementById('bottom-nav').style.display=showNav?'flex':'none';
 }
 
-function initNav() { const nav=document.getElementById('bottom-nav'); if(nav){nav.style.display='flex';nav.style.visibility='visible';nav.style.opacity='1';} }
+function initNav() { document.getElementById('bottom-nav').style.display='flex'; }
 
 function navTo(name) {
   if (name==='profile') {openProfile();return;}
@@ -1718,44 +1700,6 @@ async function loadCoupleReviews(coupleId) {
   </div>`;
 }
 
-
-
-// ═══ RESET PASSWORD ═══
-async function doResetPassword() {
-  const pass = document.getElementById('new-pass').value;
-  const confirm = document.getElementById('new-pass-confirm').value;
-  const err = document.getElementById('reset-err');
-  if (pass.length < 6) { err.textContent = 'סיסמה חייבת להיות לפחות 6 תווים'; return; }
-  if (pass !== confirm) { err.textContent = 'הסיסמאות לא תואמות'; return; }
-  const { error } = await sb.auth.updateUser({ password: pass });
-  if (error) { err.textContent = 'שגיאה: ' + error.message; return; }
-  showToast('✅ סיסמה עודכנה בהצלחה!');
-  await loadMyProfile();
-}
-
-// Check for password reset token on load
-async function checkResetToken() {
-  const hash = window.location.hash;
-  if (hash.includes('type=recovery')) {
-    hideLoading();
-    showScreen('reset');
-    // Clear hash from URL
-    window.history.replaceState({}, '', window.location.pathname);
-  }
-}
-
-// ═══ FORGOT PASSWORD ═══
-async function forgotPassword() {
-  const email = document.getElementById('login-email').value.trim();
-  if (!email) { document.getElementById('login-err').textContent = 'נא להזין אימייל קודם'; return; }
-  const { error } = await sb.auth.resetPasswordForEmail(email, {
-    redirectTo: window.location.origin,
-  });
-  if (error) { document.getElementById('login-err').textContent = 'שגיאה: ' + error.message; return; }
-  document.getElementById('login-err').style.color = 'var(--green)';
-  document.getElementById('login-err').textContent = '✅ נשלח אימייל לאיפוס סיסמה!';
-}
-
 // ═══════════════════════════════════
 // PLACES (מסעדות, פארקים, חופים...)
 // ═══════════════════════════════════
@@ -1782,7 +1726,6 @@ async function togglePlaces() {
     btn.classList.add('active');
     btn.textContent = '✕';
     bar.style.display = 'flex';
-    showToast('זומו פנימה לעיר לראות אטרקציות 🗺️');
     if (!placesLoaded) await loadPlaces();
     else renderPlaceMarkers(activePlaceFilter);
   } else {
@@ -1790,7 +1733,6 @@ async function togglePlaces() {
     btn.textContent = '📍';
     bar.style.display = 'none';
     clearPlaceMarkers();
-    showToast('אטרקציות כובו');
   }
 }
 
@@ -1801,58 +1743,61 @@ function clearPlaceMarkers() {
 
 async function loadPlaces() {
   showToast('טוען אטרקציות... 📍');
-  const bounds = mapInstance.getBounds();
-  const s = bounds.getSouth().toFixed(3);
-  const w = bounds.getWest().toFixed(3);
-  const n = bounds.getNorth().toFixed(3);
-  const e = bounds.getEast().toFixed(3);
-  const b = `${s},${w},${n},${e}`;
+  const center = mapInstance.getCenter();
+  const lat = center.lat.toFixed(4);
+  const lng = center.lng.toFixed(4);
 
-  const q = `[out:json][timeout:20];(`+
-    `node["amenity"="restaurant"](${b});`+
-    `node["amenity"="bar"](${b});`+
-    `node["amenity"="cafe"](${b});`+
-    `node["leisure"="park"](${b});`+
-    `node["natural"="beach"](${b});`+
-    `node["amenity"="theatre"](${b});`+
-    `node["amenity"="cinema"](${b});`+
-  `);out 200;`;
+  const typeMap = {
+    restaurant: { amenity: 'restaurant', emoji: '🍽️', color: '#ff9f43' },
+    bar:        { amenity: 'bar',        emoji: '🍺', color: '#ff4b6e' },
+    cafe:       { amenity: 'cafe',       emoji: '☕', color: '#a29bfe' },
+    park:       { leisure: 'park',       emoji: '🌳', color: '#1dd1a1' },
+    beach:      { natural: 'beach',      emoji: '🏖️', color: '#54a0ff' },
+    theatre:    { amenity: 'theatre',    emoji: '🎭', color: '#fd79a8' },
+  };
 
-  const mirrors = [
-    'https://overpass.private.coffee/api/interpreter',
-    'https://overpass.kumi.systems/api/interpreter',
-    'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
-  ];
+  try {
+    // Use Overpass with a different mirror
+    const bounds = mapInstance.getBounds();
+    const b = `${bounds.getSouth().toFixed(3)},${bounds.getWest().toFixed(3)},${bounds.getNorth().toFixed(3)},${bounds.getEast().toFixed(3)}`;
 
-  let data = null;
-  for (const mirror of mirrors) {
-    try {
-      const res = await fetch(mirror + '?data=' + encodeURIComponent(q));
-      if (res.ok) { data = await res.json(); break; }
-    } catch(e) { continue; }
+    const parts = [
+      `node["amenity"="restaurant"](${b});`,
+      `node["amenity"="bar"](${b});`,
+      `node["amenity"="cafe"](${b});`,
+      `node["leisure"="park"](${b});`,
+      `node["natural"="beach"](${b});`,
+      `node["amenity"="theatre"](${b});`,
+      `node["amenity"="cinema"](${b});`,
+    ].join('');
+
+    const query = `[out:json][timeout:25];(${parts});out 300;`;
+    const url = `https://lz4.overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
+
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+
+    placesData = { restaurant:[], bar:[], cafe:[], park:[], beach:[], theatre:[] };
+    data.elements.forEach(el => {
+      const t = el.tags || {};
+      if (t.amenity === 'restaurant') placesData.restaurant.push(el);
+      else if (t.amenity === 'bar') placesData.bar.push(el);
+      else if (t.amenity === 'cafe') placesData.cafe.push(el);
+      else if (t.leisure === 'park') placesData.park.push(el);
+      else if (t.natural === 'beach') placesData.beach.push(el);
+      else if (t.amenity === 'theatre' || t.amenity === 'cinema') placesData.theatre.push(el);
+    });
+
+    placesLoaded = true;
+    renderPlaceMarkers(activePlaceFilter);
+    const total = data.elements.length;
+    showToast(total > 0 ? `נטענו ${total} אטרקציות! 🎉` : 'זום פנימה לראות אטרקציות');
+  } catch(e) {
+    console.error('Places error:', e);
+    showToast('לא ניתן לטעון אטרקציות כרגע');
   }
-
-  if (!data) { showToast('לא ניתן לטעון אטרקציות כרגע 😔'); return; }
-
-  placesData = { restaurant:[], bar:[], cafe:[], park:[], beach:[], theatre:[] };
-  data.elements.forEach(el => {
-    const t = el.tags || {};
-    if (t.amenity === 'restaurant') placesData.restaurant.push(el);
-    else if (t.amenity === 'bar') placesData.bar.push(el);
-    else if (t.amenity === 'cafe') placesData.cafe.push(el);
-    else if (t.leisure === 'park') placesData.park.push(el);
-    else if (t.natural === 'beach') placesData.beach.push(el);
-    else if (t.amenity === 'theatre' || t.amenity === 'cinema') placesData.theatre.push(el);
-  });
-
-  placesLoaded = true;
-  const counts = Object.entries(placesData).map(([k,v])=>k+':'+v.length).join(', ');
-  console.log('placesData counts:', counts);
-  renderPlaceMarkers(activePlaceFilter);
-  const total = data.elements.length;
-  showToast(total > 0 ? `נטענו ${total} אטרקציות! 🎉` : 'זומו פנימה לראות אטרקציות');
 }
-
 
 function filterPlaces(type) {
   activePlaceFilter = type;
@@ -1873,11 +1818,9 @@ function renderPlaceMarkers(filter) {
   clearPlaceMarkers();
   const types = filter === 'all' ? Object.keys(PLACE_TYPES) : [filter];
 
-  console.log('rendering types:', types);
   types.forEach(type => {
     const meta = PLACE_TYPES[type];
     const places = placesData[type] || [];
-    console.log(type, places.length, 'places');
     // Limit to 80 per type to avoid clutter
     places.slice(0, 80).forEach(place => {
       if (!place.lat || !place.lon) return;
@@ -1913,13 +1856,11 @@ function renderPlaceMarkers(filter) {
 // Reload places when map moves significantly
 let placesReloadTimer = null;
 let lastPlacesCenter = null;
-
 function onMapMoveEnd() {
   if (!placesOn) return;
   clearTimeout(placesReloadTimer);
   placesReloadTimer = setTimeout(async () => {
     const center = mapInstance.getCenter();
-    // Only reload if moved more than 0.5km from last load
     if (lastPlacesCenter) {
       const dist = getDistanceKm(lastPlacesCenter.lat, lastPlacesCenter.lng, center.lat, center.lng);
       if (dist < 0.5) return;
