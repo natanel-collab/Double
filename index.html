@@ -509,12 +509,12 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
 
 
 <!-- FULL COUPLE PROFILE -->
-<div id="screen-full-profile" class="screen scroll-screen" style="padding:0 0 calc(var(--safe-bot) + 80px)">
+<div id="screen-full-profile" class="screen" style="flex-direction:column;overflow:hidden">
   <div style="display:flex;align-items:center;gap:12px;padding:calc(var(--safe-top) + 14px) 18px 14px;border-bottom:1px solid var(--border);background:var(--bg2);position:sticky;top:0;z-index:10">
     <button class="icon-btn" onclick="closeFullProfile()">←</button>
     <div style="font-family:'Syne';font-weight:700;font-size:17px" id="fp-title">פרופיל הזוג</div>
   </div>
-  <div style="padding:20px 18px;display:flex;flex-direction:column;gap:14px" id="fp-body"></div>
+  <div style="padding:20px 18px;display:flex;flex-direction:column;gap:14px;flex:1;overflow-y:auto;padding-bottom:20px" id="fp-body"></div>
   <div style="padding:16px 18px;border-top:1px solid var(--border);background:var(--bg);position:sticky;bottom:0;display:flex;flex-direction:column;gap:8px">
     <button class="shake-btn" onclick="sendShake()">💞 Double Shake!</button>
     <div style="display:flex;gap:8px">
@@ -534,8 +534,11 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
   <div class="panel-body" id="panel-body"></div>
   <div class="panel-footer">
     <button class="shake-btn" id="shake-btn" onclick="sendShake()">💞 Double Shake!</button>
-    <div style="display:flex;gap:8px;margin-top:8px"><button class="btn-secondary" style="flex:1" onclick="openChat()">💬 צ&apos;אט</button><button class="btn-secondary" style="flex:1" onclick="openReviewModal()">⭐ המלצה</button></div>
-    <button onclick="openFullProfile()" style="width:100%;padding:11px;border:1px solid rgba(255,75,110,0.25);border-radius:12px;background:rgba(255,75,110,0.06);color:#ff8fa8;font-family:'Heebo';font-weight:600;font-size:13px;cursor:pointer;margin-top:0">👤 פרופיל מלא</button>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn-secondary" style="flex:1" onclick="openChat()">💬 צ&apos;אט</button>
+      <button class="btn-secondary" style="flex:1" onclick="openReviewModal()">⭐ המלצה</button>
+      <button class="btn-secondary" style="flex:1;color:#ff8fa8;border-color:rgba(255,75,110,0.25)" onclick="openFullProfile()">👤 פרופיל</button>
+    </div>
     <div style="text-align:center;color:var(--text3);font-size:12px;margin-top:8px">נפתח צ&apos;אט קבוצתי של 4 אנשים</div>
   </div>
 </div>
