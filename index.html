@@ -133,6 +133,10 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
 .msg-bubble.other{background:linear-gradient(135deg,#FF6B6B 0%,#6C5CE7 100%);color:white;border-radius:20px 20px 20px 6px;box-shadow:0 6px 18px rgba(108,92,231,0.35)}
 .msg-time{font-size:10px;color:var(--text3);margin-top:4px;padding:0 4px}
 @keyframes fadeSlideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.ice-msg{align-self:center;max-width:90%;text-align:center;background:radial-gradient(ellipse at 50% 0%,rgba(255,200,60,0.14),transparent 70%),rgba(20,20,35,0.6);border:1px solid rgba(255,200,60,0.4);border-radius:18px;padding:14px 18px;box-shadow:0 0 24px rgba(255,200,60,0.18);animation:iceGlow 2.5s ease-in-out infinite,fadeSlideUp 0.32s ease both}
+.ice-label{font-size:11px;font-weight:700;color:#ffd24a;letter-spacing:0.5px;margin-bottom:6px}
+.ice-text{font-size:14px;color:#fff;line-height:1.5}
+@keyframes iceGlow{0%,100%{box-shadow:0 0 24px rgba(255,200,60,0.15)}50%{box-shadow:0 0 34px rgba(255,200,60,0.3)}}
 .icebreaker-card{background:rgba(255,159,67,0.1);border:1px solid rgba(255,159,67,0.25);border-radius:14px;padding:12px 14px;margin-bottom:4px}
 .icebreaker-label{font-size:11px;color:var(--orange);font-weight:700;margin-bottom:4px}
 .chat-input-row{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--border);padding-bottom:calc(var(--safe-bot) + 12px);flex-shrink:0}
@@ -673,6 +677,7 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
     <button onclick="openReviewModal()" style="background:rgba(255,215,0,0.15);border:1px solid rgba(255,215,0,0.3);color:#ffd700;padding:6px 14px;border-radius:100px;font-family:'Heebo';font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">⭐ המלצה</button>
   </div>
   <div class="chat-input-row">
+    <button onclick="sendIcebreaker()" title="שובר קרח" style="width:42px;height:42px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,rgba(255,200,60,0.2),rgba(255,160,40,0.15));border:1px solid rgba(255,200,60,0.4);display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer">🎲</button>
     <input class="chat-input" id="chat-input" placeholder="כתבו הודעה..." onkeydown="if(event.key==='Enter')sendMsg()"/>
     <button class="chat-send" onclick="sendMsg()">↑</button>
   </div>
@@ -804,11 +809,26 @@ const STATUS_META = {
   cold: {color:'#54a0ff',label:'פתוחים'},
 };
 const ICEBREAKERS = [
-  'מי הזוג שיותר סביר שיאחר למפגש? 😄',
-  'מהו הדייט הכי מביך שחוויתם יחד? 😂',
-  'אם הייתם חייבים לבחור: ים או הרים?',
-  'מהי ארוחת הערב המושלמת בעיניכם?',
-  'מה הדבר שאתם הכי לא מסכימים עליו? 🤔',
+  'מי מבני הזוג עושה יותר פדיחות כשאתם יוצאים? 😂',
+  'אם הייתם צריכים לבחור דייט משותף עכשיו: פאב רועש או פיקניק שקט בים? 🍻🏖️',
+  'מה הדבר הכי מוזר שהזוג השני לא יודע עליכם עדיין? 🙈',
+  'מי מבני הזוג מבזבז יותר כסף על שטויות? 💸',
+  'מי הזוג שיותר סביר שיאחר למפגש? ⏰',
+  'מהו הדייט הכי מביך שחוויתם יחד? 😳',
+  'אם הייתם חייבים לבחור: ים או הרים? 🌊⛰️',
+  'מי מבשל יותר טוב — ומי רק חושב שכן? 👨‍🍳',
+  'מה השיר שתמיד גורם לכם לרקוד? 💃',
+  'מי נרדם ראשון מול הטלוויזיה? 😴',
+  'הזמנה אחרונה שהתחרטתם עליה? 🛍️',
+  'מי האחראי על ה-GPS בנסיעות — ולמה זו טעות? 🗺️',
+  'מה הדבר הראשון ששמתם לב אצל הזוג השני? 👀',
+  'אם היה לכם ערב חופשי בלי תכניות — מה הייתם עושים? ✨',
+  'מי יותר רומנטי מביניכם? 💕',
+  'הנופש הכי טוב שהייתם בו יחד? 🏝️',
+  'מי גונב יותר אוכל מהצלחת של השני? 🍟',
+  'מה ההרגל המעצבן (אבל חמוד) של בן/בת הזוג? 😅',
+  'איזה כינוי חיבה אתם הכי שונאים? 🙄',
+  'מי יוזם יותר — דייטים, יציאות, הרפתקאות? 🚀',
 ];
 const DIST_VALUES = [2,10,25,50,100,99999];
 const DIST_LABELS = ['2 ק"מ','10 ק"מ','25 ק"מ','50 ק"מ','100 ק"מ','הכל'];
@@ -1106,7 +1126,7 @@ function openCouplePanel(couple) {
   selectedCouple=couple;
   const status=couple.status||'cold';
   const meta=STATUS_META[status];
-  document.getElementById('panel-title').textContent=`${couple.name} & ${couple.partner_name||'?'}`;
+  document.getElementById('panel-title').textContent=`${couple.name} <span style="font-family:'Heebo',sans-serif;font-weight:400;opacity:0.7">&</span> ${couple.partner_name||'?'}`;
   const photoHtml=couple.photo_url
     ?`<img src="${couple.photo_url}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid ${meta.color};margin:0 auto 12px;display:block"/>`
     :`<div style="width:80px;height:80px;border-radius:50%;background:rgba(255,75,110,0.15);border:2px solid ${meta.color};display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 12px">${vibeEmoji((couple.vibes||[])[0])}</div>`;
@@ -1179,7 +1199,7 @@ async function openChat() {
   closePanel();
   const couple=selectedCouple;
   currentRoomId=getRoomId(currentUser.id,couple.id);
-  document.getElementById('chat-couple-name').textContent=`${couple.name} & ${couple.partner_name||'?'}`;
+  document.getElementById('chat-couple-name').textContent=`${couple.name} <span style="font-family:'Heebo',sans-serif;font-weight:400;opacity:0.7">&</span> ${couple.partner_name||'?'}`;
   document.getElementById('chat-emoji').textContent=vibeEmoji((couple.vibes||[])[0]);
   document.getElementById('chat-messages').innerHTML='<div style="text-align:center;color:var(--text3);padding:20px;font-size:13px">טוען...</div>';
   document.getElementById('chat-panel').classList.add('open');
@@ -1209,6 +1229,11 @@ function renderRealChat(msgs,icebreaker) {
   msgs.forEach(msg=>{
     const self=msg.sender_id===currentUser.id;
     const time=new Date(msg.created_at).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+    if (msg.text && msg.text.startsWith('🎲|')) {
+      const q = msg.text.slice(2);
+      html+=`<div class="ice-msg"><div class="ice-label">🎲 שובר קרח</div><div class="ice-text">${q}</div></div>`;
+      return;
+    }
     const badge=self?(msg.sender_name||'אתם'):('💑 '+(msg.sender_name||''));
     const del=self?`<div onclick="deleteMsg(${msg.id})" style="font-size:11px;color:var(--text3);cursor:pointer;padding:2px 4px;margin-top:2px">🗑️</div>`:'';
     html+=`<div class="msg-wrapper ${self?'self':'other'}"><span class="msg-namebadge ${self?'self':'other'}">${badge}</span><div class="msg-bubble ${self?'self':'other'}">${msg.text}</div><div class="msg-time">${time}</div>${del}</div>`;
@@ -1217,6 +1242,14 @@ function renderRealChat(msgs,icebreaker) {
   // Show review bar if there are messages (meaning they've chatted)
   const bar = document.getElementById('chat-review-bar');
   if (bar) bar.style.display = msgs.length > 0 ? 'flex' : 'none';
+}
+
+
+async function sendIcebreaker() {
+  if (!currentRoomId) return;
+  const q = ICEBREAKERS[Math.floor(Math.random()*ICEBREAKERS.length)];
+  const {error} = await sb.from('messages').insert({room_id:currentRoomId,sender_id:currentUser.id,sender_name:myProfile?.name||'אנחנו',text:'🎲|'+q});
+  if (error) showToast('שגיאה בשליחה');
 }
 
 async function sendMsg() {
@@ -1262,7 +1295,7 @@ async function loadChats() {
         <div style="font-size:18px">🗑️</div>
         <div style="font-size:10px;color:white;font-weight:700">מחק</div>
       </div>
-      <div class="chat-row-inner" onclick="if(this.style.transform&&this.style.transform!=='translateX(0px)'){this.style.transform='translateX(0)';return;}openChatById('${profile.id}')" style="display:flex;gap:12px;align-items:center;padding:14px 16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;cursor:pointer;transition:transform 0.2s ease;position:relative" ontouchstart="chatSwipeStart(event,this)" ontouchmove="chatSwipeMove(event,this)" ontouchend="chatSwipeEnd(event,this)">${photoEl}<div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><span style="font-family:'Syne';font-weight:700;font-size:15px">${profile.name} & ${profile.partner_name||'?'}</span><span style="font-size:11px;color:var(--text3)">${time}</span></div><div style="font-size:13px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${isMine?'אתם: ':''}${lastMsg.text}</div></div><div style="font-size:18px;flex-shrink:0">›</div></div>
+      <div class="chat-row-inner" onclick="if(this.style.transform&&this.style.transform!=='translateX(0px)'){this.style.transform='translateX(0)';return;}openChatById('${profile.id}')" style="display:flex;gap:12px;align-items:center;padding:14px 16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;cursor:pointer;transition:transform 0.2s ease;position:relative" ontouchstart="chatSwipeStart(event,this)" ontouchmove="chatSwipeMove(event,this)" ontouchend="chatSwipeEnd(event,this)">${photoEl}<div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><span style="font-family:'Syne';font-weight:700;font-size:15px">${profile.name} <span style="font-family:'Heebo',sans-serif;font-weight:400;opacity:0.7">&</span> ${profile.partner_name||'?'}</span><span style="font-size:11px;color:var(--text3)">${time}</span></div><div style="font-size:13px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${isMine?'אתם: ':''}${lastMsg.text}</div></div><div style="font-size:18px;flex-shrink:0">›</div></div>
     </div>`;
   }).join('');
 }
@@ -1325,7 +1358,7 @@ function renderFeed(searchQ) {
       ?`<img src="${c.photo_url}" style="width:54px;height:54px;border-radius:50%;object-fit:cover;border:2px solid ${meta.color}55;flex-shrink:0"/>`
       :`<div style="width:54px;height:54px;border-radius:50%;background:${meta.color}18;border:2px solid ${meta.color}44;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">${emoji}</div>`;
     const tags=(c.vibes||[]).slice(0,3).map(v=>`<span class="tag">${v}</span>`).join('');
-    return `<div onclick="openCouplePanel(${JSON.stringify(c).replace(/"/g,'&quot;')})" style="background:rgba(255,255,255,0.04);border:1px solid ${meta.color}22;border-radius:18px;padding:16px;margin-bottom:12px;cursor:pointer" onmouseenter="this.style.background='${meta.color}12'" onmouseleave="this.style.background='rgba(255,255,255,0.04)'"><div style="display:flex;gap:12px;align-items:center;margin-bottom:${c.status_text||tags?'12px':'0'}">${photoEl}<div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span style="font-family:'Syne';font-weight:800;font-size:16px">${c.name} & ${c.partner_name||'?'}</span><div style="background:${meta.color}22;color:${meta.color};padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;white-space:nowrap">${meta.label}</div></div><div style="color:var(--text3);font-size:12px;margin-top:2px">${c.city||'ישראל'}</div></div></div>${c.status_text?`<div style="color:var(--text2);font-size:14px;line-height:1.5;margin-bottom:10px;padding:10px 14px;background:rgba(255,255,255,0.04);border-radius:10px">"${c.status_text}"</div>`:''}${tags?`<div class="tags-row">${tags}</div>`:''}`;
+    return `<div onclick="openCouplePanel(${JSON.stringify(c).replace(/"/g,'&quot;')})" style="background:rgba(255,255,255,0.04);border:1px solid ${meta.color}22;border-radius:18px;padding:16px;margin-bottom:12px;cursor:pointer" onmouseenter="this.style.background='${meta.color}12'" onmouseleave="this.style.background='rgba(255,255,255,0.04)'"><div style="display:flex;gap:12px;align-items:center;margin-bottom:${c.status_text||tags?'12px':'0'}">${photoEl}<div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span style="font-family:'Syne';font-weight:800;font-size:16px">${c.name} <span style="font-family:'Heebo',sans-serif;font-weight:400;opacity:0.7">&</span> ${c.partner_name||'?'}</span><div style="background:${meta.color}22;color:${meta.color};padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;white-space:nowrap">${meta.label}</div></div><div style="color:var(--text3);font-size:12px;margin-top:2px">${c.city||'ישראל'}</div></div></div>${c.status_text?`<div style="color:var(--text2);font-size:14px;line-height:1.5;margin-bottom:10px;padding:10px 14px;background:rgba(255,255,255,0.04);border-radius:10px">"${c.status_text}"</div>`:''}${tags?`<div class="tags-row">${tags}</div>`:''}`;
   }).join('');
 }
 
@@ -1355,7 +1388,7 @@ async function loadShakes() {
     const photoEl=p?.photo_url
       ?`<img src="${p.photo_url}" style="width:56px;height:56px;border-radius:14px;object-fit:cover;flex-shrink:0;border:2px solid var(--pink)"/>`
       :`<div style="width:56px;height:56px;border-radius:14px;background:rgba(255,75,110,0.15);border:2px solid rgba(255,75,110,0.3);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">💞</div>`;
-    return `<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,75,110,0.2);border-radius:18px;padding:16px;margin-bottom:12px"><div style="display:flex;gap:12px;align-items:center;margin-bottom:14px">${photoEl}<div style="flex:1"><div style="font-family:'Syne';font-weight:800;font-size:16px">${p?.name||'?'} & ${p?.partner_name||'?'}</div><div style="color:var(--text3);font-size:12px;margin-top:2px">${p?.city||'ישראל'}</div>${p?.status_text?`<div style="color:var(--text2);font-size:13px;margin-top:4px">"${p.status_text}"</div>`:''}</div></div><div style="display:flex;gap:8px"><button onclick="respondShake(${s.id},'accepted','${p?.name||''}')" style="flex:1;padding:12px;background:linear-gradient(135deg,var(--pink),var(--pink2));border:none;color:white;border-radius:12px;font-family:'Heebo';font-weight:700;font-size:14px;cursor:pointer">💞 קבלו!</button><button onclick="respondShake(${s.id},'declined','')" style="flex:1;padding:12px;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text2);border-radius:12px;font-family:'Heebo';font-weight:600;font-size:14px;cursor:pointer">לא עכשיו</button></div></div>`;
+    return `<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,75,110,0.2);border-radius:18px;padding:16px;margin-bottom:12px"><div style="display:flex;gap:12px;align-items:center;margin-bottom:14px">${photoEl}<div style="flex:1"><div style="font-family:'Syne';font-weight:800;font-size:16px">${p?.name||'?'} <span style="font-family:'Heebo',sans-serif;font-weight:400;opacity:0.7">&</span> ${p?.partner_name||'?'}</div><div style="color:var(--text3);font-size:12px;margin-top:2px">${p?.city||'ישראל'}</div>${p?.status_text?`<div style="color:var(--text2);font-size:13px;margin-top:4px">"${p.status_text}"</div>`:''}</div></div><div style="display:flex;gap:8px"><button onclick="respondShake(${s.id},'accepted','${p?.name||''}')" style="flex:1;padding:12px;background:linear-gradient(135deg,var(--pink),var(--pink2));border:none;color:white;border-radius:12px;font-family:'Heebo';font-weight:700;font-size:14px;cursor:pointer">💞 קבלו!</button><button onclick="respondShake(${s.id},'declined','')" style="flex:1;padding:12px;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text2);border-radius:12px;font-family:'Heebo';font-weight:600;font-size:14px;cursor:pointer">לא עכשיו</button></div></div>`;
   }).join('');
 }
 
@@ -1551,7 +1584,7 @@ function spinRoulette() {
     const emoji=vibeEmoji((p.vibes||[])[0]);
     document.getElementById('roulette-content').innerHTML=`
       <div style="font-size:48px">${emoji}</div>
-      <div style="font-family:'Syne';font-size:22px;font-weight:800;margin-top:10px">${p.name} & ${p.partner_name||'?'}</div>
+      <div style="font-family:'Syne';font-size:22px;font-weight:800;margin-top:10px">${p.name} <span style="font-family:'Heebo',sans-serif;font-weight:400;opacity:0.7">&</span> ${p.partner_name||'?'}</div>
       <div style="color:var(--text2);font-size:14px;margin-top:4px">${p.city||'ישראל'}</div>
       ${p.status_text?`<div style="background:rgba(255,75,110,0.12);border:1px solid rgba(255,75,110,0.25);border-radius:12px;padding:12px;margin:14px 0;font-size:14px;color:#ffb3c1">"${p.status_text}"</div>`:''}
       <button class="fab-btn" style="width:100%;margin-top:10px" onclick="closeRoulette();openRouletteCouple()">💞 Double Shake!</button>
@@ -1598,7 +1631,7 @@ function filterList(vibe) {
     const photoEl=cc.photo_url
       ?`<img src="${cc.photo_url}" style="width:58px;height:58px;border-radius:14px;object-fit:cover;border:2px solid ${meta.color}55;flex-shrink:0"/>`
       :`<div style="width:58px;height:58px;border-radius:14px;background:${meta.color}18;border:2px solid ${meta.color}44;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0">${emoji}</div>`;
-    return `<div onclick="closeListView();openCouplePanel(${JSON.stringify(cc).replace(/"/g,'&quot;')})" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:18px;padding:16px;margin-bottom:10px;cursor:pointer;display:flex;gap:14px;align-items:flex-start" onmouseenter="this.style.background='rgba(255,75,110,0.08)'" onmouseleave="this.style.background='rgba(255,255,255,0.04)'">${photoEl}<div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:4px"><span style="font-family:'Syne';font-weight:800;font-size:16px">${cc.name} & ${cc.partner_name||'?'}</span><div style="background:${meta.color}22;color:${meta.color};padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;white-space:nowrap">${meta.label}</div></div><div style="color:var(--text3);font-size:12px;margin-bottom:6px">${cc.city||'ישראל'}</div>${cc.status_text?`<div style="color:var(--text2);font-size:13px;line-height:1.4;margin-bottom:8px">"${cc.status_text}"</div>`:''}<div style="display:flex;flex-wrap:wrap;gap:5px">${(cc.vibes||[]).map(v=>`<span class="tag">${v}</span>`).join('')}</div></div></div>`;
+    return `<div onclick="closeListView();openCouplePanel(${JSON.stringify(cc).replace(/"/g,'&quot;')})" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:18px;padding:16px;margin-bottom:10px;cursor:pointer;display:flex;gap:14px;align-items:flex-start" onmouseenter="this.style.background='rgba(255,75,110,0.08)'" onmouseleave="this.style.background='rgba(255,255,255,0.04)'">${photoEl}<div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:4px"><span style="font-family:'Syne';font-weight:800;font-size:16px">${cc.name} <span style="font-family:'Heebo',sans-serif;font-weight:400;opacity:0.7">&</span> ${cc.partner_name||'?'}</span><div style="background:${meta.color}22;color:${meta.color};padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;white-space:nowrap">${meta.label}</div></div><div style="color:var(--text3);font-size:12px;margin-bottom:6px">${cc.city||'ישראל'}</div>${cc.status_text?`<div style="color:var(--text2);font-size:13px;line-height:1.4;margin-bottom:8px">"${cc.status_text}"</div>`:''}<div style="display:flex;flex-wrap:wrap;gap:5px">${(cc.vibes||[]).map(v=>`<span class="tag">${v}</span>`).join('')}</div></div></div>`;
   }).join('');
 }
 
@@ -1628,7 +1661,7 @@ function openProfile() {
     c.classList.toggle('selected', c.dataset.looking===myProfile?.looking_for);
   });
   document.getElementById('profile-vibes-input').value=(myProfile?.vibes||[]).join(', ');
-  document.getElementById('profile-couple-name').textContent=`${myProfile?.name||'?'} & ${myProfile?.partner_name||'?'}`;
+  document.getElementById('profile-couple-name').textContent=`${myProfile?.name||'?'} <span style="font-family:'Heebo',sans-serif;font-weight:400;opacity:0.7">&</span> ${myProfile?.partner_name||'?'}`;
   document.getElementById('profile-couple-city').textContent=myProfile?.city||'';
   document.getElementById('profile-invite-link').value=window.location.origin+'?invite='+(myProfile?.invite_code||currentUser.id);
   const partnerStatus=document.getElementById('partner-link-status');
@@ -1933,7 +1966,7 @@ function checkNearbyCouples() {
       const key = c.id + '_' + c.status_text;
       if (!lastNearbyAlert[key]) {
         lastNearbyAlert[key] = true;
-        showToast(`📍 ${c.name} & ${c.partner_name || '?'} פעילים ${Math.round(dist * 10) / 10} ק"מ ממך!`);
+        showToast(`📍 ${c.name} <span style="font-family:'Heebo',sans-serif;font-weight:400;opacity:0.7">&</span> ${c.partner_name || '?'} פעילים ${Math.round(dist * 10) / 10} ק"מ ממך!`);
       }
     }
   });
@@ -2016,7 +2049,7 @@ async function loadReviewsReceived() {
     return `<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,215,0,0.2);border-radius:14px;padding:14px;margin-bottom:10px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
         <div style="font-size:20px">⭐</div>
-        <span style="font-weight:700;font-size:14px">${p?.name || '?'} & ${p?.partner_name || '?'}</span>
+        <span style="font-weight:700;font-size:14px">${p?.name || '?'} <span style="font-family:'Heebo',sans-serif;font-weight:400;opacity:0.7">&</span> ${p?.partner_name || '?'}</span>
       </div>
       <div style="font-size:14px;color:var(--text2);line-height:1.5">"${r.text}"</div>
     </div>`;
