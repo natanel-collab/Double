@@ -1126,7 +1126,7 @@ function openCouplePanel(couple) {
   selectedCouple=couple;
   const status=couple.status||'cold';
   const meta=STATUS_META[status];
-  document.getElementById('panel-title').textContent=`${couple.name} <span style="font-family:'Heebo',sans-serif;font-weight:400;opacity:0.7">&</span> ${couple.partner_name||'?'}`;
+  document.getElementById('panel-title').textContent=`${couple.name} & ${couple.partner_name||'?'}`;
   const photoHtml=couple.photo_url
     ?`<img src="${couple.photo_url}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid ${meta.color};margin:0 auto 12px;display:block"/>`
     :`<div style="width:80px;height:80px;border-radius:50%;background:rgba(255,75,110,0.15);border:2px solid ${meta.color};display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 12px">${vibeEmoji((couple.vibes||[])[0])}</div>`;
@@ -1199,7 +1199,7 @@ async function openChat() {
   closePanel();
   const couple=selectedCouple;
   currentRoomId=getRoomId(currentUser.id,couple.id);
-  document.getElementById('chat-couple-name').textContent=`${couple.name} <span style="font-family:'Heebo',sans-serif;font-weight:400;opacity:0.7">&</span> ${couple.partner_name||'?'}`;
+  document.getElementById('chat-couple-name').textContent=`${couple.name} & ${couple.partner_name||'?'}`;
   document.getElementById('chat-emoji').textContent=vibeEmoji((couple.vibes||[])[0]);
   document.getElementById('chat-messages').innerHTML='<div style="text-align:center;color:var(--text3);padding:20px;font-size:13px">טוען...</div>';
   document.getElementById('chat-panel').classList.add('open');
@@ -1661,7 +1661,7 @@ function openProfile() {
     c.classList.toggle('selected', c.dataset.looking===myProfile?.looking_for);
   });
   document.getElementById('profile-vibes-input').value=(myProfile?.vibes||[]).join(', ');
-  document.getElementById('profile-couple-name').textContent=`${myProfile?.name||'?'} <span style="font-family:'Heebo',sans-serif;font-weight:400;opacity:0.7">&</span> ${myProfile?.partner_name||'?'}`;
+  document.getElementById('profile-couple-name').textContent=`${myProfile?.name||'?'} & ${myProfile?.partner_name||'?'}`;
   document.getElementById('profile-couple-city').textContent=myProfile?.city||'';
   document.getElementById('profile-invite-link').value=window.location.origin+'?invite='+(myProfile?.invite_code||currentUser.id);
   const partnerStatus=document.getElementById('partner-link-status');
