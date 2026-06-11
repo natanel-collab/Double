@@ -2223,12 +2223,12 @@ let _chatSwipeX = 0;
 function chatSwipeStart(e, el) { _chatSwipeX = e.touches[0].clientX; }
 function chatSwipeMove(e, el) {
   const diff = e.touches[0].clientX - _chatSwipeX;
-  if (diff > 0) el.style.transform = `translateX(${Math.min(diff,72)}px)`;
-  else if (diff < 0 && el.style.transform) el.style.transform = `translateX(${Math.max(diff,0)}px)`;
+  if (diff < 0) el.style.transform = `translateX(${Math.max(diff,-72)}px)`;
+  else if (diff > 0 && el.style.transform) el.style.transform = `translateX(${Math.min(diff,0)}px)`;
 }
 function chatSwipeEnd(e, el) {
   const diff = e.changedTouches[0].clientX - _chatSwipeX;
-  if (diff > 40) el.style.transform = 'translateX(72px)';
+  if (diff < -40) el.style.transform = 'translateX(-72px)';
   else el.style.transform = 'translateX(0)';
 }
 
