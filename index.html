@@ -1291,7 +1291,7 @@ async function loadChats() {
     const time=new Date(lastMsg.created_at).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
     const isMine=lastMsg.sender_id===currentUser.id;
     return `<div style="position:relative;overflow:hidden;border-radius:16px;margin-bottom:10px">
-      <div style="position:absolute;left:0;top:0;bottom:0;width:72px;background:#ff4b6e;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;border-radius:16px 0 0 16px" onclick="deleteChat('${profile.id}','${roomId}')">
+      <div style="position:absolute;right:0;top:0;bottom:0;width:72px;background:#ff4b6e;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;border-radius:0 16px 16px 0" onclick="deleteChat('${profile.id}','${roomId}')">
         <div style="font-size:18px">🗑️</div>
         <div style="font-size:10px;color:white;font-weight:700">מחק</div>
       </div>
@@ -2223,12 +2223,12 @@ let _chatSwipeX = 0;
 function chatSwipeStart(e, el) { _chatSwipeX = e.touches[0].clientX; }
 function chatSwipeMove(e, el) {
   const diff = e.touches[0].clientX - _chatSwipeX;
-  if (diff < 0) el.style.transform = `translateX(${Math.max(diff,-72)}px)`;
-  else if (diff > 0 && el.style.transform) el.style.transform = `translateX(${Math.min(diff,0)}px)`;
+  if (diff > 0) el.style.transform = `translateX(${Math.min(diff,72)}px)`;
+  else if (diff < 0 && el.style.transform) el.style.transform = `translateX(${Math.max(diff,0)}px)`;
 }
 function chatSwipeEnd(e, el) {
   const diff = e.changedTouches[0].clientX - _chatSwipeX;
-  if (diff < -40) el.style.transform = 'translateX(-72px)';
+  if (diff > 40) el.style.transform = 'translateX(72px)';
   else el.style.transform = 'translateX(0)';
 }
 
