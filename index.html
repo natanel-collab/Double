@@ -902,7 +902,7 @@ async function loadMyProfile() {
     showScreen('setup'); initSetupScreen();
   } else {
     showScreen('main'); initNav(); updateProfileNavIcon();
-    await initMap(); subscribeRealtime(); subscribeNewMessages();
+    await initMap(); subscribeRealtime(); subscribeNewMessages(); subscribeShakes();
     loadShakes();
     await checkInviteCode();
   }
@@ -1333,8 +1333,8 @@ function renderFeed(searchQ) {
   const couples=allCouples.filter(c=>{
     if (c.id===currentUser.id) return false;
     if (c.status==='cold') return false;
-    if (feedVibeFilter==='hot') return c.status==='hot';
-    if (feedVibeFilter!=='all') return (c.vibes||[]).includes(feedVibeFilter);
+    if (feedVibeFilter==='hot'&&c.status!=='hot') return false;
+    if (feedVibeFilter!=='all'&&feedVibeFilter!=='hot'&&!(c.vibes||[]).includes(feedVibeFilter)) return false;
     if (q) {
       const name = (c.name+' '+(c.partner_name||'')+' '+(c.city||'')).toLowerCase();
       if (!name.includes(q)) return false;
@@ -1700,6 +1700,8 @@ function openProfile() {
     else sc.style.display='none';
   }
   renderStatusOptions();
+  loadDateHistory();
+  loadReviewsReceived();
 }
 
 async function saveProfile() {
@@ -1932,7 +1934,6 @@ function nextOnboardSlide() {
 function finishOnboarding() {
   localStorage.setItem('double_onboarded', '1');
   showScreen('auth');
-  // Init swipe on next render
 }
 
 function _obInitSwipe() {
@@ -2520,6 +2521,7 @@ function updateHeatmapIfOn() {
 // ═══════════════════════════════════
 // START
 // ═══════════════════════════════════
+_obInitSwipe();
 init();
 </script>
 </body>
