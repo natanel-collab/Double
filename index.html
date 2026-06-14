@@ -849,7 +849,7 @@ let currentUser = null, myProfile = null, allCouples = [];
 let mapInstance = null, markers = {};
 let selectedVibeFilter = 'all', selectedCouple = null;
 let maxDistanceKm = 99999;
-let currentRoomId = null, chatChannel = null;
+let currentRoomId = null, chatChannel = null, currentChatMsgs = [];
 let selectedStatusOption = 'cold';
 let eventSelectedVibe = '', eventLat = null, eventLng = null;
 let feedVibeFilter = 'all', listVibeFilter = 'all';
@@ -1212,14 +1212,21 @@ async function openChat() {
   document.getElementById('chat-panel').classList.add('open');
 
   const {data} = await sb.from('messages').select('*').eq('room_id',currentRoomId).order('created_at',{ascending:true}).limit(100);
-  const msgs=data||[];
-  const icebreaker=msgs.length?null:ICEBREAKERS[Math.floor(Math.random()*ICEBREAKERS.length)];
-  renderRealChat(msgs,icebreaker);
+  currentChatMsgs=data||[];
+  const icebreaker=currentChatMsgs.length?null:ICEBREAKERS[Math.floor(Math.random()*ICEBREAKERS.length)];
+  renderRealChat(currentChatMsgs,icebreaker);
 
   if (chatChannel) chatChannel.unsubscribe();
   chatChannel=sb.channel('room:'+currentRoomId)
     .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:`room_id=eq.${currentRoomId}`},payload=>{
-      renderRealChat([...(data||[]),payload.new],null);
+      if (currentChatMsgs.some(m=>m.id===payload.new.id)) return;
+      currentChatMsgs.push(payload.new);
+      renderRealChat(currentChatMsgs,null);
+    })
+    .on('postgres_changes',{event:'DELETE',schema:'public',table:'messages',filter:`room_id=eq.${currentRoomId}`},payload=>{
+      const idx=currentChatMsgs.findIndex(m=>m.id===payload.old.id);
+      if (idx>-1) currentChatMsgs.splice(idx,1);
+      renderRealChat(currentChatMsgs,null);
     }).subscribe();
 }
 
@@ -1255,8 +1262,10 @@ function renderRealChat(msgs,icebreaker) {
 async function sendIcebreaker() {
   if (!currentRoomId) return;
   const q = ICEBREAKERS[Math.floor(Math.random()*ICEBREAKERS.length)];
-  const {error} = await sb.from('messages').insert({room_id:currentRoomId,sender_id:currentUser.id,sender_name:myProfile?.name||'אנחנו',text:'🎲|'+q});
-  if (error) showToast('שגיאה בשליחה');
+  const {data,error} = await sb.from('messages').insert({room_id:currentRoomId,sender_id:currentUser.id,sender_name:myProfile?.name||'אנחנו',text:'🎲|'+q}).select().single();
+  if (error) {showToast('שגיאה בשליחה');return;}
+  currentChatMsgs.push(data);
+  renderRealChat(currentChatMsgs,null);
 }
 
 async function sendMsg() {
@@ -1264,8 +1273,10 @@ async function sendMsg() {
   const text=input.value.trim();
   if (!text||!currentRoomId) return;
   input.value='';
-  const {error} = await sb.from('messages').insert({room_id:currentRoomId,sender_id:currentUser.id,sender_name:myProfile?.name||'אנחנו',text});
-  if (error) showToast('שגיאה בשליחה');
+  const {data,error} = await sb.from('messages').insert({room_id:currentRoomId,sender_id:currentUser.id,sender_name:myProfile?.name||'אנחנו',text}).select().single();
+  if (error) {showToast('שגיאה בשליחה');return;}
+  currentChatMsgs.push(data);
+  renderRealChat(currentChatMsgs,null);
 }
 
 // ═══════════════════════════════════
@@ -2264,8 +2275,9 @@ async function deleteMsg(msgId) {
   if (!confirm('למחוק הודעה זו?')) return;
   await sb.from('messages').delete().eq('id', msgId).eq('sender_id', currentUser.id);
   showToast('הודעה נמחקה');
-  const {data} = await sb.from('messages').select('*').eq('room_id',currentRoomId).order('created_at',{ascending:true}).limit(100);
-  renderRealChat(data||[], null);
+  const idx=currentChatMsgs.findIndex(m=>m.id===msgId);
+  if (idx>-1) currentChatMsgs.splice(idx,1);
+  renderRealChat(currentChatMsgs, null);
 }
 
 // ═══════════════════════════════════
