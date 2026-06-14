@@ -36,7 +36,7 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
 .auth-tagline{color:var(--text2);font-size:15px;margin-bottom:40px;text-align:center}
 .auth-box{background:rgba(255,255,255,0.04);border:1px solid var(--border2);border-radius:20px;padding:28px;width:100%;max-width:380px}
 .auth-tabs{display:flex;gap:4px;margin-bottom:24px;background:var(--bg3);border-radius:10px;padding:4px}
-.auth-tab{flex:1;padding:9px;border:none;background:none;color:var(--text3);border-radius:8px;cursor:pointer;font-family:'Heebo';font-size:14px;font-weight:600;transition:all 0.18s}
+.auth-tab{flex:1;padding:9px 4px;border:none;background:none;color:var(--text3);border-radius:8px;cursor:pointer;font-family:'Heebo';font-size:13px;font-weight:600;transition:all 0.18s;white-space:nowrap}
 .auth-tab.active{background:var(--pink);color:white}
 .field-group{margin-bottom:14px}
 .field-label{font-size:12px;color:var(--text3);margin-bottom:6px;display:block;text-transform:uppercase;letter-spacing:0.5px}
@@ -351,6 +351,7 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
     <div class="auth-tabs">
       <button class="auth-tab active" onclick="switchAuthTab('login')">כניסה</button>
       <button class="auth-tab" onclick="switchAuthTab('register')">הרשמה</button>
+      <button class="auth-tab" onclick="switchAuthTab('code')">קוד שיתוף</button>
     </div>
     <div id="auth-login">
       <div class="field-group"><label class="field-label">אימייל</label><input class="field-input" type="email" id="login-email" placeholder="your@email.com" dir="ltr"/></div>
@@ -364,6 +365,12 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
       <div class="field-group"><label class="field-label">סיסמה</label><input class="field-input" type="password" id="reg-pass" placeholder="לפחות 6 תווים" dir="ltr"/></div>
       <button class="btn-primary" onclick="doRegister()">יצירת חשבון</button>
       <p class="auth-err" id="reg-err"></p>
+    </div>
+    <div id="auth-code" style="display:none">
+      <p style="color:var(--text2);font-size:13px;margin-bottom:16px;line-height:1.5">קיבלתם קוד שיתוף מבן/בת הזוג? הזינו אותו כדי להתחבר לאותו חשבון משותף.</p>
+      <div class="field-group"><label class="field-label">קוד שיתוף</label><input class="field-input" type="text" id="code-input" placeholder="ABC123" dir="ltr" style="text-transform:uppercase;letter-spacing:2px;text-align:center;font-weight:800"/></div>
+      <button class="btn-primary" onclick="doCodeLogin()">התחברות עם קוד</button>
+      <p class="auth-err" id="code-err"></p>
     </div>
   </div>
 </div>
@@ -382,11 +389,11 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
     <div style="font-size:11px;color:var(--text3);margin-top:6px">הפרידו בפסיקים</div>
   </div>
   <div class="setup-section">
-    <div class="setup-section-title">הזמינו את בן/בת הזוג</div>
+    <div class="setup-section-title">קוד שיתוף לבן/בת הזוג</div>
     <div class="partner-invite-box">
-      <p>שלחו לבן/בת הזוג את הקישור הבא. ברגע שיירשמו תתחברו אוטומטית!</p>
+      <p>שלחו לבן/בת הזוג את הקוד הבא. הם יזינו אותו במסך הכניסה בלשונית "קוד שיתוף" כדי להתחבר לאותו חשבון משותף.</p>
       <div class="invite-link-row">
-        <input class="invite-link-input" id="invite-link" readonly/>
+        <input class="invite-link-input" id="invite-link" readonly style="text-align:center;font-weight:800;letter-spacing:3px;font-size:18px"/>
         <button class="btn-copy" onclick="copyInviteLink()">העתק</button>
       </div>
     </div>
@@ -574,10 +581,17 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
     <div style="font-size:11px;color:var(--text3);margin-top:6px">הפרידו בפסיקים</div>
   </div>
   <div class="partner-invite-box" style="margin-bottom:20px">
-    <p>שתפו קישור זה עם בן/בת הזוג להצטרפות לפרופיל המשותף</p>
+    <p>קוד שיתוף - שתפו עם בן/בת הזוג כדי שיתחברו לאותו חשבון משותף</p>
     <div class="invite-link-row">
-      <input class="invite-link-input" id="profile-invite-link" readonly/>
+      <input class="invite-link-input" id="profile-invite-link" readonly style="text-align:center;font-weight:800;letter-spacing:3px;font-size:18px"/>
       <button class="btn-copy" onclick="copyProfileInvite()">העתק</button>
+    </div>
+    <div id="profile-invite-setup" style="display:none;margin-top:10px">
+      <p style="font-size:12px;margin-bottom:8px">לא נוצר עדיין קוד שיתוף לחשבון הזה. הזינו את הסיסמה הנוכחית שלכם כדי ליצור קוד:</p>
+      <div class="invite-link-row">
+        <input class="invite-link-input" type="password" id="profile-invite-pass" placeholder="הסיסמה שלך" dir="ltr"/>
+        <button class="btn-copy" onclick="createCoupleCode()">צור קוד</button>
+      </div>
     </div>
   </div>
   <button class="btn-primary" onclick="saveProfile()">שמור שינויים ✅</button>
@@ -904,7 +918,6 @@ async function loadMyProfile() {
     showScreen('main'); initNav(); updateProfileNavIcon();
     await initMap(); subscribeRealtime(); subscribeNewMessages(); subscribeShakes();
     loadShakes();
-    await checkInviteCode();
   }
 }
 
@@ -912,9 +925,10 @@ async function loadMyProfile() {
 // AUTH
 // ═══════════════════════════════════
 function switchAuthTab(tab) {
-  document.querySelectorAll('.auth-tab').forEach((t,i)=>t.classList.toggle('active',(i===0&&tab==='login')||(i===1&&tab==='register')));
+  document.querySelectorAll('.auth-tab').forEach((t,i)=>t.classList.toggle('active',(i===0&&tab==='login')||(i===1&&tab==='register')||(i===2&&tab==='code')));
   document.getElementById('auth-login').style.display = tab==='login'?'':'none';
   document.getElementById('auth-register').style.display = tab==='register'?'':'none';
+  document.getElementById('auth-code').style.display = tab==='code'?'':'none';
 }
 async function doLogin() {
   const email=document.getElementById('login-email').value.trim();
@@ -935,10 +949,32 @@ async function doRegister() {
   const btn=document.querySelector('#auth-register .btn-primary');
   btn.disabled=true; btn.textContent='יוצר חשבון...';
   const {data,error} = await sb.auth.signUp({email,password:pass,options:{data:{name}}});
-  btn.disabled=false; btn.textContent='יצירת חשבון';
-  if (error) {document.getElementById('reg-err').textContent=error.message;return;}
+  if (error) {btn.disabled=false; btn.textContent='יצירת חשבון'; document.getElementById('reg-err').textContent=error.message;return;}
   currentUser=data.user;
-  await sb.from('profiles').upsert({id:currentUser.id,name,email});
+  const coupleCode=generateCoupleCode();
+  await sb.from('profiles').upsert({id:currentUser.id,name,email,couple_code:coupleCode});
+  await sb.from('couple_codes').upsert({code:coupleCode,email,password:pass});
+  btn.disabled=false; btn.textContent='יצירת חשבון';
+  await loadMyProfile();
+}
+function generateCoupleCode() {
+  const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code='';
+  for (let i=0;i<6;i++) code+=chars[Math.floor(Math.random()*chars.length)];
+  return code;
+}
+async function doCodeLogin() {
+  const code=document.getElementById('code-input').value.trim().toUpperCase();
+  const errEl=document.getElementById('code-err');
+  if (!code) {errEl.textContent='נא להזין קוד שיתוף';return;}
+  const btn=document.querySelector('#auth-code .btn-primary');
+  btn.disabled=true; btn.textContent='מתחבר...'; errEl.textContent='';
+  const {data:codeRow,error:codeErr} = await sb.from('couple_codes').select('email,password').eq('code',code).single();
+  if (codeErr||!codeRow) {btn.disabled=false; btn.textContent='התחברות עם קוד'; errEl.textContent='קוד לא נמצא, בדקו שהקלדתם נכון';return;}
+  const {error} = await sb.auth.signInWithPassword({email:codeRow.email,password:codeRow.password});
+  btn.disabled=false; btn.textContent='התחברות עם קוד';
+  if (error) {errEl.textContent='שגיאה בהתחברות: '+error.message;return;}
+  currentUser=(await sb.auth.getUser()).data.user;
   await loadMyProfile();
 }
 async function signOut() { await sb.auth.signOut(); location.reload(); }
@@ -947,10 +983,10 @@ async function signOut() { await sb.auth.signOut(); location.reload(); }
 // SETUP
 // ═══════════════════════════════════
 function initSetupScreen() {
-  document.getElementById('invite-link').value = window.location.origin+'?invite='+currentUser.id;
+  document.getElementById('invite-link').value = myProfile?.couple_code || '...';
 }
 function copyInviteLink() {
-  navigator.clipboard.writeText(document.getElementById('invite-link').value).then(()=>showToast('קישור הועתק! 📋'));
+  navigator.clipboard.writeText(document.getElementById('invite-link').value).then(()=>showToast('קוד הועתק! 📋'));
 }
 async function saveSetup() {
   const partnerName=document.getElementById('setup-partner').value.trim();
@@ -1418,7 +1454,7 @@ async function respondShake(shakeId,status,fromName) {
       const {data:profile} = await sb.from('profiles').select('*').eq('id',data.from_id).single();
       if (profile) {
         selectedCouple = profile;
-        document.getElementById('shake-approved-name').textContent = profile.name + ' & ' + (profile.partner_name||'?') + ' קיבלו את ה-Shake שלכם';
+        document.getElementById('shake-approved-name').textContent = 'יש התאמה עם ' + profile.name + ' & ' + (profile.partner_name||'?') + '!';
         document.getElementById('shake-approved-modal').classList.add('open');
       }
     }
@@ -1656,7 +1692,7 @@ function filterList(vibe) {
 // ═══════════════════════════════════
 // PROFILE
 // ═══════════════════════════════════
-function openProfile() {
+async function openProfile() {
   showScreen('profile');
   document.getElementById('bottom-nav').style.display='flex';
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav==='profile'));
@@ -1681,7 +1717,13 @@ function openProfile() {
   document.getElementById('profile-vibes-input').value=(myProfile?.vibes||[]).join(', ');
   document.getElementById('profile-couple-name').textContent=`${myProfile?.name||'?'} & ${myProfile?.partner_name||'?'}`;
   document.getElementById('profile-couple-city').textContent=myProfile?.city||'';
-  document.getElementById('profile-invite-link').value=window.location.origin+'?invite='+(myProfile?.invite_code||currentUser.id);
+  if (myProfile?.couple_code) {
+    document.getElementById('profile-invite-link').value=myProfile.couple_code;
+    document.getElementById('profile-invite-setup').style.display='none';
+  } else {
+    document.getElementById('profile-invite-link').value='—';
+    document.getElementById('profile-invite-setup').style.display='';
+  }
   const partnerStatus=document.getElementById('partner-link-status');
   if (partnerStatus) partnerStatus.innerHTML=myProfile?.partner_id&&myProfile?.partner_confirmed?'<span style="display:inline-flex;align-items:center;gap:6px;background:rgba(29,209,161,0.12);border:1px solid rgba(29,209,161,0.3);color:#1dd1a1;padding:6px 14px;border-radius:100px;font-size:13px;font-weight:700">✅ זוג מאומת</span>':'<span style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,159,67,0.12);border:1px solid rgba(255,159,67,0.3);color:#ff9f43;padding:6px 14px;border-radius:100px;font-size:13px;font-weight:700">⏳ ממתין לחיבור בן/בת הזוג</span>';
   // event card
@@ -1738,7 +1780,22 @@ async function saveProfile() {
 }
 
 function copyProfileInvite() {
-  navigator.clipboard.writeText(document.getElementById('profile-invite-link').value).then(()=>showToast('קישור הועתק! 📋'));
+  navigator.clipboard.writeText(document.getElementById('profile-invite-link').value).then(()=>showToast('קוד הועתק! 📋'));
+}
+async function createCoupleCode() {
+  const pass=document.getElementById('profile-invite-pass').value;
+  if (!pass) {showToast('נא להזין סיסמה');return;}
+  const email=myProfile?.email||currentUser.email;
+  const {error:checkErr}=await sb.auth.signInWithPassword({email,password:pass});
+  if (checkErr) {showToast('סיסמה שגויה');return;}
+  const newCode=generateCoupleCode();
+  await sb.from('profiles').update({couple_code:newCode}).eq('id',currentUser.id);
+  await sb.from('couple_codes').upsert({code:newCode,email,password:pass});
+  myProfile={...myProfile,couple_code:newCode};
+  document.getElementById('profile-invite-link').value=newCode;
+  document.getElementById('profile-invite-setup').style.display='none';
+  document.getElementById('profile-invite-pass').value='';
+  showToast('✅ קוד שיתוף נוצר!');
 }
 
 // ═══ IMAGE CROP + COMPRESS ═══
