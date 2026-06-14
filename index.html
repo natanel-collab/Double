@@ -635,9 +635,9 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
   </div>
   <div style="padding:20px 18px;display:flex;flex-direction:column;gap:14px;flex:1;overflow-y:auto;padding-bottom:20px" id="fp-body"></div>
   <div style="padding:16px 18px;border-top:1px solid var(--border);background:var(--bg);position:sticky;bottom:0;display:flex;flex-direction:column;gap:8px">
-    <button class="shake-btn" onclick="sendShake()">💞 Double Shake!</button>
+    <button class="shake-btn" id="fp-shake-btn" onclick="sendShake()">💞 Double Shake!</button>
     <div style="display:flex;gap:8px">
-      <button class="btn-secondary" style="flex:1" onclick="openChat()">💬 צ'אט</button>
+      <button class="btn-secondary" style="flex:1;display:none" id="fp-chat-btn" onclick="openChat()">💬 צ'אט</button>
       <button class="btn-secondary" style="flex:1;color:#54a0ff;border-color:rgba(84,160,255,0.3)" id="fp-nav-btn">🗺️ נווט</button>
     </div>
   </div>
@@ -658,7 +658,7 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
   <div class="panel-footer" id="couple-panel-footer">
     <button class="shake-btn" id="shake-btn" onclick="sendShake()">💞 Double Shake!</button>
     <div style="display:flex;gap:8px;margin-top:8px">
-      <button class="btn-secondary" style="flex:1" onclick="openChat()">💬 צ&apos;אט</button>
+      <button class="btn-secondary" style="flex:1;display:none" id="panel-chat-btn" onclick="openChat()">💬 צ&apos;אט</button>
       <button class="btn-secondary" style="flex:1" onclick="openReviewModal()">⭐ המלצה</button>
     </div>
     <button onclick="openFullProfile()" style="width:100%;padding:10px;border:1px solid rgba(255,75,110,0.2);border-radius:12px;background:rgba(255,75,110,0.06);color:#ff8fa8;font-family:'Heebo';font-weight:600;font-size:13px;cursor:pointer;margin-top:8px">👤 פרופיל מלא</button>
@@ -1182,6 +1182,8 @@ function openCouplePanel(couple) {
   // Check shake status
   sb.from('shakes').select('status').eq('from_id',currentUser.id).eq('to_id',couple.id).single().then(({data})=>{
     const btn=document.getElementById('shake-btn');
+    const chatBtn=document.getElementById('panel-chat-btn');
+    if (chatBtn) chatBtn.style.display = data?.status==='accepted' ? '' : 'none';
     if (!btn) return;
     if (data?.status==='pending') {btn.textContent='⏳ Shake נשלח';btn.disabled=true;btn.style.opacity='0.7';}
     else if (data?.status==='accepted') {btn.textContent='✅ מחוברים! פתחו צ\u0027אט';btn.disabled=false;btn.style.opacity='1';btn.onclick=()=>{closePanel();openChat();};}
@@ -2214,6 +2216,18 @@ function openFullProfile() {
   closePanel();
   showScreen('full-profile');
   document.getElementById('bottom-nav').style.display = 'none';
+
+  // Check shake status to show/hide chat button
+  sb.from('shakes').select('status').eq('from_id',currentUser.id).eq('to_id',c.id).single().then(({data})=>{
+    const btn=document.getElementById('fp-shake-btn');
+    const chatBtn=document.getElementById('fp-chat-btn');
+    if (chatBtn) chatBtn.style.display = data?.status==='accepted' ? '' : 'none';
+    if (!btn) return;
+    if (data?.status==='pending') {btn.textContent='⏳ Shake נשלח';btn.disabled=true;btn.style.opacity='0.7';}
+    else if (data?.status==='accepted') {btn.textContent='✅ מחוברים! פתחו צ\u0027אט';btn.disabled=false;btn.style.opacity='1';btn.onclick=()=>{openChat();};}
+    else if (data?.status==='declined') {btn.textContent='💞 שלחו Shake שוב';btn.disabled=false;btn.style.opacity='1';}
+    else {btn.textContent='💞 Double Shake!';btn.disabled=false;btn.style.opacity='1';}
+  });
 }
 
 function closeFullProfile() {
