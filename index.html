@@ -614,6 +614,10 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
   <button class="nav-item" data-nav="feed" onclick="navTo('feed')">
     <div class="nav-icon">✨</div><div class="nav-label">פיד</div>
   </button>
+  <button class="nav-item" data-nav="shakes" onclick="navTo('shakes')">
+    <div class="nav-icon">💞</div><div class="nav-label">שייקים</div>
+    <div class="nav-badge" id="shake-badge" style="display:none"></div>
+  </button>
   <button class="nav-item" data-nav="chats" onclick="navTo('chats')">
     <div class="nav-icon">💬</div><div class="nav-label">צ&apos;אטים</div>
     <div class="nav-badge" id="chats-badge"></div>
@@ -899,6 +903,7 @@ async function loadMyProfile() {
   } else {
     showScreen('main'); initNav(); updateProfileNavIcon();
     await initMap(); subscribeRealtime(); subscribeNewMessages();
+    loadShakes();
     await checkInviteCode();
   }
 }
