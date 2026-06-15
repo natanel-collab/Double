@@ -1463,7 +1463,8 @@ async function loadShakes() {
 }
 
 async function respondShake(shakeId,status,fromName) {
-  await sb.from('shakes').update({status}).eq('id',shakeId);
+  const {error} = await sb.from('shakes').update({status}).eq('id',shakeId);
+  if (error) {showToast('שגיאה: '+error.message); return;}
   if (status==='accepted') {
     const {data} = await sb.from('shakes').select('from_id').eq('id',shakeId).single();
     if (data) {
@@ -1649,11 +1650,10 @@ async function saveEvent() {
     }
   }
   const statusText=document.getElementById('event-desc').value.trim()||title;
-  const newVibes=eventSelectedVibe?[eventSelectedVibe,...(myProfile?.vibes||[]).filter(v=>v!==eventSelectedVibe)]:(myProfile?.vibes||[]);
   const eventExpiresAt=new Date(Date.now()+24*60*60*1000).toISOString();
-  const {error} = await sb.from('profiles').update({status:'hot',status_text:statusText,vibes:newVibes,lat,lng,event_expires_at:eventExpiresAt}).eq('id',currentUser.id);
+  const {error} = await sb.from('profiles').update({status:'hot',status_text:statusText,lat,lng,event_expires_at:eventExpiresAt}).eq('id',currentUser.id);
   if (error) {showToast('שגיאה: '+error.message);return;}
-  myProfile={...myProfile,status:'hot',status_text:statusText,lat,lng,vibes:newVibes,event_expires_at:eventExpiresAt};
+  myProfile={...myProfile,status:'hot',status_text:statusText,lat,lng,event_expires_at:eventExpiresAt};
   closeEventModal();
   showToast('האירוע פורסם על המפה! 🗺️');
   const card=document.getElementById('active-event-card');
@@ -1676,7 +1676,7 @@ function spinRoulette() {
   const modal=document.getElementById('roulette-modal');
   modal.classList.add('open');
   document.getElementById('roulette-content').innerHTML='<div style="font-size:56px">🎰</div><div style="font-family:Syne;font-size:22px;font-weight:800;margin-top:14px">מחפשים...</div>';
-  const hotCouples=allCouples.filter(c=>c.id!==currentUser.id&&(c.status==='hot'||c.status==='warm'));
+  const hotCouples=allCouples.filter(c=>c.id!==currentUser.id&&(effectiveStatus(c)==='hot'||effectiveStatus(c)==='warm'));
   setTimeout(()=>{
     if (!hotCouples.length) {
       document.getElementById('roulette-content').innerHTML='<div style="font-size:56px">😴</div><div style="font-family:Syne;font-size:22px;font-weight:800;margin-top:14px">אין זוגות זמינים</div><button class="btn-secondary" onclick="closeRoulette()" style="margin-top:20px">סגור</button>';
@@ -1687,9 +1687,9 @@ function spinRoulette() {
     const emoji=vibeEmoji((p.vibes||[])[0]);
     document.getElementById('roulette-content').innerHTML=`
       <div style="font-size:48px">${emoji}</div>
-      <div style="font-family:'Syne';font-size:22px;font-weight:800;margin-top:10px">${p.name} <span style="font-family:'Heebo',sans-serif;font-weight:400;opacity:0.7">&</span> ${p.partner_name||'?'}</div>
-      <div style="color:var(--text2);font-size:14px;margin-top:4px">${p.city||'ישראל'}</div>
-      ${p.status_text?`<div style="background:rgba(255,75,110,0.12);border:1px solid rgba(255,75,110,0.25);border-radius:12px;padding:12px;margin:14px 0;font-size:14px;color:#ffb3c1">"${p.status_text}"</div>`:''}
+      <div style="font-family:'Syne';font-size:22px;font-weight:800;margin-top:10px">${escapeHtml(p.name)} <span style="font-family:'Heebo',sans-serif;font-weight:400;opacity:0.7">&</span> ${escapeHtml(p.partner_name||'?')}</div>
+      <div style="color:var(--text2);font-size:14px;margin-top:4px">${escapeHtml(p.city||'ישראל')}</div>
+      ${p.status_text?`<div style="background:rgba(255,75,110,0.12);border:1px solid rgba(255,75,110,0.25);border-radius:12px;padding:12px;margin:14px 0;font-size:14px;color:#ffb3c1">"${escapeHtml(p.status_text)}"</div>`:''}
       <button class="fab-btn" style="width:100%;margin-top:10px" onclick="closeRoulette();openRouletteCouple()">💞 Double Shake!</button>
       <button class="btn-secondary" onclick="closeRoulette()" style="margin-top:8px">סגור</button>`;
   },1600);
@@ -2091,13 +2091,13 @@ function checkNearbyCouples() {
 
   allCouples.forEach(c => {
     if (!c.lat || !c.lng || c.id === currentUser.id) return;
-    if (c.status !== 'hot') return;
+    if (effectiveStatus(c) !== 'hot') return;
     const dist = getDistanceKm(refLat, refLng, c.lat, c.lng);
     if (dist <= nearbyKm) {
       const key = c.id + '_' + c.status_text;
       if (!lastNearbyAlert[key]) {
         lastNearbyAlert[key] = true;
-        showToast(`📍 ${c.name} <span style="font-family:'Heebo',sans-serif;font-weight:400;opacity:0.7">&</span> ${c.partner_name || '?'} פעילים ${Math.round(dist * 10) / 10} ק"מ ממך!`);
+        showToast(`📍 ${c.name} & ${c.partner_name || '?'} פעילים ${Math.round(dist * 10) / 10} ק"מ ממך!`);
       }
     }
   });
@@ -2152,13 +2152,20 @@ async function submitReview() {
   }, { onConflict: 'from_id,to_id' });
   if (error) { showToast('שגיאה: ' + error.message); return; }
 
-  // Also mark as date history automatically
-  await sb.from('date_history').insert({
-    couple_a: currentUser.id,
-    couple_b: selectedCouple.id,
-    date: new Date().toISOString(),
-    note: 'נפגשנו עם ' + selectedCouple.name,
-  }).then(() => {});
+  // Also mark as date history automatically (only once per couple)
+  const { data: existingDate } = await sb.from('date_history')
+    .select('id')
+    .eq('couple_a', currentUser.id)
+    .eq('couple_b', selectedCouple.id)
+    .limit(1);
+  if (!existingDate || existingDate.length === 0) {
+    await sb.from('date_history').insert({
+      couple_a: currentUser.id,
+      couple_b: selectedCouple.id,
+      date: new Date().toISOString(),
+      note: 'נפגשנו עם ' + selectedCouple.name,
+    });
+  }
 
   closeReviewModal();
   showToast('המלצה נשלחה! ⭐');
@@ -2615,11 +2622,11 @@ function renderHeatmap() {
   const weights = { hot: 1.0, warm: 0.6, cold: 0.2 };
   const points = allCouples
     .filter(c => c.lat && c.lng)
-    .map(c => [c.lat, c.lng, weights[c.status || 'cold'] || 0.2]);
+    .map(c => [c.lat, c.lng, weights[effectiveStatus(c)] || 0.2]);
 
   // Add user location as extra point if active
-  if (myProfile?.lat && myProfile?.status !== 'cold') {
-    points.push([myProfile.lat, myProfile.lng, weights[myProfile.status] || 0.2]);
+  if (myProfile?.lat && effectiveStatus(myProfile) !== 'cold') {
+    points.push([myProfile.lat, myProfile.lng, weights[effectiveStatus(myProfile)] || 0.2]);
   }
 
   if (!points.length) {
@@ -2646,8 +2653,6 @@ function renderHeatmap() {
 }
 
 // Update heatmap when data changes
-const _origRenderMarkers = renderMarkers;
-// We'll call updateHeatmapIfOn after renderMarkers
 function updateHeatmapIfOn() {
   if (heatmapOn) {
     renderHeatmap();
