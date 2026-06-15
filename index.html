@@ -66,6 +66,9 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
 .header-live{font-size:11px;color:var(--text3);margin-top:-2px}
 .live-dot{display:inline-block;width:6px;height:6px;background:var(--pink);border-radius:50%;margin-left:5px;animation:blink 1.4s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+@keyframes selfPulse{0%{transform:scale(1);opacity:0.7}100%{transform:scale(1.5);opacity:0}}
+@keyframes btnSpin{to{transform:rotate(360deg)}}
+.btn-spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:btnSpin 0.7s linear infinite;vertical-align:middle;margin-left:4px}
 .header-actions{display:flex;gap:8px;align-items:center}
 .icon-btn{background:rgba(255,255,255,0.07);border:1px solid var(--border);color:var(--text2);width:36px;height:36px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all 0.15s}
 .icon-btn.active{background:var(--pink);color:white;border-color:var(--pink)}
@@ -150,7 +153,7 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
 .nav-item.active{color:var(--pink)}
 .nav-icon{font-size:22px;line-height:1}
 .nav-label{font-size:10px;font-weight:600;font-family:'Heebo'}
-.vibe-chip{background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:8px 14px;border-radius:100px;cursor:pointer;font-size:13px;transition:all 0.15s;user-select:none;display:inline-block;margin:3px}.vibe-chip.selected{background:rgba(255,75,110,0.2);border-color:rgba(255,75,110,0.5);color:var(--pink)}.nav-badge{position:absolute;top:6px;right:calc(50% - 20px);width:8px;height:8px;background:var(--pink);border-radius:50%;display:none}
+.vibe-chip{background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:8px 14px;border-radius:100px;cursor:pointer;font-size:13px;transition:all 0.15s;user-select:none;display:inline-block;margin:3px}.vibe-chip.selected{background:rgba(255,75,110,0.2);border-color:rgba(255,75,110,0.5);color:var(--pink)}.nav-badge{position:absolute;top:2px;right:calc(50% - 22px);min-width:17px;height:17px;padding:0 4px;background:var(--pink);color:#fff;font-size:10px;font-weight:800;border-radius:100px;display:none;align-items:center;justify-content:center;border:2px solid var(--bg);box-sizing:border-box}
 
 /* MODALS */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);z-index:900;display:none;align-items:center;justify-content:center;padding:20px}
@@ -941,6 +944,17 @@ function switchAuthTab(tab) {
   document.getElementById('auth-register').style.display = tab==='register'?'':'none';
   document.getElementById('auth-code').style.display = tab==='code'?'':'none';
 }
+function friendlyAuthError(msg) {
+  const m=(msg||'').toLowerCase();
+  if (m.includes('invalid login')||m.includes('invalid credentials')) return 'אימייל או סיסמה שגויים';
+  if (m.includes('email not confirmed')) return 'יש לאמת את כתובת האימייל קודם';
+  if (m.includes('user already registered')||m.includes('already registered')) return 'כתובת האימייל כבר רשומה — נסו להתחבר';
+  if (m.includes('password should be')||m.includes('password')) return 'הסיסמה חייבת להכיל לפחות 6 תווים';
+  if (m.includes('unable to validate email')||m.includes('invalid email')) return 'כתובת אימייל לא תקינה';
+  if (m.includes('network')||m.includes('fetch')) return 'אין חיבור לאינטרנט — בדקו ונסו שוב';
+  if (m.includes('rate limit')||m.includes('too many')) return 'יותר מדי ניסיונות — המתינו רגע ונסו שוב';
+  return 'משהו השתבש — נסו שוב';
+}
 async function doLogin() {
   const email=document.getElementById('login-email').value.trim();
   const pass=document.getElementById('login-pass').value;
@@ -948,7 +962,7 @@ async function doLogin() {
   btn.disabled=true; btn.textContent='מתחבר...';
   const {error} = await sb.auth.signInWithPassword({email,password:pass});
   btn.disabled=false; btn.textContent='כניסה';
-  if (error) {document.getElementById('login-err').textContent='שגיאה: '+error.message;return;}
+  if (error) {document.getElementById('login-err').textContent=friendlyAuthError(error.message);return;}
   currentUser=(await sb.auth.getUser()).data.user;
   await loadMyProfile();
 }
@@ -960,7 +974,7 @@ async function doRegister() {
   const btn=document.querySelector('#auth-register .btn-primary');
   btn.disabled=true; btn.textContent='יוצר חשבון...';
   const {data,error} = await sb.auth.signUp({email,password:pass,options:{data:{name}}});
-  if (error) {btn.disabled=false; btn.textContent='יצירת חשבון'; document.getElementById('reg-err').textContent=error.message;return;}
+  if (error) {btn.disabled=false; btn.textContent='יצירת חשבון'; document.getElementById('reg-err').textContent=friendlyAuthError(error.message);return;}
   currentUser=data.user;
   const coupleCode=generateCoupleCode();
   await sb.from('profiles').upsert({id:currentUser.id,name,email,couple_code:coupleCode});
@@ -984,7 +998,7 @@ async function doCodeLogin() {
   if (codeErr||!codeRow) {btn.disabled=false; btn.textContent='התחברות עם קוד'; errEl.textContent='קוד לא נמצא, בדקו שהקלדתם נכון';return;}
   const {error} = await sb.auth.signInWithPassword({email:codeRow.email,password:codeRow.password});
   btn.disabled=false; btn.textContent='התחברות עם קוד';
-  if (error) {errEl.textContent='שגיאה בהתחברות: '+error.message;return;}
+  if (error) {errEl.textContent=friendlyAuthError(error.message);return;}
   currentUser=(await sb.auth.getUser()).data.user;
   await loadMyProfile();
 }
@@ -1092,18 +1106,27 @@ function renderMarkers() {
     const status=effectiveStatus(couple);
     const meta=STATUS_META[status]||STATUS_META.cold;
     const emoji=vibeEmoji((couple.vibes||[])[0]);
-    const icon=L.divIcon({
-      className:'',
-      html:`<div class="double-marker ${status}">${status==='hot'?'<div class="pulse-ring"></div>':''}</div>`,
-      iconSize:[46,46],iconAnchor:[23,23],
-    });
+    const isSelf=couple.id===currentUser.id;
     // fix: use data attribute for emoji
     const verifiedDot = couple.partner_confirmed ? '<div style="position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;border-radius:50%;background:#1dd1a1;border:2px solid white;display:flex;align-items:center;justify-content:center;font-size:8px;color:white">✓</div>' : '';
-    const markerEl = L.divIcon({
-      className:'',
-      html:`<div class="double-marker ${status}" style="font-size:20px;position:relative">${status==='hot'?'<div class="pulse-ring"></div>':''}<span>${emoji}</span>${verifiedDot}</div>`,
-      iconSize:[46,46],iconAnchor:[23,23],
-    });
+    let markerEl;
+    if (isSelf) {
+      markerEl = L.divIcon({
+        className:'',
+        html:`<div style="position:relative;width:52px;height:52px;display:flex;align-items:center;justify-content:center">
+          <div style="position:absolute;top:-24px;right:50%;transform:translateX(50%);background:#6c5ce7;color:white;font-size:10px;font-weight:800;padding:2px 9px;border-radius:100px;white-space:nowrap;font-family:'Heebo'">⭐ זה אתם</div>
+          <div style="position:absolute;inset:-6px;border:2px solid rgba(108,92,231,0.5);border-radius:50%;animation:selfPulse 2s infinite"></div>
+          <div class="double-marker ${status}" style="width:52px;height:52px;font-size:22px;background:linear-gradient(135deg,rgba(108,92,231,0.45),rgba(255,75,110,0.45));border-color:#fff;border-width:3px;box-shadow:0 0 0 3px rgba(108,92,231,0.45),0 0 18px rgba(108,92,231,0.6)">${status==='hot'?'<div class="pulse-ring"></div>':''}<span>${emoji}</span>${verifiedDot}</div>
+        </div>`,
+        iconSize:[52,52],iconAnchor:[26,26],
+      });
+    } else {
+      markerEl = L.divIcon({
+        className:'',
+        html:`<div class="double-marker ${status}" style="font-size:20px;position:relative">${status==='hot'?'<div class="pulse-ring"></div>':''}<span>${emoji}</span>${verifiedDot}</div>`,
+        iconSize:[46,46],iconAnchor:[23,23],
+      });
+    }
     const m=L.marker([couple.lat,couple.lng],{icon:markerEl}).addTo(mapInstance).on('click',()=>openCouplePanel(couple));
     markers[couple.id]=m;
   });
@@ -1172,7 +1195,7 @@ function subscribeNewMessages() {
       const roomId=payload.new?.room_id||'';
       if (roomId.includes(currentUser.id)&&payload.new?.sender_id!==currentUser.id) {
         const badge=document.getElementById('chats-badge');
-        if (badge) badge.style.display='block';
+        if (badge) {badge.textContent='●';badge.style.display='flex';}
         showToast(`💬 הודעה חדשה מ-${payload.new.sender_name}`);
       }
     }).subscribe();
@@ -1185,6 +1208,7 @@ function openCouplePanel(couple) {
   selectedCouple=couple;
   const status=effectiveStatus(couple);
   const meta=STATUS_META[status];
+  const isSelfPanel=couple.id===currentUser.id;
   document.getElementById('panel-title').textContent=`${couple.name} & ${couple.partner_name||'?'}`;
   const photoHtml=couple.photo_url
     ?`<img src="${couple.photo_url}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid ${meta.color};margin:0 auto 12px;display:block"/>`
@@ -1195,6 +1219,7 @@ function openCouplePanel(couple) {
       <div class="couple-name">${escapeHtml(couple.name)} <span style="font-family:'Heebo',sans-serif;font-weight:400;opacity:0.7">&</span> ${escapeHtml(couple.partner_name||'?')}</div>
       <div class="couple-city">${escapeHtml(couple.city||'ישראל')}</div>
       <div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:10px">
+        ${isSelfPanel?`<div style="display:inline-flex;align-items:center;gap:4px;background:rgba(108,92,231,0.18);border:1px solid rgba(108,92,231,0.45);color:#b8aaff;padding:4px 12px;border-radius:100px;font-size:11px;font-weight:800">⭐ זה אתם</div>`:''}
         <div class="status-badge" style="background:${meta.color}22;color:${meta.color}">
           <div class="status-dot" style="background:${meta.color}"></div>
           ${meta.label}
@@ -1226,15 +1251,31 @@ function openCouplePanel(couple) {
     }
   });
 
-  // Hide action buttons if viewing own profile
+  // Own profile: show "this is you" footer with edit shortcut; otherwise show shake/chat actions
   const isOwn = couple.id === currentUser.id;
   const panelFooter = document.getElementById('couple-panel-footer');
-  if (panelFooter) panelFooter.style.display = isOwn ? 'none' : 'block';
+  if (panelFooter) {
+    if (isOwn) {
+      panelFooter.style.display = 'block';
+      panelFooter.innerHTML = `
+        <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(108,92,231,0.18);border:1px solid rgba(108,92,231,0.45);color:#b8aaff;padding:8px 16px;border-radius:100px;font-size:13px;font-weight:800;width:100%;justify-content:center;box-sizing:border-box">⭐ זה אתם</div>
+        <button onclick="closePanel();navTo('profile')" style="width:100%;padding:12px;border:1px solid rgba(108,92,231,0.4);border-radius:12px;background:rgba(108,92,231,0.1);color:#b8aaff;font-family:'Heebo';font-weight:700;font-size:14px;cursor:pointer;margin-top:8px">✏️ ערוך את האירוע שלי</button>`;
+    } else {
+      panelFooter.style.display = 'block';
+      panelFooter.innerHTML = `
+        <button class="shake-btn" id="shake-btn" onclick="sendShake()">💞 Double Shake!</button>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button class="btn-secondary" style="flex:1;display:none" id="panel-chat-btn" onclick="openChat()">💬 צ'אט</button>
+          <button class="btn-secondary" style="flex:1" onclick="openReviewModal()">⭐ המלצה</button>
+        </div>
+        <button onclick="openFullProfile()" style="width:100%;padding:10px;border:1px solid rgba(255,75,110,0.2);border-radius:12px;background:rgba(255,75,110,0.06);color:#ff8fa8;font-family:'Heebo';font-weight:600;font-size:13px;cursor:pointer;margin-top:8px">👤 פרופיל מלא</button>`;
+    }
+  }
 
   document.getElementById('panel-overlay').classList.add('open');
   document.getElementById('couple-panel').classList.add('open');
-  // Check shake status
-  sb.from('shakes').select('status').eq('from_id',currentUser.id).eq('to_id',couple.id).single().then(({data})=>{
+  // Check shake status (only for other couples)
+  if (!isOwn) sb.from('shakes').select('status').eq('from_id',currentUser.id).eq('to_id',couple.id).single().then(({data})=>{
     const btn=document.getElementById('shake-btn');
     const chatBtn=document.getElementById('panel-chat-btn');
     if (chatBtn) chatBtn.style.display = data?.status==='accepted' ? '' : 'none';
@@ -1340,7 +1381,7 @@ async function loadChats() {
   const {data:sent} = await sb.from('messages').select('room_id,text,created_at,sender_name,sender_id').order('created_at',{ascending:false}).limit(500);
   const list=document.getElementById('chats-list');
   if (!sent?.length) {
-    list.innerHTML='<div style="text-align:center;padding:60px 20px;color:var(--text3)"><div style="font-size:48px;margin-bottom:16px">💬</div><div style="font-size:16px;font-weight:700;margin-bottom:8px">אין צ\u0027אטים עדיין</div><div style="font-size:13px">שלחו Double Shake לזוג כדי להתחיל שיחה</div></div>';
+    list.innerHTML='<div style="text-align:center;padding:50px 24px"><div style="font-size:52px;margin-bottom:14px">💬</div><div style="font-family:\'Syne\',sans-serif;font-size:18px;font-weight:800;margin-bottom:8px">אין צ\u0027אטים עדיין</div><div style="font-size:13px;color:var(--text3);line-height:1.6;margin-bottom:20px">שלחו Double Shake לזוג, וכשהוא יקבל — תוכלו להתחיל לשוחח כאן!</div><button onclick="navTo(\'main\')" style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border:none;border-radius:100px;background:linear-gradient(135deg,var(--pink),var(--pink2));color:white;font-family:\'Heebo\';font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 20px rgba(255,75,110,0.35)">🗺️ מצאו זוגות</button></div>';
     return;
   }
   const rooms={};
@@ -1439,8 +1480,14 @@ async function loadFeed() { await loadCouples(); renderFeed(); }
 // ═══════════════════════════════════
 async function sendShake() {
   if (!selectedCouple) return;
+  const btns=[document.getElementById('shake-btn'),document.getElementById('fp-shake-btn')].filter(Boolean);
+  btns.forEach(b=>{b.disabled=true;b.dataset.orig=b.textContent;b.innerHTML='<span class="btn-spinner"></span> שולח...';b.style.opacity='0.7';});
   const {error} = await sb.from('shakes').upsert({from_id:currentUser.id,to_id:selectedCouple.id,status:'pending'},{onConflict:'from_id,to_id'});
-  if (error) {showToast('שגיאה: '+error.message);return;}
+  if (error) {
+    btns.forEach(b=>{b.disabled=false;b.textContent=b.dataset.orig||'💞 Double Shake!';b.style.opacity='1';});
+    showToast('😕 לא הצלחנו לשלוח — בדקו את החיבור לאינטרנט ונסו שוב');
+    return;
+  }
   showToast('💞 Double Shake נשלח!'); closePanel();
 }
 
@@ -1448,9 +1495,12 @@ async function loadShakes() {
   const {data} = await sb.from('shakes').select('*, from_profile:from_id(name,partner_name,photo_url,city,vibes,status_text)').eq('to_id',currentUser.id).eq('status','pending').order('created_at',{ascending:false});
   const list=document.getElementById('shakes-list');
   const badge=document.getElementById('shake-badge');
-  if (badge) badge.style.display=data?.length?'block':'none';
+  if (badge) {
+    if (data?.length) {badge.textContent=data.length>9?'9+':data.length;badge.style.display='flex';}
+    else badge.style.display='none';
+  }
   if (!data?.length) {
-    list.innerHTML='<div style="text-align:center;padding:60px 20px;color:var(--text3)"><div style="font-size:48px;margin-bottom:16px">💤</div><div style="font-size:16px;font-weight:700;margin-bottom:8px">אין Shake חדש</div><div style="font-size:13px">כשזוג ישלח לכם Shake הוא יופיע כאן</div></div>';
+    list.innerHTML='<div style="text-align:center;padding:50px 24px"><div style="font-size:52px;margin-bottom:14px">💞</div><div style="font-family:\'Syne\',sans-serif;font-size:18px;font-weight:800;margin-bottom:8px">עוד אין Shakes</div><div style="font-size:13px;color:var(--text3);line-height:1.6;margin-bottom:20px">כשתמצאו זוג מעניין על המפה, שלחו לו Double Shake — וכאן תראו מי ענה!</div><button onclick="navTo(\'main\')" style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border:none;border-radius:100px;background:linear-gradient(135deg,var(--pink),var(--pink2));color:white;font-family:\'Heebo\';font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 20px rgba(255,75,110,0.35)">🗺️ למפה</button></div>';
     return;
   }
   list.innerHTML=data.map(s=>{
@@ -1488,8 +1538,7 @@ function subscribeShakes() {
   sb.channel('shakes:'+currentUser.id)
     .on('postgres_changes',{event:'INSERT',schema:'public',table:'shakes',filter:`to_id=eq.${currentUser.id}`},()=>{
       showToast('💞 קיבלתם Double Shake חדש!');
-      const badge=document.getElementById('shake-badge');
-      if (badge) badge.style.display='block';
+      loadShakes();
     }).subscribe();
 }
 
@@ -1519,8 +1568,11 @@ async function saveMyStatus() {
     } catch {}
   }
   const eventExpiresAt = selectedStatusOption==='hot' ? new Date(Date.now()+24*60*60*1000).toISOString() : null;
+  const btn=document.querySelector('#screen-status .btn-primary');
+  if (btn){btn.disabled=true;btn.dataset.orig=btn.textContent;btn.innerHTML='<span class="btn-spinner"></span> מעדכן...';}
   const {error} = await sb.from('profiles').update({status:selectedStatusOption,status_text:text,lat,lng,event_expires_at:eventExpiresAt}).eq('id',currentUser.id);
-  if (error) {document.getElementById('status-err').textContent=error.message;return;}
+  if (btn){btn.disabled=false;btn.textContent=btn.dataset.orig||'עדכון סטטוס 🚀';}
+  if (error) {document.getElementById('status-err').textContent='😕 לא הצלחנו לעדכן — בדקו את החיבור ונסו שוב';return;}
   myProfile={...myProfile,status:selectedStatusOption,status_text:text,lat,lng,event_expires_at:eventExpiresAt};
   showToast('סטטוס עודכן! 🚀'); navTo('main');
 }
@@ -1651,8 +1703,11 @@ async function saveEvent() {
   }
   const statusText=document.getElementById('event-desc').value.trim()||title;
   const eventExpiresAt=new Date(Date.now()+24*60*60*1000).toISOString();
+  const saveBtn=document.querySelector('#event-modal .btn-primary');
+  if (saveBtn){saveBtn.disabled=true;saveBtn.dataset.orig=saveBtn.textContent;saveBtn.innerHTML='<span class="btn-spinner"></span> מפרסם...';}
   const {error} = await sb.from('profiles').update({status:'hot',status_text:statusText,lat,lng,event_expires_at:eventExpiresAt}).eq('id',currentUser.id);
-  if (error) {showToast('שגיאה: '+error.message);return;}
+  if (saveBtn){saveBtn.disabled=false;saveBtn.textContent=saveBtn.dataset.orig||'פרסם על המפה 🗺️';}
+  if (error) {showToast('😕 לא הצלחנו לפרסם — בדקו את החיבור ונסו שוב');return;}
   myProfile={...myProfile,status:'hot',status_text:statusText,lat,lng,event_expires_at:eventExpiresAt};
   closeEventModal();
   showToast('האירוע פורסם על המפה! 🗺️');
@@ -1827,8 +1882,11 @@ async function saveProfile() {
   const bio=document.getElementById('profile-bio').value.trim();
   const hasKids=document.querySelector('#kids-chips .vibe-chip.selected')?.dataset.kids||'';
   const lookingFor=document.querySelector('#looking-chips .vibe-chip.selected')?.dataset.looking||'';
+  const btn=document.querySelector('#screen-profile .btn-primary');
+  if (btn){btn.disabled=true;btn.dataset.orig=btn.textContent;btn.innerHTML='<span class="btn-spinner"></span> שומר...';}
   const {error} = await sb.from('profiles').update({name,partner_name:partnerName,role_him:roleHim,role_her:roleHer,city,vibes:newVibesArr,age_him:ageHim,age_her:ageHer,together_since:together,bio,has_kids:hasKids,looking_for:lookingFor}).eq('id',currentUser.id);
-  if (error) {err.textContent=error.message;return;}
+  if (btn){btn.disabled=false;btn.textContent=btn.dataset.orig||'שמור שינויים ✅';}
+  if (error) {err.textContent='😕 לא הצלחנו לשמור — בדקו את החיבור ונסו שוב';return;}
   myProfile={...myProfile,name,partner_name:partnerName,role_him:roleHim,role_her:roleHer,city,vibes:newVibesArr,age_him:ageHim,age_her:ageHer,together_since:together,bio,has_kids:hasKids,looking_for:lookingFor};
   err.textContent=''; showToast('פרופיל עודכן! ✅'); navTo('main');
 }
@@ -2013,7 +2071,7 @@ function initNav() { document.getElementById('bottom-nav').style.display='flex';
 function navTo(name) {
   if (name==='profile') {openProfile();return;}
   if (name==='feed') {showScreen('feed');document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav===name));loadFeed();return;}
-  if (name==='chats') {showScreen('chats');document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav===name));loadChats();return;}
+  if (name==='chats') {showScreen('chats');document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav===name));const cb=document.getElementById('chats-badge');if(cb)cb.style.display='none';loadChats();return;}
   if (name==='shakes') {showScreen('shakes');document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav===name));loadShakes();return;}
   if (name==='status') {showScreen('status');document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav===name));selectedStatusOption=myProfile?.status||'cold';document.getElementById('status-text').value=myProfile?.status_text||'';renderStatusOptions();return;}
   showScreen(name);
