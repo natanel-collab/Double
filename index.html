@@ -1358,12 +1358,9 @@ async function loadChats() {
       :`<div style="width:54px;height:54px;border-radius:50%;background:rgba(255,75,110,0.15);border:2px solid rgba(255,75,110,0.3);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${vibeEmoji((profile.vibes||[])[0])}</div>`;
     const time=new Date(lastMsg.created_at).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
     const isMine=lastMsg.sender_id===currentUser.id;
-    return `<div style="position:relative;overflow:hidden;border-radius:16px;margin-bottom:10px">
-      <div style="position:absolute;left:0;top:0;bottom:0;width:72px;background:#ff4b6e;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;border-radius:16px 0 0 16px;z-index:1" onclick="deleteChat('${profile.id}','${roomId}')">
-        <div style="font-size:18px">🗑️</div>
-        <div style="font-size:10px;color:white;font-weight:700">מחק</div>
-      </div>
-      <div class="chat-row-inner" onclick="if(this.style.transform&&this.style.transform!=='translateX(0px)'&&this.style.transform!=='translateX(0px, 0px)'&&this.style.transform!==''){this.style.transform='translateX(0)';return;}openChatById('${profile.id}')" style="width:100%;display:flex;gap:12px;align-items:center;padding:14px 16px;background:var(--bg2);border:1px solid rgba(255,255,255,0.08);border-radius:16px;cursor:pointer;transition:transform 0.2s ease;position:relative;box-sizing:border-box;z-index:2" ontouchstart="chatSwipeStart(event,this)" ontouchmove="chatSwipeMove(event,this)" ontouchend="chatSwipeEnd(event,this)">${photoEl}<div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><span style="font-family:'Syne';font-weight:700;font-size:15px">${profile.name} <span style="font-family:'Heebo',sans-serif;font-weight:400;opacity:0.7">&</span> ${profile.partner_name||'?'}</span><span style="font-size:11px;color:var(--text3)">${time}</span></div><div style="font-size:13px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${isMine?'אתם: ':''}${lastMsg.text}</div></div><div style="font-size:18px;flex-shrink:0">›</div></div>
+    return `<div style="width:100%;display:flex;gap:8px;align-items:center;padding:14px 16px;background:var(--bg2);border:1px solid rgba(255,255,255,0.08);border-radius:16px;margin-bottom:10px;box-sizing:border-box">
+      <div onclick="openChatById('${profile.id}')" style="flex:1;min-width:0;display:flex;gap:12px;align-items:center;cursor:pointer">${photoEl}<div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><span style="font-family:'Syne';font-weight:700;font-size:15px">${profile.name} <span style="font-family:'Heebo',sans-serif;font-weight:400;opacity:0.7">&</span> ${profile.partner_name||'?'}</span><span style="font-size:11px;color:var(--text3)">${time}</span></div><div style="font-size:13px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${isMine?'אתם: ':''}${lastMsg.text}</div></div><div style="font-size:18px;flex-shrink:0">›</div></div>
+      <button onclick="event.stopPropagation();deleteChat('${profile.id}','${roomId}')" style="background:rgba(255,75,110,0.12);border:1px solid rgba(255,75,110,0.3);color:var(--pink);border-radius:10px;width:38px;height:38px;flex-shrink:0;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center">🗑️</button>
     </div>`;
   }).join('');
 }
@@ -2189,8 +2186,9 @@ async function loadReviewsReceived() {
 
 async function deleteReview(id) {
   if (!confirm('למחוק את ההמלצה הזו?')) return;
-  const { error } = await sb.from('reviews').delete().eq('id', id);
+  const { data, error } = await sb.from('reviews').delete().eq('id', id).select();
   if (error) { showToast('שגיאה: ' + error.message); return; }
+  if (!data || data.length === 0) { showToast('לא ניתן למחוק - חסומה ע"י הרשאות (RLS)'); return; }
   showToast('ההמלצה נמחקה 🗑️');
   loadReviewsReceived();
 }
@@ -2255,8 +2253,9 @@ async function loadDateHistory() {
 
 async function deleteDateHistory(id) {
   if (!confirm('למחוק את הדייט הזה מההיסטוריה?')) return;
-  const { error } = await sb.from('date_history').delete().eq('id', id);
+  const { data, error } = await sb.from('date_history').delete().eq('id', id).select();
   if (error) { showToast('שגיאה: ' + error.message); return; }
+  if (!data || data.length === 0) { showToast('לא ניתן למחוק - חסומה ע"י הרשאות (RLS)'); return; }
   showToast('נמחק 🗑️');
   loadDateHistory();
 }
@@ -2379,24 +2378,12 @@ function closeFullProfile() {
 }
 
 
-// ═══ CHAT SWIPE TO DELETE ═══
-let _chatSwipeX = 0;
-function chatSwipeStart(e, el) { _chatSwipeX = e.touches[0].clientX; }
-function chatSwipeMove(e, el) {
-  const diff = e.touches[0].clientX - _chatSwipeX;
-  if (diff > 0) el.style.transform = `translateX(${Math.min(diff,72)}px)`;
-  else if (diff < 0 && el.style.transform) el.style.transform = `translateX(${Math.max(diff,0)}px)`;
-}
-function chatSwipeEnd(e, el) {
-  const diff = e.changedTouches[0].clientX - _chatSwipeX;
-  if (diff > 40) el.style.transform = 'translateX(72px)';
-  else el.style.transform = 'translateX(0)';
-}
 
 async function deleteChat(profileId, roomId) {
   if (!confirm('למחוק את השיחה עם זוג זה?')) return;
-  const {error} = await sb.from('messages').delete().eq('room_id', roomId);
+  const {data, error} = await sb.from('messages').delete().eq('room_id', roomId).select();
   if (error) {showToast('שגיאה במחיקה: '+error.message); return;}
+  if (!data || data.length === 0) {showToast('לא ניתן למחוק - חסומה ע"י הרשאות (RLS)'); return;}
   showToast('השיחה נמחקה 🗑️');
   loadChats();
 }
