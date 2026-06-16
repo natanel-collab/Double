@@ -38,9 +38,9 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
 .auth-tabs{display:flex;gap:4px;margin-bottom:24px;background:var(--bg3);border-radius:10px;padding:4px}
 .auth-tab{flex:1;padding:9px 4px;border:none;background:none;color:var(--text3);border-radius:8px;cursor:pointer;font-family:'Heebo';font-size:13px;font-weight:600;transition:all 0.18s;white-space:nowrap}
 .auth-tab.active{background:var(--pink);color:white}
-.field-group{margin-bottom:14px}
-.field-label{font-size:12px;color:var(--text3);margin-bottom:6px;display:block;text-transform:uppercase;letter-spacing:0.5px}
-.field-input{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:12px 14px;border-radius:10px;font-family:'Heebo';font-size:15px;outline:none;transition:border 0.15s;direction:rtl}
+.field-group{margin-bottom:8px}
+.field-label{font-size:11px;color:var(--text3);margin-bottom:3px;display:block;text-transform:uppercase;letter-spacing:0.3px}
+.field-input{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:8px;font-family:'Heebo';font-size:13px;outline:none;transition:border 0.15s;direction:rtl}
 .field-input:focus{border-color:var(--pink)}
 .field-input::placeholder{color:var(--text3)}
 .btn-primary{width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--pink),var(--pink2));color:white;font-family:'Heebo';font-size:16px;font-weight:700;cursor:pointer;transition:all 0.2s;margin-top:6px;box-shadow:0 4px 20px rgba(255,75,110,0.35)}
@@ -565,37 +565,39 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
     <div style="color:var(--text2);font-size:13px;margin-top:4px" id="profile-couple-city"></div>
     <div style="font-size:12px;margin-top:8px" id="partner-link-status"></div>
   </div>
-  <div style="margin-bottom:14px"><label class="field-label">השם שלך</label><input class="field-input" id="profile-name" placeholder="השם שלך"/></div>
-  <div style="margin-bottom:14px"><label class="field-label">שם בן/בת הזוג</label><input class="field-input" id="profile-partner" placeholder="שם בן/בת הזוג"/></div>
-  <div style="margin-bottom:14px"><label class="field-label">עיסוק שלך</label><input class="field-input" id="profile-role-him" placeholder="מפתח, מורה..."/></div>
-  <div style="margin-bottom:14px"><label class="field-label">עיסוק בן/בת הזוג</label><input class="field-input" id="profile-role-her" placeholder="רופאה, סטודנטית..."/></div>
-  <div style="margin-bottom:14px"><label class="field-label">עיר מגורים</label><input class="field-input" id="profile-city-input" placeholder="תל אביב, חיפה..."/></div>
-  <div style="display:flex;gap:10px;margin-bottom:14px">
-    <div style="flex:1"><label class="field-label">הגיל שלך</label><input class="field-input" type="number" id="profile-age-him" placeholder="28"/></div>
-    <div style="flex:1"><label class="field-label">גיל בן/בת הזוג</label><input class="field-input" type="number" id="profile-age-her" placeholder="26"/></div>
+  <div style="margin-bottom:8px"><label class="field-label">השם שלך</label><input class="field-input" id="profile-name" placeholder="השם שלך"/></div>
+  <div style="margin-bottom:8px"><label class="field-label">שם בן/בת הזוג</label><input class="field-input" id="profile-partner" placeholder="שם בן/בת הזוג"/></div>
+  <div style="display:flex;gap:8px;margin-bottom:8px">
+    <div style="flex:1"><label class="field-label">עיסוק שלך</label><input class="field-input" id="profile-role-him" placeholder="מפתח, מורה..."/></div>
+    <div style="flex:1"><label class="field-label">עיסוק בן/בת הזוג</label><input class="field-input" id="profile-role-her" placeholder="רופאה, סטודנטית..."/></div>
   </div>
-  <div style="margin-bottom:14px"><label class="field-label">כמה זמן ביחד?</label><input class="field-input" id="profile-together" placeholder='לדוגמה: "שנה וחצי", "3 שנים"'/></div>
-  <div style="margin-bottom:16px">
-    <label class="field-label" style="display:block;margin-bottom:8px">ילדים?</label>
-    <div style="display:flex;flex-wrap:wrap;gap:8px" id="kids-chips">
+  <div style="display:flex;gap:8px;margin-bottom:8px">
+    <div style="flex:2"><label class="field-label">עיר מגורים</label><input class="field-input" id="profile-city-input" placeholder="תל אביב, חיפה..."/></div>
+    <div style="flex:1"><label class="field-label">גיל שלך</label><input class="field-input" type="number" id="profile-age-him" placeholder="28"/></div>
+    <div style="flex:1"><label class="field-label">גיל זוג</label><input class="field-input" type="number" id="profile-age-her" placeholder="26"/></div>
+  </div>
+  <div style="margin-bottom:8px"><label class="field-label">כמה זמן ביחד?</label><input class="field-input" id="profile-together" placeholder='לדוגמה: "שנה וחצי", "3 שנים"'/></div>
+  <div style="margin-bottom:8px">
+    <label class="field-label" style="display:block;margin-bottom:6px">ילדים?</label>
+    <div style="display:flex;flex-wrap:wrap;gap:6px" id="kids-chips">
       <div class="vibe-chip" data-kids="יש לנו ילדים" onclick="selectKids(this)">👶 יש לנו ילדים</div>
       <div class="vibe-chip" data-kids="אין ילדים" onclick="selectKids(this)">🙅 אין ילדים</div>
       <div class="vibe-chip" data-kids="מעדיפים לא לציין" onclick="selectKids(this)">🤐 לא לציין</div>
     </div>
   </div>
-  <div style="margin-bottom:16px">
-    <label class="field-label" style="display:block;margin-bottom:8px">מה אתם מחפשים?</label>
-    <div style="display:flex;flex-wrap:wrap;gap:8px" id="looking-chips">
+  <div style="margin-bottom:8px">
+    <label class="field-label" style="display:block;margin-bottom:6px">מה אתם מחפשים?</label>
+    <div style="display:flex;flex-wrap:wrap;gap:6px" id="looking-chips">
       <div class="vibe-chip" data-looking="דייט חד פעמי" onclick="selectLooking(this)">✨ דייט חד פעמי</div>
       <div class="vibe-chip" data-looking="חברות ארוכת טווח" onclick="selectLooking(this)">💛 חברות ארוכת טווח</div>
       <div class="vibe-chip" data-looking="שניהם" onclick="selectLooking(this)">🔄 שניהם</div>
     </div>
   </div>
-  <div style="margin-bottom:14px"><label class="field-label">תארו את עצמכם במשפט</label><input class="field-input" id="profile-bio" placeholder='זוג שאוהב לגלות מסעדות חדשות...'/></div>
-  <div style="margin-bottom:16px">
+  <div style="margin-bottom:8px"><label class="field-label">תארו את עצמכם במשפט</label><input class="field-input" id="profile-bio" placeholder='זוג שאוהב לגלות מסעדות חדשות...'/></div>
+  <div style="margin-bottom:8px">
     <label class="field-label">תחומי עניין משותפים</label>
-    <input class="field-input" id="profile-vibes-input" placeholder="בורד גיימס, יין, טיולים..." style="margin-top:6px"/>
-    <div style="font-size:11px;color:var(--text3);margin-top:6px">הפרידו בפסיקים</div>
+    <input class="field-input" id="profile-vibes-input" placeholder="בורד גיימס, יין, טיולים..." style="margin-top:4px"/>
+    <div style="font-size:11px;color:var(--text3);margin-top:4px">הפרידו בפסיקים</div>
   </div>
   <div class="partner-invite-box" style="margin-bottom:20px">
     <p>קוד שיתוף - שתפו עם בן/בת הזוג כדי שיתחברו לאותו חשבון משותף</p>
