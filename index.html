@@ -610,6 +610,13 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
     📤 שתפו Double עם חברים
   </button>
 
+  <!-- Friends list -->
+  <div style="margin-top:24px">
+    <div style="font-family:'Syne';font-size:18px;font-weight:800;margin-bottom:4px">👥 החברים שלנו</div>
+    <div style="color:var(--text3);font-size:13px;margin-bottom:12px">זוגות שהתחברתם איתם דרך Double</div>
+    <div id="friends-list"></div>
+  </div>
+
   <!-- Date history -->
   <div style="margin-top:24px">
     <div style="font-family:'Syne';font-size:18px;font-weight:800;margin-bottom:4px">📅 היסטוריית דייטים</div>
@@ -678,14 +685,7 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
     <div style="font-family:'Syne';font-weight:700;font-size:16px" id="panel-title">פרופיל זוג</div>
   </div>
   <div class="panel-body" id="panel-body" style="overflow-y:auto;flex:1"></div>
-  <div class="panel-footer" id="couple-panel-footer">
-    <button class="shake-btn" id="shake-btn" onclick="sendShake()">💞 Double Shake!</button>
-    <div style="display:flex;gap:8px;margin-top:8px">
-      <button class="btn-secondary" style="flex:1;display:none" id="panel-chat-btn" onclick="openChat()">💬 צ&apos;אט</button>
-      <button class="btn-secondary" style="flex:1" onclick="openReviewModal()">⭐ המלצה</button>
-    </div>
-    <button onclick="openFullProfile()" style="width:100%;padding:10px;border:1px solid rgba(255,75,110,0.2);border-radius:12px;background:rgba(255,75,110,0.06);color:#ff8fa8;font-family:'Heebo';font-weight:600;font-size:13px;cursor:pointer;margin-top:8px">👤 פרופיל מלא</button>
-  </div>
+  <div class="panel-footer" id="couple-panel-footer"></div>
 </div>
 
 <!-- Chat Panel -->
@@ -1274,13 +1274,25 @@ function openCouplePanel(couple) {
   document.getElementById('panel-overlay').classList.add('open');
   document.getElementById('couple-panel').classList.add('open');
   // Check shake status (only for other couples)
-  if (!isOwn) sb.from('shakes').select('status').eq('from_id',currentUser.id).eq('to_id',couple.id).single().then(({data})=>{
+  if (!isOwn) sb.from('shakes').select('id,status').eq('from_id',currentUser.id).eq('to_id',couple.id).single().then(({data})=>{
     const btn=document.getElementById('shake-btn');
     const chatBtn=document.getElementById('panel-chat-btn');
     if (chatBtn) chatBtn.style.display = data?.status==='accepted' ? '' : 'none';
     if (!btn) return;
     if (data?.status==='pending') {btn.textContent='⏳ Shake נשלח';btn.disabled=true;btn.style.opacity='0.7';}
-    else if (data?.status==='accepted') {btn.textContent='✅ מחוברים! פתחו צ\u0027אט';btn.disabled=false;btn.style.opacity='1';btn.onclick=()=>{closePanel();openChat();};}
+    else if (data?.status==='accepted') {
+      btn.textContent='✅ מחוברים! פתחו צ\'אט';btn.disabled=false;btn.style.opacity='1';
+      btn.onclick=()=>{closePanel();openChat();};
+      const footer=document.getElementById('couple-panel-footer');
+      if (footer&&!footer.querySelector('#unmatch-btn')) {
+        const ub=document.createElement('button');
+        ub.id='unmatch-btn';
+        ub.textContent='💔 ביטול שייק';
+        ub.style.cssText='width:100%;padding:10px;border:1px solid rgba(255,75,110,0.3);border-radius:12px;background:transparent;color:rgba(255,75,110,0.7);font-family:\'Heebo\';font-weight:600;font-size:13px;cursor:pointer;margin-top:6px';
+        ub.onclick=()=>unmatch(data.id,couple);
+        footer.appendChild(ub);
+      }
+    }
     else if (data?.status==='declined') {btn.textContent='💞 שלחו Shake שוב';btn.disabled=false;btn.style.opacity='1';}
     else {btn.textContent='💞 Double Shake!';btn.disabled=false;btn.style.opacity='1';}
   });
@@ -1531,6 +1543,31 @@ async function respondShake(shakeId,status,fromName) {
 function openChatFromShake() {
   document.getElementById('shake-approved-modal').classList.remove('open');
   if (selectedCouple) openChat();
+}
+
+async function unmatch(shakeId, couple) {
+  if (!confirm(`לבטל את השייק עם ${couple.name}?\nהם יישמרו ברשימת החברים שלכם.`)) return;
+  const {error:delErr} = await sb.from('shakes').delete()
+    .or(`and(from_id.eq.${currentUser.id},to_id.eq.${couple.id}),and(from_id.eq.${couple.id},to_id.eq.${currentUser.id})`);
+  if (delErr) { showToast('שגיאה בביטול: '+delErr.message); return; }
+  const {data:existing} = await sb.from('friends').select('id')
+    .eq('couple_a',currentUser.id).eq('couple_b',couple.id).maybeSingle();
+  if (!existing) {
+    const {error:friendErr} = await sb.from('friends').insert({
+      couple_a:currentUser.id, couple_b:couple.id,
+      name:couple.name, partner_name:couple.partner_name||'',
+      photo_url:couple.photo_url||null, city:couple.city||'',
+    });
+    if (friendErr) console.warn('friends table error:', friendErr.message);
+  }
+  const btn=document.getElementById('shake-btn');
+  const chatBtn=document.getElementById('panel-chat-btn');
+  const unmatchBtn=document.getElementById('unmatch-btn');
+  if (btn) { btn.textContent='💞 שלחו Shake שוב'; btn.disabled=false; btn.style.opacity='1'; btn.onclick=()=>sendShake(); }
+  if (chatBtn) chatBtn.style.display='none';
+  if (unmatchBtn) unmatchBtn.remove();
+  showToast(`💔 השייק בוטל — ${couple.name} נשמרו כחברים`);
+  loadFriends();
 }
 
 function subscribeShakes() {
@@ -1859,6 +1896,7 @@ async function openProfile() {
   renderStatusOptions();
   loadDateHistory();
   loadReviewsReceived();
+  loadFriends();
 }
 
 async function saveProfile() {
@@ -2288,6 +2326,35 @@ async function saveDateHistory() {
   closeDateModal();
   showToast('דייט נשמר! 📅');
   loadDateHistory();
+}
+
+async function loadFriends() {
+  const list=document.getElementById('friends-list');
+  if (!list) return;
+  const {data}=await sb.from('friends').select('*').eq('couple_a',currentUser.id).order('created_at',{ascending:false});
+  if (!data?.length) {
+    list.innerHTML='<div style="color:var(--text3);font-size:13px;padding:10px 0">עוד אין חברים — כשתבטלו שייק עם זוג הם יישמרו כאן 💞</div>';
+    return;
+  }
+  list.innerHTML=data.map(f=>{
+    const photo=f.photo_url
+      ?`<img src="${f.photo_url}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,75,110,0.3);flex-shrink:0"/>`
+      :`<div style="width:44px;height:44px;border-radius:50%;background:rgba(255,75,110,0.15);border:2px solid rgba(255,75,110,0.3);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">💞</div>`;
+    return `<div style="display:flex;align-items:center;gap:12px;padding:11px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,75,110,0.15);border-radius:14px;margin-bottom:8px;cursor:pointer" onclick="openFriendPanel(${JSON.stringify(f).replace(/"/g,'&quot;')})">
+      ${photo}
+      <div style="flex:1;min-width:0">
+        <div style="font-family:'Syne';font-weight:800;font-size:14px">${escapeHtml(f.name)} & ${escapeHtml(f.partner_name||'?')}</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:2px">${escapeHtml(f.city||'ישראל')}</div>
+      </div>
+      <div style="font-size:18px;color:var(--text3)">›</div>
+    </div>`;
+  }).join('');
+}
+
+async function openFriendPanel(friend) {
+  const {data:profile}=await sb.from('profiles').select('*').eq('id',friend.couple_b).single();
+  if (profile) openCouplePanel(profile);
+  else showToast('פרופיל לא נמצא');
 }
 
 async function loadDateHistory() {
