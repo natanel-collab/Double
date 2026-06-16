@@ -537,6 +537,14 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
       <button onclick="cancelActiveEvent()" style="background:rgba(255,75,110,0.2);border:1px solid rgba(255,75,110,0.4);color:var(--pink);padding:5px 12px;border-radius:100px;cursor:pointer;font-size:12px;font-family:'Heebo';font-weight:700">ביטול אירוע</button>
     </div>
     <div id="active-event-text" style="font-size:14px;color:var(--text2);margin-bottom:10px"></div>
+    <!-- תמונת אירוע -->
+    <div id="active-event-photo-preview" style="display:none;margin-bottom:10px">
+      <img id="active-event-photo-img" src="" style="width:100%;border-radius:10px;object-fit:cover;max-height:160px"/>
+    </div>
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;color:var(--pink);font-weight:600;margin-bottom:10px">
+      <input type="file" accept="image/*" style="display:none" onchange="uploadEventPhoto(this)"/>
+      📸 הוסיפו תמונה מהדייט (אופציונלי)
+    </label>
     <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.04);border-radius:10px;padding:8px 12px">
       <span style="font-size:12px;color:var(--text3)">⏳ נותרו</span>
       <span id="active-event-countdown" style="font-size:13px;font-weight:700;color:var(--orange);font-family:'Syne',sans-serif"></span>
@@ -600,6 +608,13 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
       <div class="invite-link-row">
         <input class="invite-link-input" type="password" id="profile-invite-pass" placeholder="הסיסמה שלך" dir="ltr"/>
         <button class="btn-copy" onclick="createCoupleCode()">צור קוד</button>
+      </div>
+    </div>
+    <div id="profile-invite-sync" style="display:none;margin-top:10px">
+      <p style="font-size:12px;color:var(--orange);margin-bottom:8px">⚠️ הקוד קיים אבל לא מסונכרן — הזינו סיסמה כדי לאפשר כניסה עם הקוד:</p>
+      <div class="invite-link-row">
+        <input class="invite-link-input" type="password" id="profile-sync-pass" placeholder="הסיסמה שלך" dir="ltr"/>
+        <button class="btn-copy" onclick="syncCoupleCode()">סנכרן</button>
       </div>
     </div>
   </div>
@@ -763,6 +778,10 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
     <div style="margin-bottom:12px">
       <label class="field-label">שם הזוג שנפגשתם</label>
       <input class="field-input" id="date-couple-name" placeholder="דן ומיה"/>
+    </div>
+    <div style="margin-bottom:12px">
+      <label class="field-label">תאריך הדייט</label>
+      <input class="field-input" type="date" id="date-date" style="color-scheme:dark"/>
     </div>
     <div style="margin-bottom:16px">
       <label class="field-label">הערה קצרה</label>
@@ -1228,7 +1247,7 @@ function openCouplePanel(couple) {
       </div>
     </div>
     ${couple.lat && couple.lng ? `<div style="margin-bottom:12px"><button onclick="navigateToCouple(${couple.lat},${couple.lng})" style="width:100%;padding:11px;border:1px solid rgba(84,160,255,0.3);border-radius:12px;background:rgba(84,160,255,0.08);color:#54a0ff;font-family:'Heebo';font-weight:600;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">🗺️ נווט למיקום הדייט</button></div>` : ''}
-    ${couple.status_text?`<div class="info-card"><div class="info-card-label">הם מחפשים</div><div style="font-size:14px;color:var(--text2)">"${escapeHtml(couple.status_text)}"</div></div>`:''}
+    ${couple.status_text?`<div class="info-card"><div class="info-card-label">הם מחפשים</div><div style="font-size:14px;color:var(--text2)">"${escapeHtml(couple.status_text)}"</div>${couple.event_photo_url?`<img src="${couple.event_photo_url}" style="width:100%;border-radius:10px;margin-top:10px;max-height:180px;object-fit:cover"/>`:''}</div>`:''}
     <div class="people-row">
       <div class="person-card"><div class="person-name">${escapeHtml(couple.name)}</div><div class="person-role">${escapeHtml([couple.role_him,couple.age_him?'גיל '+couple.age_him:''].filter(Boolean).join(' · '))||''}</div></div>
       <div class="person-card"><div class="person-name">${escapeHtml(couple.partner_name||'?')}</div><div class="person-role">${escapeHtml([couple.role_her,couple.age_her?'גיל '+couple.age_her:''].filter(Boolean).join(' · '))||''}</div></div>
@@ -1461,11 +1480,15 @@ function renderFeed(searchQ) {
   });
   couples.sort((a,b)=>({hot:0,warm:1,cold:2}[effectiveStatus(a)]||0)-({hot:0,warm:1,cold:2}[effectiveStatus(b)]||0));
   if (!couples.length) {
+    const filterMsg = feedVibeFilter!=='all'
+      ? `<div style="font-size:13px;color:var(--text2);margin-top:8px">💡 נסו לסנן ב"הכל" — ייתכן שזוגות פעילים לא הגדירו את תחום העניין הזה</div>`
+      : '';
     list.innerHTML=`<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:20px;overflow:hidden">
   <div style="padding:36px 24px 24px;text-align:center;background:radial-gradient(ellipse at 50% 0%,rgba(255,75,110,0.12),transparent 70%)">
     <div style="font-size:64px;margin-bottom:14px;display:block;animation:emptyFloat 3s ease-in-out infinite">💞</div>
     <div style="font-family:'Syne';font-size:20px;font-weight:800;margin-bottom:10px">אין זוגות פעילים עכשיו</div>
     <div style="font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:20px">היו הראשונים!<br/>פרסמו אירוע ותופיעו בפיד של זוגות אחרים</div>
+    ${filterMsg}
     <button onclick="navTo('main');openEventModal()" style="display:inline-flex;align-items:center;gap:8px;padding:13px 24px;border:none;border-radius:100px;background:linear-gradient(135deg,#ff4b6e,#ff6b9d);color:white;font-family:'Heebo';font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 20px rgba(255,75,110,0.35)">🔥 פרסמו אירוע עכשיו</button>
   </div>
   <div style="padding:0 16px 16px;display:flex;flex-direction:column;gap:8px">
@@ -1652,9 +1675,9 @@ function updateEventCountdown() {
 }
 
 async function cancelActiveEvent(expired) {
-  const {error} = await sb.from('profiles').update({status:'cold',status_text:'',event_expires_at:null}).eq('id',currentUser.id);
+  const {error} = await sb.from('profiles').update({status:'cold',status_text:'',event_expires_at:null,event_photo_url:null}).eq('id',currentUser.id);
   if (error) {showToast('שגיאה: '+error.message);return;}
-  myProfile={...myProfile,status:'cold',status_text:'',event_expires_at:null};
+  myProfile={...myProfile,status:'cold',status_text:'',event_expires_at:null,event_photo_url:null};
   stopEventCountdown();
   const fab=document.getElementById('event-fab');
   if (fab) {fab.textContent='➕ אירוע';fab.style.background='linear-gradient(135deg,#1dd1a1,#00b894)';fab.onclick=openEventModal;}
@@ -1865,9 +1888,16 @@ async function openProfile() {
   if (myProfile?.couple_code) {
     document.getElementById('profile-invite-link').value=myProfile.couple_code;
     document.getElementById('profile-invite-setup').style.display='none';
+    // בדיקה אם הקוד מסונכרן ב-couple_codes
+    sb.from('couple_codes').select('code').eq('code',myProfile.couple_code).maybeSingle().then(({data})=>{
+      const syncDiv=document.getElementById('profile-invite-sync');
+      if (syncDiv) syncDiv.style.display=data?'none':'';
+    });
   } else {
     document.getElementById('profile-invite-link').value='—';
     document.getElementById('profile-invite-setup').style.display='';
+    const syncDiv=document.getElementById('profile-invite-sync');
+    if (syncDiv) syncDiv.style.display='none';
   }
   const partnerStatus=document.getElementById('partner-link-status');
   if (partnerStatus) partnerStatus.innerHTML=myProfile?.partner_id&&myProfile?.partner_confirmed?'<span style="display:inline-flex;align-items:center;gap:6px;background:rgba(29,209,161,0.12);border:1px solid rgba(29,209,161,0.3);color:#1dd1a1;padding:6px 14px;border-radius:100px;font-size:13px;font-weight:700">✅ זוג מאומת</span>':'<span style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,159,67,0.12);border:1px solid rgba(255,159,67,0.3);color:#ff9f43;padding:6px 14px;border-radius:100px;font-size:13px;font-weight:700">⏳ ממתין לחיבור בן/בת הזוג</span>';
@@ -1879,6 +1909,13 @@ async function openProfile() {
     if (card) card.style.display='block';
     if (txt) txt.textContent='"'+myProfile.status_text+'"';
     if (addBtn) addBtn.style.display='none';
+    // הצגת תמונת אירוע קיימת
+    const photoPreview=document.getElementById('active-event-photo-preview');
+    const photoImg=document.getElementById('active-event-photo-img');
+    if (photoPreview&&photoImg&&myProfile.event_photo_url) {
+      photoImg.src=myProfile.event_photo_url;
+      photoPreview.style.display='block';
+    }
     startEventCountdown();
   } else if (myProfile?.status==='hot'&&myProfile?.event_expires_at&&new Date(myProfile.event_expires_at)<=new Date()) {
     // event already expired - auto reset
@@ -1952,7 +1989,37 @@ async function createCoupleCode() {
   showToast('✅ קוד שיתוף נוצר!');
 }
 
-// ═══ IMAGE CROP + COMPRESS ═══
+async function syncCoupleCode() {
+  const pass=document.getElementById('profile-sync-pass').value;
+  if (!pass) {showToast('נא להזין סיסמה');return;}
+  const email=myProfile?.email||currentUser.email;
+  const {error:checkErr}=await sb.auth.signInWithPassword({email,password:pass});
+  if (checkErr) {showToast('סיסמה שגויה');return;}
+  const code=myProfile?.couple_code;
+  if (!code) {showToast('אין קוד שיתוף');return;}
+  await sb.from('couple_codes').upsert({code,email,password:pass});
+  document.getElementById('profile-invite-sync').style.display='none';
+  document.getElementById('profile-sync-pass').value='';
+  showToast('✅ הקוד סונכרן! עכשיו בן/בת הזוג יוכלו להיכנס');
+}
+
+async function uploadEventPhoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  showToast('מעלה תמונה...');
+  const path = `${currentUser.id}/event.jpg`;
+  const {error:upErr} = await sb.storage.from('Photos').upload(path, file, {upsert:true, contentType:file.type});
+  if (upErr) {showToast('שגיאה בהעלאה: '+upErr.message); return;}
+  const {data:{publicUrl}} = sb.storage.from('Photos').getPublicUrl(path);
+  const photoUrl = `${publicUrl}?v=${Date.now()}`;
+  await sb.from('profiles').update({event_photo_url:photoUrl}).eq('id',currentUser.id);
+  myProfile={...myProfile, event_photo_url:photoUrl};
+  const preview=document.getElementById('active-event-photo-preview');
+  const img=document.getElementById('active-event-photo-img');
+  if (preview&&img) {img.src=photoUrl; preview.style.display='block';}
+  showToast('📸 התמונה עלתה!');
+}
+
 let _cropImgEl, _cropDx=0, _cropDy=0, _cropScale=1, _cropStartX, _cropStartY, _cropStartDx, _cropStartDy;
 
 function handlePhotoUpload(input) {
@@ -2073,7 +2140,7 @@ function updateProfileNavIcon() {
   const navIcon=document.getElementById('nav-profile-icon');
   const headerAvatar=document.getElementById('header-avatar');
   if (myProfile?.photo_url) {
-    if (navIcon) navIcon.innerHTML=`<img src="${myProfile.photo_url}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;border:2px solid var(--pink)"/>`;
+    if (navIcon) navIcon.innerHTML=`<img src="${myProfile.photo_url}" style="width:26px;height:26px;border-radius:8px;object-fit:cover;border:2px solid var(--pink)"/>`;
     if (headerAvatar) headerAvatar.innerHTML=`<img src="${myProfile.photo_url}" style="width:100%;height:100%;object-fit:cover"/>`;
   } else {
     if (navIcon) navIcon.textContent='👫';
@@ -2313,6 +2380,8 @@ async function deleteReview(id) {
 function addDateHistory() {
   document.getElementById('date-couple-name').value = '';
   document.getElementById('date-note').value = '';
+  // ברירת מחדל: היום
+  document.getElementById('date-date').value = new Date().toISOString().split('T')[0];
   document.getElementById('date-modal').classList.add('open');
 }
 
@@ -2323,12 +2392,13 @@ function closeDateModal() {
 async function saveDateHistory() {
   const coupleName = document.getElementById('date-couple-name').value.trim();
   const note = document.getElementById('date-note').value.trim();
+  const dateVal = document.getElementById('date-date').value;
   if (!coupleName) { showToast('נא להזין שם הזוג'); return; }
-
+  const dateToSave = dateVal ? new Date(dateVal).toISOString() : new Date().toISOString();
   const { error } = await sb.from('date_history').insert({
     couple_a: currentUser.id,
-    couple_b: null, // self-reported, no matching couple in the app
-    date: new Date().toISOString(),
+    couple_b: null,
+    date: dateToSave,
     note: coupleName + (note ? ' — ' + note : ''),
   });
   if (error) { showToast('שגיאה: ' + error.message); return; }
