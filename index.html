@@ -878,6 +878,7 @@ let eventSelectedVibe = '', eventLat = null, eventLng = null;
 let feedVibeFilter = 'all', listVibeFilter = 'all';
 let profileSelectedVibes = [];
 let statusChannel = null;
+let _panelUnmatched = false;
 let toastTimer;
 
 // ═══════════════════════════════════
@@ -1273,8 +1274,10 @@ function openCouplePanel(couple) {
 
   document.getElementById('panel-overlay').classList.add('open');
   document.getElementById('couple-panel').classList.add('open');
+  _panelUnmatched = false;
   // Check shake status (only for other couples)
   if (!isOwn) sb.from('shakes').select('id,status').eq('from_id',currentUser.id).eq('to_id',couple.id).single().then(({data})=>{
+    if (_panelUnmatched) return;
     const btn=document.getElementById('shake-btn');
     const chatBtn=document.getElementById('panel-chat-btn');
     if (chatBtn) chatBtn.style.display = data?.status==='accepted' ? '' : 'none';
@@ -1546,10 +1549,11 @@ function openChatFromShake() {
 }
 
 async function unmatch(shakeId, couple) {
-  if (!confirm(`לבטל את השייק עם ${couple.name}?\nהם יישמרו ברשימת החברים שלכם.`)) return;
+  if (!confirm(`לבטל את השייק עם ${couple.name} & ${couple.partner_name||'?'}?\nהם יישמרו ברשימת החברים שלכם.`)) return;
+  _panelUnmatched = true;
   const {error:delErr} = await sb.from('shakes').delete()
     .or(`and(from_id.eq.${currentUser.id},to_id.eq.${couple.id}),and(from_id.eq.${couple.id},to_id.eq.${currentUser.id})`);
-  if (delErr) { showToast('שגיאה בביטול: '+delErr.message); return; }
+  if (delErr) { showToast('שגיאה בביטול: '+delErr.message); _panelUnmatched=false; return; }
   const {data:existing} = await sb.from('friends').select('id')
     .eq('couple_a',currentUser.id).eq('couple_b',couple.id).maybeSingle();
   if (!existing) {
@@ -1558,7 +1562,14 @@ async function unmatch(shakeId, couple) {
       name:couple.name, partner_name:couple.partner_name||'',
       photo_url:couple.photo_url||null, city:couple.city||'',
     });
-    if (friendErr) console.warn('friends table error:', friendErr.message);
+    if (friendErr) {
+      showToast('⚠️ השייק בוטל, אבל שמירת החבר נכשלה: '+friendErr.message);
+    } else {
+      showToast(`💔 השייק בוטל — ${couple.name} & ${couple.partner_name||'?'} נשמרו כחברים`);
+      loadFriends();
+    }
+  } else {
+    showToast('💔 השייק בוטל');
   }
   const btn=document.getElementById('shake-btn');
   const chatBtn=document.getElementById('panel-chat-btn');
@@ -1566,8 +1577,6 @@ async function unmatch(shakeId, couple) {
   if (btn) { btn.textContent='💞 שלחו Shake שוב'; btn.disabled=false; btn.style.opacity='1'; btn.onclick=()=>sendShake(); }
   if (chatBtn) chatBtn.style.display='none';
   if (unmatchBtn) unmatchBtn.remove();
-  showToast(`💔 השייק בוטל — ${couple.name} נשמרו כחברים`);
-  loadFriends();
 }
 
 function subscribeShakes() {
