@@ -1045,7 +1045,10 @@ async function loadMyProfile() {
     showScreen('main'); initNav(); updateProfileNavIcon();
     await initMap(); subscribeRealtime(); subscribeNewMessages(); subscribeShakes();
     loadShakes();
-    renderStarterCard();
+    // הצג כרטיס רק אם לא גמר את כל השלבים
+    const _hasPartner = !!(myProfile?.partner_id && myProfile?.partner_confirmed);
+    const _hasEvent = myProfile?.status === 'hot';
+    if (!(_hasPartner && _hasEvent)) renderStarterCard();
   }
 }
 
@@ -2424,6 +2427,11 @@ function showScreen(name) {
 function initNav() { document.getElementById('bottom-nav').style.display='flex'; }
 
 function navTo(name) {
+  // הסתר כרטיס מתחילים כשעוברים ממסך הבית
+  if (name !== 'main') {
+    const sc = document.getElementById('starter-card');
+    if (sc) sc.style.display = 'none';
+  }
   if (name==='profile') {openProfile();return;}
   if (name==='feed') {showScreen('feed');document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav===name));loadFeed();return;}
   if (name==='chats') {showScreen('chats');document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav===name));const cb=document.getElementById('chats-badge');if(cb)cb.style.display='none';loadChats();return;}
@@ -2431,6 +2439,11 @@ function navTo(name) {
   if (name==='status') {showScreen('status');document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav===name));selectedStatusOption=myProfile?.status||'cold';document.getElementById('status-text').value=myProfile?.status_text||'';renderStatusOptions();return;}
   showScreen(name);
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav===name));
+  if (name === 'main') {
+    const _hasPartner = !!(myProfile?.partner_id && myProfile?.partner_confirmed);
+    const _hasEvent = myProfile?.status === 'hot';
+    if (!(_hasPartner && _hasEvent)) renderStarterCard();
+  }
   const navIcon = document.querySelector('[data-nav="'+name+'"] .nav-icon');
   if (navIcon) { navIcon.style.transform='scale(1.35)'; setTimeout(()=>navIcon.style.transform='',220); }
   if (name==='main'&&mapInstance) setTimeout(()=>mapInstance.invalidateSize(),100);
@@ -3188,8 +3201,12 @@ function starterCardState() {
   if (!myProfile) return 'hidden';
   const dismissed = localStorage.getItem('double_starter_dismissed_' + currentUser?.id);
   if (dismissed) return 'hidden';
+  // Only show on main screen
+  const mainScreen = document.getElementById('screen-main');
+  if (!mainScreen || !mainScreen.classList.contains('active')) return 'hidden';
   const hasPartner = !!(myProfile.partner_id && myProfile.partner_confirmed);
   const hasEvent = myProfile.status === 'hot';
+  // אם כבר עשה הכל — הצג done רק אם נרשם לאחרונה (תוך 24 שעות)
   if (hasPartner && hasEvent) return 'done';
   if (hasPartner) return 'step3';
   return 'step2';
