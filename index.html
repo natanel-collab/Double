@@ -1144,6 +1144,26 @@ function applyVibeFilter(vibe) {
 async function loadCouples() {
   const {data} = await sb.from('profiles').select('*').not('lat','is',null).neq('id',currentUser.id);
   allCouples = data||[];
+  // מזג אירוע פרטנר ל-myProfile אם אין לנו אירוע פעיל
+  if (myProfile?.partner_id) {
+    const {data:partner} = await sb.from('profiles').select('*').eq('id',myProfile.partner_id).single();
+    if (partner) {
+      const myActive = effectiveStatus(myProfile)==='hot';
+      const partnerActive = effectiveStatus(partner)==='hot';
+      if (!myActive && partnerActive) {
+        myProfile = {...myProfile,
+          status: partner.status,
+          status_text: partner.status_text,
+          lat: partner.lat,
+          lng: partner.lng,
+          event_vibe: partner.event_vibe,
+          event_expires_at: partner.event_expires_at
+        };
+      }
+      // סנן את הפרטנר — הוא חלק מ"הזוג שלנו", לא זוג אחר
+      allCouples = allCouples.filter(c => c.id !== partner.id);
+    }
+  }
   renderMarkers(); updateLiveCount();
 }
 
