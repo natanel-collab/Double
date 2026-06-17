@@ -1286,7 +1286,7 @@ function openCouplePanel(couple) {
       panelFooter.style.display = 'block';
       panelFooter.innerHTML = `
         <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(108,92,231,0.18);border:1px solid rgba(108,92,231,0.45);color:#b8aaff;padding:8px 16px;border-radius:100px;font-size:13px;font-weight:800;width:100%;justify-content:center;box-sizing:border-box">⭐ זה אתם</div>
-        <button onclick="closePanel();navTo('profile')" style="width:100%;padding:12px;border:1px solid rgba(108,92,231,0.4);border-radius:12px;background:rgba(108,92,231,0.1);color:#b8aaff;font-family:'Heebo';font-weight:700;font-size:14px;cursor:pointer;margin-top:8px">✏️ ערוך את האירוע שלי</button>`;
+        <button onclick="closePanel();openEventModal(true)" style="width:100%;padding:12px;border:1px solid rgba(108,92,231,0.4);border-radius:12px;background:rgba(108,92,231,0.1);color:#b8aaff;font-family:'Heebo';font-weight:700;font-size:14px;cursor:pointer;margin-top:8px">✏️ ערוך את האירוע שלי</button>`;
     } else {
       panelFooter.style.display = 'block';
       panelFooter.innerHTML = `
@@ -1773,22 +1773,63 @@ async function cancelActiveEvent(expired) {
 // ═══════════════════════════════════
 // EVENT MODAL
 // ═══════════════════════════════════
-function openEventModal() {
+function openEventModal(editMode=false) {
   document.getElementById('event-modal').classList.add('open');
-  document.getElementById('event-title').value='';
-  document.getElementById('event-desc').value='';
-  eventSelectedVibe=''; eventLat=null; eventLng=null;
-  document.getElementById('event-city-search').style.display='none';
-  document.getElementById('city-results').innerHTML='';
-  document.getElementById('selected-location').style.display='flex';
-  document.getElementById('selected-location-text').textContent='מיקום נוכחי';
-  document.getElementById('loc-auto-btn').classList.add('selected');
-  document.getElementById('loc-manual-btn').classList.remove('selected');
+  const titleEl=document.getElementById('event-title');
+  const descEl=document.getElementById('event-desc');
+  const saveBtn=document.querySelector('#event-modal .btn-primary');
+  const modalTitle=document.querySelector('#event-modal .modal-box > div:first-child');
+
+  if (editMode && myProfile) {
+    // טעינת נתונים קיימים
+    if (modalTitle) modalTitle.textContent='✏️ ערוך אירוע';
+    if (saveBtn) saveBtn.textContent='עדכן על המפה 🗺️';
+    titleEl.value=myProfile.status_text||'';
+    descEl.value=myProfile.event_desc||'';
+    // טעינת ויב קיים
+    eventSelectedVibe=myProfile.event_vibe||'';
+    // טעינת מיקום קיים
+    if (myProfile.city) {
+      eventLat=myProfile.lat||null;
+      eventLng=myProfile.lng||null;
+      document.getElementById('event-city-search').style.display='none';
+      document.getElementById('city-results').innerHTML='';
+      document.getElementById('selected-location').style.display='flex';
+      document.getElementById('selected-location-text').textContent=myProfile.city;
+      document.getElementById('loc-auto-btn').classList.remove('selected');
+      document.getElementById('loc-manual-btn').classList.add('selected');
+    } else {
+      eventLat=null; eventLng=null;
+      document.getElementById('event-city-search').style.display='none';
+      document.getElementById('city-results').innerHTML='';
+      document.getElementById('selected-location').style.display='flex';
+      document.getElementById('selected-location-text').textContent='מיקום נוכחי';
+      document.getElementById('loc-auto-btn').classList.add('selected');
+      document.getElementById('loc-manual-btn').classList.remove('selected');
+    }
+  } else {
+    // מצב חדש — איפוס
+    if (modalTitle) modalTitle.textContent='➕ הוספת אירוע';
+    if (saveBtn) saveBtn.textContent='פרסם על המפה 🗺️';
+    titleEl.value='';
+    descEl.value='';
+    eventSelectedVibe=''; eventLat=null; eventLng=null;
+    document.getElementById('event-city-search').style.display='none';
+    document.getElementById('city-results').innerHTML='';
+    document.getElementById('selected-location').style.display='flex';
+    document.getElementById('selected-location-text').textContent='מיקום נוכחי';
+    document.getElementById('loc-auto-btn').classList.add('selected');
+    document.getElementById('loc-manual-btn').classList.remove('selected');
+  }
+
+  // בניית רשימת ויבים
   const grid=document.getElementById('event-vibes');
   grid.innerHTML='';
   VIBES_LIST.forEach(v=>{
     const chip=document.createElement('div');
-    chip.className='vibe-chip'; chip.textContent=v.label;
+    chip.className='vibe-chip';
+    if (v.id===eventSelectedVibe) chip.classList.add('selected');
+    chip.textContent=v.label;
     chip.onclick=()=>{
       eventSelectedVibe=v.id;
       grid.querySelectorAll('.vibe-chip').forEach(c=>c.classList.remove('selected'));
@@ -2511,37 +2552,8 @@ async function loadFriends() {
 async function openFriendPanel(friend) {
   const {data:profile}=await sb.from('profiles').select('*').eq('id',friend.couple_b).single();
   if (!profile) {showToast('פרופיל לא נמצא'); return;}
-  // פתיחת פרופיל מלא ישירות (לא כרטיס אירוע)
-  selectedCouple=profile;
-  const c=profile;
-  document.getElementById('fp-title').textContent=`${escapeHtml(c.name||'?')} & ${escapeHtml(c.partner_name||'?')}`;
-  const av=document.getElementById('fp-avatar');
-  if (av) {
-    if (c.photo_url) av.innerHTML=`<img src="${c.photo_url}" style="width:100%;height:100%;object-fit:cover"/>`;
-    else av.textContent=(c.name||'?')[0];
-  }
-  // מילוי שאר הפרטים
-  const body=document.getElementById('fp-body');
-  if (body) {
-    const vibesHtml=(c.vibes||[]).map(v=>`<span style="background:rgba(255,75,110,0.12);border:1px solid rgba(255,75,110,0.25);color:#ff8fa8;padding:4px 10px;border-radius:100px;font-size:12px">${escapeHtml(v)}</span>`).join('');
-    body.innerHTML=`
-      ${c.city?`<div style="color:var(--text3);font-size:13px;text-align:center;margin-bottom:14px">📍 ${escapeHtml(c.city)}</div>`:''}
-      ${c.bio?`<div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:12px;font-size:13px;color:var(--text2);margin-bottom:14px;text-align:center">"${escapeHtml(c.bio)}"</div>`:''}
-      ${vibesHtml?`<div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:14px">${vibesHtml}</div>`:''}
-      ${c.together_time?`<div style="font-size:12px;color:var(--text3);text-align:center;margin-bottom:8px">❤️ ${escapeHtml(c.together_time)} ביחד</div>`:''}
-    `;
-  }
-  // כפתורי פעולה
-  const footer=document.getElementById('fp-footer');
-  if (footer) {
-    footer.innerHTML=`
-      <button onclick="openChat()" style="width:100%;padding:13px;background:linear-gradient(135deg,var(--pink),var(--pink2));border:none;border-radius:13px;color:white;font-family:'Heebo';font-weight:700;font-size:15px;cursor:pointer;margin-bottom:8px">💬 פתחו צ'אט</button>
-      <button onclick="unmatchFriend('${friend.id}',${JSON.stringify(c).replace(/"/g,'&quot;')})" style="width:100%;padding:10px;border:1px solid rgba(255,75,110,0.3);border-radius:12px;background:transparent;color:rgba(255,75,110,0.7);font-family:'Heebo';font-weight:600;font-size:13px;cursor:pointer">💔 ביטול שייק והסרה מחברים</button>
-    `;
-  }
-  closePanel();
-  showScreen('full-profile');
-  document.getElementById('bottom-nav').style.display='none';
+  selectedCouple = profile;
+  openFullProfile();
 }
 
 async function unmatchFriend(friendId, couple) {
