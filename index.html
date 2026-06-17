@@ -1029,8 +1029,8 @@ async function doRegister() {
       const {data:partnerProfile} = await sb.from('profiles').select('id').eq('email',partnerRow.email).single();
       if (partnerProfile?.id) {
         // סמן אישור זוגי על שני הפרופילים
-        await sb.from('profiles').update({partner_confirmed:true,linked_partner_id:partnerProfile.id}).eq('id',currentUser.id);
-        await sb.from('profiles').update({partner_confirmed:true,linked_partner_id:currentUser.id}).eq('id',partnerProfile.id);
+        await sb.from('profiles').update({partner_id:partnerProfile.id,partner_confirmed:true}).eq('id',currentUser.id);
+        await sb.from('profiles').update({partner_id:currentUser.id,partner_confirmed:true}).eq('id',partnerProfile.id);
         showToast('💑 חשבון זוגי חובר בהצלחה!');
       }
     }
@@ -1046,8 +1046,8 @@ async function connectSetupPartnerCode() {
   if (!partnerRow?.email) {err.textContent='קוד לא נמצא — בדקו שהזנתם נכון';return;}
   const {data:partnerProfile} = await sb.from('profiles').select('id').eq('email',partnerRow.email).single();
   if (!partnerProfile?.id) {err.textContent='לא נמצא פרופיל עם קוד זה';return;}
-  await sb.from('profiles').update({partner_confirmed:true,linked_partner_id:partnerProfile.id}).eq('id',currentUser.id);
-  await sb.from('profiles').update({partner_confirmed:true,linked_partner_id:currentUser.id}).eq('id',partnerProfile.id);
+  await sb.from('profiles').update({partner_id:partnerProfile.id,partner_confirmed:true}).eq('id',currentUser.id);
+  await sb.from('profiles').update({partner_id:currentUser.id,partner_confirmed:true}).eq('id',partnerProfile.id);
   err.textContent='';
   showToast('💑 חשבון זוגי חובר בהצלחה!');
   document.getElementById('setup-partner-code').value='';
@@ -1064,8 +1064,24 @@ async function doCodeLogin() {
   if (!code) {errEl.textContent='נא להזין קוד שיתוף';return;}
   const btn=document.querySelector('#auth-code .btn-primary');
   btn.disabled=true; btn.textContent='מתחבר...'; errEl.textContent='';
+  // מצא את הפרופיל שמחזיק את הקוד
   const {data:codeRow,error:codeErr} = await sb.from('couple_codes').select('email,password').eq('code',code).single();
   if (codeErr||!codeRow) {btn.disabled=false; btn.textContent='התחברות עם קוד'; errEl.textContent='קוד לא נמצא — בדקו שהזנתם נכון';return;}
+  // אם המשתמש כבר מחובר — קשר את שני החשבונות
+  const {data:{session}} = await sb.auth.getSession();
+  if (session) {
+    currentUser=session.user;
+    const {data:partnerProfile} = await sb.from('profiles').select('id').eq('email',codeRow.email).single();
+    if (!partnerProfile?.id) {btn.disabled=false;btn.textContent='התחברות עם קוד';errEl.textContent='לא נמצא פרופיל עם קוד זה';return;}
+    if (partnerProfile.id===currentUser.id) {btn.disabled=false;btn.textContent='התחברות עם קוד';errEl.textContent='לא ניתן להתחבר לעצמך';return;}
+    await sb.from('profiles').update({partner_id:partnerProfile.id,partner_confirmed:true}).eq('id',currentUser.id);
+    await sb.from('profiles').update({partner_id:currentUser.id,partner_confirmed:true}).eq('id',partnerProfile.id);
+    btn.disabled=false; btn.textContent='התחברות עם קוד';
+    showToast('💑 חשבון זוגי חובר בהצלחה!');
+    await loadMyProfile();
+    return;
+  }
+  // אין session — היכנס לחשבון הבעלים של הקוד
   const {error} = await sb.auth.signInWithPassword({email:codeRow.email,password:codeRow.password});
   btn.disabled=false; btn.textContent='התחברות עם קוד';
   if (error) {errEl.textContent=friendlyAuthError(error.message);return;}
@@ -1929,10 +1945,10 @@ async function saveEvent() {
   const eventExpiresAt=new Date(Date.now()+24*60*60*1000).toISOString();
   const saveBtn=document.querySelector('#event-modal .btn-primary');
   if (saveBtn){saveBtn.disabled=true;saveBtn.dataset.orig=saveBtn.textContent;saveBtn.innerHTML='<span class="btn-spinner"></span> מפרסם...';}
-  const {error} = await sb.from('profiles').update({status:'hot',status_text:statusText,lat,lng,event_expires_at:eventExpiresAt}).eq('id',currentUser.id);
+  const {error} = await sb.from('profiles').update({status:'hot',status_text:statusText,lat,lng,event_expires_at:eventExpiresAt,event_vibe:eventSelectedVibe||null}).eq('id',currentUser.id);
   if (saveBtn){saveBtn.disabled=false;saveBtn.textContent=saveBtn.dataset.orig||'פרסם על המפה 🗺️';}
   if (error) {showToast('😕 לא הצלחנו לפרסם — בדקו את החיבור ונסו שוב');return;}
-  myProfile={...myProfile,status:'hot',status_text:statusText,lat,lng,event_expires_at:eventExpiresAt};
+  myProfile={...myProfile,status:'hot',status_text:statusText,lat,lng,event_expires_at:eventExpiresAt,event_vibe:eventSelectedVibe||null};
   closeEventModal();
   showToast('האירוע פורסם על המפה! 🗺️');
   const card=document.getElementById('active-event-card');
