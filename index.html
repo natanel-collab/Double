@@ -1818,8 +1818,10 @@ async function cancelActiveEvent(expired) {
   const resetData={status:'cold',status_text:'',event_expires_at:null,event_photo_url:null,event_vibe:null};
   const {error} = await sb.from('profiles').update(resetData).eq('id',currentUser.id);
   if (error) {showToast('שגיאה: '+error.message);return;}
+  // בטל גם אצל הפרטנר
   if (myProfile?.partner_id) {
-    await sb.from('profiles').update(resetData).eq('id',myProfile.partner_id);
+    const {error:pe} = await sb.from('profiles').update(resetData).eq('id',myProfile.partner_id);
+    if (pe) console.warn('שגיאת ביטול פרטנר:', pe.message);
   }
   myProfile={...myProfile,...resetData};
   stopEventCountdown();
@@ -1958,10 +1960,16 @@ async function saveEvent() {
   const eventExpiresAt=new Date(Date.now()+24*60*60*1000).toISOString();
   const saveBtn=document.querySelector('#event-modal .btn-primary');
   if (saveBtn){saveBtn.disabled=true;saveBtn.dataset.orig=saveBtn.textContent;saveBtn.innerHTML='<span class="btn-spinner"></span> מפרסם...';}
-  const {error} = await sb.from('profiles').update({status:'hot',status_text:statusText,lat,lng,event_expires_at:eventExpiresAt,event_vibe:eventSelectedVibe||null}).eq('id',currentUser.id);
+  const eventData={status:'hot',status_text:statusText,lat,lng,event_expires_at:eventExpiresAt,event_vibe:eventSelectedVibe||null};
+  // תמיד שמור על currentUser
+  const {error} = await sb.from('profiles').update(eventData).eq('id',currentUser.id);
   if (saveBtn){saveBtn.disabled=false;saveBtn.textContent=saveBtn.dataset.orig||'פרסם על המפה 🗺️';}
   if (error) {showToast('😕 לא הצלחנו לפרסם — בדקו את החיבור ונסו שוב');return;}
-  myProfile={...myProfile,status:'hot',status_text:statusText,lat,lng,event_expires_at:eventExpiresAt,event_vibe:eventSelectedVibe||null};
+  // סנכרן גם לפרטנר
+  if (myProfile?.partner_id) {
+    await sb.from('profiles').update(eventData).eq('id',myProfile.partner_id);
+  }
+  myProfile={...myProfile,...eventData};
   closeEventModal();
   showToast('האירוע פורסם על המפה! 🗺️');
   const card=document.getElementById('active-event-card');
