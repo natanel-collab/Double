@@ -1029,18 +1029,13 @@ async function doRegister() {
   currentUser=data.user;
   const coupleCode=generateCoupleCode();
   await sb.from('profiles').upsert({id:currentUser.id,name,email,couple_code:coupleCode});
-  await sb.from('couple_codes').upsert({code:coupleCode,email,password:pass});
-  // אם הוזן קוד זוגי — נסה לחבר
+  // אם הוזן קוד זוגי — חבר ישירות מ-profiles
   if (partnerCodeRaw) {
-    const {data:partnerRow} = await sb.from('couple_codes').select('email').eq('code',partnerCodeRaw).single();
-    if (partnerRow?.email) {
-      const {data:partnerProfile} = await sb.from('profiles').select('id').eq('email',partnerRow.email).single();
-      if (partnerProfile?.id) {
-        // סמן אישור זוגי על שני הפרופילים
-        await sb.from('profiles').update({partner_id:partnerProfile.id,partner_confirmed:true}).eq('id',currentUser.id);
-        await sb.from('profiles').update({partner_id:currentUser.id,partner_confirmed:true}).eq('id',partnerProfile.id);
-        showToast('💑 חשבון זוגי חובר בהצלחה!');
-      }
+    const {data:partner} = await sb.from('profiles').select('id').eq('couple_code',partnerCodeRaw).single();
+    if (partner?.id && partner.id!==currentUser.id) {
+      await sb.from('profiles').update({partner_id:partner.id,partner_confirmed:true}).eq('id',currentUser.id);
+      await sb.from('profiles').update({partner_id:currentUser.id,partner_confirmed:true}).eq('id',partner.id);
+      showToast('💑 חשבון זוגי חובר בהצלחה!');
     }
   }
   btn.disabled=false; btn.textContent='יצירת חשבון';
@@ -1050,14 +1045,13 @@ async function connectFromProfile() {
   const code=(document.getElementById('profile-partner-code-input')?.value||'').trim().toUpperCase();
   const errEl=document.getElementById('profile-connect-err');
   if (!code) {errEl.textContent='נא להזין קוד';return;}
-  const {data:partnerRow} = await sb.from('couple_codes').select('email').eq('code',code).single();
-  if (!partnerRow?.email) {errEl.textContent='קוד לא נמצא — בדקו שהזנתם נכון';return;}
-  const {data:partnerProfile} = await sb.from('profiles').select('id').eq('email',partnerRow.email).single();
-  if (!partnerProfile?.id) {errEl.textContent='לא נמצא פרופיל עם קוד זה';return;}
-  if (partnerProfile.id===currentUser.id) {errEl.textContent='לא ניתן להתחבר לעצמך';return;}
-  await sb.from('profiles').update({partner_id:partnerProfile.id,partner_confirmed:true}).eq('id',currentUser.id);
-  await sb.from('profiles').update({partner_id:currentUser.id,partner_confirmed:true}).eq('id',partnerProfile.id);
-  myProfile={...myProfile,partner_id:partnerProfile.id,partner_confirmed:true};
+  errEl.textContent='מחפש...';
+  const {data:partner} = await sb.from('profiles').select('id').eq('couple_code',code).single();
+  if (!partner?.id) {errEl.textContent='קוד לא נמצא — בדקו שהזנתם נכון';return;}
+  if (partner.id===currentUser.id) {errEl.textContent='לא ניתן להתחבר לעצמך';return;}
+  await sb.from('profiles').update({partner_id:partner.id,partner_confirmed:true}).eq('id',currentUser.id);
+  await sb.from('profiles').update({partner_id:currentUser.id,partner_confirmed:true}).eq('id',partner.id);
+  myProfile={...myProfile,partner_id:partner.id,partner_confirmed:true};
   errEl.textContent='';
   document.getElementById('profile-connect-code-section').style.display='none';
   showToast('💑 חשבון זוגי חובר בהצלחה!');
@@ -1067,12 +1061,12 @@ async function connectSetupPartnerCode() {
   const code=(document.getElementById('setup-partner-code')?.value||'').trim().toUpperCase();
   const err=document.getElementById('setup-err');
   if (!code) {err.textContent='נא להזין קוד';return;}
-  const {data:partnerRow} = await sb.from('couple_codes').select('email').eq('code',code).single();
-  if (!partnerRow?.email) {err.textContent='קוד לא נמצא — בדקו שהזנתם נכון';return;}
-  const {data:partnerProfile} = await sb.from('profiles').select('id').eq('email',partnerRow.email).single();
-  if (!partnerProfile?.id) {err.textContent='לא נמצא פרופיל עם קוד זה';return;}
-  await sb.from('profiles').update({partner_id:partnerProfile.id,partner_confirmed:true}).eq('id',currentUser.id);
-  await sb.from('profiles').update({partner_id:currentUser.id,partner_confirmed:true}).eq('id',partnerProfile.id);
+  err.textContent='מחפש...';
+  const {data:partner} = await sb.from('profiles').select('id').eq('couple_code',code).single();
+  if (!partner?.id) {err.textContent='קוד לא נמצא — בדקו שהזנתם נכון';return;}
+  if (partner.id===currentUser.id) {err.textContent='לא ניתן להתחבר לעצמך';return;}
+  await sb.from('profiles').update({partner_id:partner.id,partner_confirmed:true}).eq('id',currentUser.id);
+  await sb.from('profiles').update({partner_id:currentUser.id,partner_confirmed:true}).eq('id',partner.id);
   err.textContent='';
   showToast('💑 חשבון זוגי חובר בהצלחה!');
   document.getElementById('setup-partner-code').value='';
@@ -1084,34 +1078,7 @@ function generateCoupleCode() {
   return code;
 }
 async function doCodeLogin() {
-  const code=document.getElementById('code-input').value.trim().toUpperCase();
-  const errEl=document.getElementById('code-err');
-  if (!code) {errEl.textContent='נא להזין קוד שיתוף';return;}
-  const btn=document.querySelector('#auth-code .btn-primary');
-  btn.disabled=true; btn.textContent='מתחבר...'; errEl.textContent='';
-  // מצא את הפרופיל שמחזיק את הקוד
-  const {data:codeRow,error:codeErr} = await sb.from('couple_codes').select('email,password').eq('code',code).single();
-  if (codeErr||!codeRow) {btn.disabled=false; btn.textContent='התחברות עם קוד'; errEl.textContent='קוד לא נמצא — בדקו שהזנתם נכון';return;}
-  // אם המשתמש כבר מחובר — קשר את שני החשבונות
-  const {data:{session}} = await sb.auth.getSession();
-  if (session) {
-    currentUser=session.user;
-    const {data:partnerProfile} = await sb.from('profiles').select('id').eq('email',codeRow.email).single();
-    if (!partnerProfile?.id) {btn.disabled=false;btn.textContent='התחברות עם קוד';errEl.textContent='לא נמצא פרופיל עם קוד זה';return;}
-    if (partnerProfile.id===currentUser.id) {btn.disabled=false;btn.textContent='התחברות עם קוד';errEl.textContent='לא ניתן להתחבר לעצמך';return;}
-    await sb.from('profiles').update({partner_id:partnerProfile.id,partner_confirmed:true}).eq('id',currentUser.id);
-    await sb.from('profiles').update({partner_id:currentUser.id,partner_confirmed:true}).eq('id',partnerProfile.id);
-    btn.disabled=false; btn.textContent='התחברות עם קוד';
-    showToast('💑 חשבון זוגי חובר בהצלחה!');
-    await loadMyProfile();
-    return;
-  }
-  // אין session — היכנס לחשבון הבעלים של הקוד
-  const {error} = await sb.auth.signInWithPassword({email:codeRow.email,password:codeRow.password});
-  btn.disabled=false; btn.textContent='התחברות עם קוד';
-  if (error) {errEl.textContent=friendlyAuthError(error.message);return;}
-  currentUser=(await sb.auth.getUser()).data.user;
-  await loadMyProfile();
+  // לא בשימוש — הטאב הוסר. נשמר כ-fallback
 }
 async function signOut() { await sb.auth.signOut(); location.reload(); }
 
@@ -2085,11 +2052,8 @@ async function openProfile() {
   if (myProfile?.couple_code) {
     document.getElementById('profile-invite-link').value=myProfile.couple_code;
     document.getElementById('profile-invite-setup').style.display='none';
-    // בדיקה אם הקוד מסונכרן ב-couple_codes
-    sb.from('couple_codes').select('code').eq('code',myProfile.couple_code).maybeSingle().then(({data})=>{
-      const syncDiv=document.getElementById('profile-invite-sync');
-      if (syncDiv) syncDiv.style.display=data?'none':'';
-    });
+    const syncDiv=document.getElementById('profile-invite-sync');
+    if (syncDiv) syncDiv.style.display='none';
   } else {
     document.getElementById('profile-invite-link').value='—';
     document.getElementById('profile-invite-setup').style.display='';
@@ -2180,7 +2144,6 @@ async function createCoupleCode() {
   if (checkErr) {showToast('סיסמה שגויה');return;}
   const newCode=generateCoupleCode();
   await sb.from('profiles').update({couple_code:newCode}).eq('id',currentUser.id);
-  await sb.from('couple_codes').upsert({code:newCode,email,password:pass});
   myProfile={...myProfile,couple_code:newCode};
   document.getElementById('profile-invite-link').value=newCode;
   document.getElementById('profile-invite-setup').style.display='none';
@@ -2189,17 +2152,7 @@ async function createCoupleCode() {
 }
 
 async function syncCoupleCode() {
-  const pass=document.getElementById('profile-sync-pass').value;
-  if (!pass) {showToast('נא להזין סיסמה');return;}
-  const email=myProfile?.email||currentUser.email;
-  const {error:checkErr}=await sb.auth.signInWithPassword({email,password:pass});
-  if (checkErr) {showToast('סיסמה שגויה');return;}
-  const code=myProfile?.couple_code;
-  if (!code) {showToast('אין קוד שיתוף');return;}
-  await sb.from('couple_codes').upsert({code,email,password:pass});
-  document.getElementById('profile-invite-sync').style.display='none';
-  document.getElementById('profile-sync-pass').value='';
-  showToast('✅ הקוד סונכרן! עכשיו בן/בת הזוג יוכלו להיכנס');
+  showToast('סנכרון לא נדרש יותר');
 }
 
 async function uploadEventPhoto(input) {
