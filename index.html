@@ -692,7 +692,9 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
     <div style="display:flex;gap:8px">
       <button class="btn-secondary" style="flex:1;display:none" id="fp-chat-btn" onclick="openChat()">💬 צ'אט</button>
       <button class="btn-secondary" style="flex:1;color:#54a0ff;border-color:rgba(84,160,255,0.3)" id="fp-nav-btn">🗺️ נווט</button>
+      <button id="fp-heart-btn" onclick="toggleFriendHeart()" style="width:44px;height:44px;border-radius:12px;background:rgba(255,75,110,0.08);border:1px solid rgba(255,75,110,0.25);color:var(--pink);font-size:20px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center">🤍</button>
     </div>
+    <button id="fp-unmatch-btn" onclick="unmatchFromFullProfile()" style="display:none;width:100%;padding:9px;border:1px solid rgba(255,75,110,0.3);border-radius:11px;background:transparent;color:rgba(255,75,110,0.7);font-family:'Heebo';font-weight:600;font-size:13px;cursor:pointer">💔 ביטול שייק</button>
   </div>
 </div>
 
@@ -1638,6 +1640,17 @@ async function respondShake(shakeId,status,fromName) {
         selectedCouple = profile;
         document.getElementById('shake-approved-name').textContent = 'יש התאמה עם ' + profile.name + ' & ' + (profile.partner_name||'?') + '!';
         document.getElementById('shake-approved-modal').classList.add('open');
+        // שמירה אוטומטית כחבר
+        const {data:existing}=await sb.from('friends').select('id').eq('couple_a',currentUser.id).eq('couple_b',profile.id).maybeSingle();
+        if (!existing) {
+          await sb.from('friends').insert({
+            couple_a:currentUser.id, couple_b:profile.id,
+            name:profile.name, partner_name:profile.partner_name||'',
+            photo_url:profile.photo_url||null, city:profile.city||'',
+            source:'shake',
+          });
+          loadFriends();
+        }
       }
     }
   } else showToast('Shake נדחה');
@@ -2538,11 +2551,14 @@ async function loadFriends() {
     const photo=f.photo_url
       ?`<img src="${f.photo_url}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,75,110,0.3);flex-shrink:0"/>`
       :`<div style="width:44px;height:44px;border-radius:50%;background:rgba(255,75,110,0.15);border:2px solid rgba(255,75,110,0.3);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">💞</div>`;
+    const sourceTag=f.source==='heart'
+      ?`<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:100px;background:rgba(255,159,67,0.15);color:#ff9f43;border:1px solid rgba(255,159,67,0.3)">❤️ מועדף</span>`
+      :`<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:100px;background:rgba(29,209,161,0.15);color:var(--green);border:1px solid rgba(29,209,161,0.3)">💞 שייק</span>`;
     return `<div style="display:flex;align-items:center;gap:12px;padding:11px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,75,110,0.15);border-radius:14px;margin-bottom:8px;cursor:pointer" onclick="openFriendPanel(${JSON.stringify(f).replace(/"/g,'&quot;')})">
       ${photo}
       <div style="flex:1;min-width:0">
         <div style="font-family:'Syne';font-weight:800;font-size:14px">${escapeHtml(f.name)} & ${escapeHtml(f.partner_name||'?')}</div>
-        <div style="font-size:12px;color:var(--text3);margin-top:2px">${escapeHtml(f.city||'ישראל')}</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:2px;display:flex;align-items:center;gap:6px">${escapeHtml(f.city||'ישראל')} ${sourceTag}</div>
       </div>
       <div style="font-size:18px;color:var(--text3)">›</div>
     </div>`;
@@ -2662,10 +2678,7 @@ function openFullProfile() {
       ${photoEl}
       <div style="font-family:'Syne';font-size:22px;font-weight:800;margin-bottom:4px">${escapeHtml(c.name)} <span style="font-family:'Heebo';font-weight:400;opacity:0.6">&</span> ${escapeHtml(c.partner_name||'?')}</div>
       <div style="color:var(--text2);font-size:13px;margin-bottom:10px">${escapeHtml(c.city||'ישראל')}</div>
-      <div style="display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:100px;font-size:12px;font-weight:700;background:${meta.color}22;color:${meta.color}">
-        <div style="width:7px;height:7px;border-radius:50%;background:${meta.color}"></div>
-        ${meta.label}
-      </div>
+      ${effectiveStatus(c)==='hot' ? `<div style="display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:100px;font-size:12px;font-weight:700;background:${meta.color}22;color:${meta.color}"><div style="width:7px;height:7px;border-radius:50%;background:${meta.color}"></div>${meta.label}</div>` : ''}
     </div>
 
     ${c.bio ? `<div class="info-card"><div class="info-card-label">על הזוג</div><div style="font-size:14px;color:var(--text2);font-style:italic;padding:10px 14px;background:rgba(255,255,255,0.03);border-radius:8px;border-right:3px solid var(--pink);line-height:1.6">"${escapeHtml(c.bio)}"</div></div>` : ''}
@@ -2698,23 +2711,91 @@ function openFullProfile() {
   showScreen('full-profile');
   document.getElementById('bottom-nav').style.display = 'none';
 
-  // Check shake status to show/hide chat button
-  sb.from('shakes').select('status').eq('from_id',currentUser.id).eq('to_id',c.id).single().then(({data})=>{
+  // איפוס כפתורים
+  const heartBtn=document.getElementById('fp-heart-btn');
+  const unmatchBtn=document.getElementById('fp-unmatch-btn');
+  if (heartBtn) {heartBtn.textContent='🤍'; heartBtn.dataset.friendId='';}
+  if (unmatchBtn) unmatchBtn.style.display='none';
+
+  // בדיקת סטטוס שייק
+  sb.from('shakes').select('id,status').eq('from_id',currentUser.id).eq('to_id',c.id).single().then(({data:shakeData})=>{
     const btn=document.getElementById('fp-shake-btn');
     const chatBtn=document.getElementById('fp-chat-btn');
-    if (chatBtn) chatBtn.style.display = data?.status==='accepted' ? '' : 'none';
+    const isAccepted=shakeData?.status==='accepted';
+    if (chatBtn) chatBtn.style.display=isAccepted ? '' : 'none';
     if (!btn) return;
-    if (data?.status==='pending') {btn.textContent='⏳ Shake נשלח';btn.disabled=true;btn.style.opacity='0.7';}
-    else if (data?.status==='accepted') {btn.textContent='✅ מחוברים! פתחו צ\u0027אט';btn.disabled=false;btn.style.opacity='1';btn.onclick=()=>{openChat();};}
-    else if (data?.status==='declined') {btn.textContent='💞 שלחו Shake שוב';btn.disabled=false;btn.style.opacity='1';}
+    if (shakeData?.status==='pending') {btn.textContent='⏳ Shake נשלח';btn.disabled=true;btn.style.opacity='0.7';}
+    else if (isAccepted) {
+      btn.textContent='✅ מחוברים! פתחו צ\'אט';btn.disabled=false;btn.style.opacity='1';btn.onclick=()=>{openChat();};
+      if (unmatchBtn) unmatchBtn.style.display='';
+    }
+    else if (shakeData?.status==='declined') {btn.textContent='💞 שלחו Shake שוב';btn.disabled=false;btn.style.opacity='1';}
     else {btn.textContent='💞 Double Shake!';btn.disabled=false;btn.style.opacity='1';}
   });
+
+  // בדיקת סטטוס חבר (לב)
+  if (heartBtn) {
+    sb.from('friends').select('id').eq('couple_a',currentUser.id).eq('couple_b',c.id).maybeSingle().then(({data:friendData})=>{
+      if (friendData) {
+        heartBtn.textContent='❤️';
+        heartBtn.style.background='rgba(255,75,110,0.2)';
+        heartBtn.style.borderColor='rgba(255,75,110,0.5)';
+        heartBtn.dataset.friendId=friendData.id;
+      } else {
+        heartBtn.textContent='🤍';
+        heartBtn.style.background='rgba(255,75,110,0.08)';
+        heartBtn.style.borderColor='rgba(255,75,110,0.25)';
+        heartBtn.dataset.friendId='';
+      }
+    });
+  }
 }
 
 function closeFullProfile() {
   showScreen('main');
   document.getElementById('bottom-nav').style.display = 'flex';
   document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.nav === 'main'));
+}
+
+async function toggleFriendHeart() {
+  if (!selectedCouple) return;
+  const heartBtn=document.getElementById('fp-heart-btn');
+  const existingId=heartBtn?.dataset.friendId;
+  if (existingId) {
+    // הסרה מחברים
+    await sb.from('friends').delete().eq('id',existingId);
+    if (heartBtn) {heartBtn.textContent='🤍';heartBtn.style.background='rgba(255,75,110,0.08)';heartBtn.style.borderColor='rgba(255,75,110,0.25)';heartBtn.dataset.friendId='';}
+    showToast('הוסר מהחברים');
+  } else {
+    // הוספה לחברים
+    const c=selectedCouple;
+    const {data,error}=await sb.from('friends').insert({
+      couple_a:currentUser.id, couple_b:c.id,
+      name:c.name, partner_name:c.partner_name||'',
+      photo_url:c.photo_url||null, city:c.city||'',
+      source:'heart',
+    }).select('id').single();
+    if (error) {showToast('שגיאה: '+error.message); return;}
+    if (heartBtn) {heartBtn.textContent='❤️';heartBtn.style.background='rgba(255,75,110,0.2)';heartBtn.style.borderColor='rgba(255,75,110,0.5)';heartBtn.dataset.friendId=data.id;}
+    showToast('❤️ נשמר כחבר מועדף!');
+    loadFriends();
+  }
+}
+
+async function unmatchFromFullProfile() {
+  if (!selectedCouple) return;
+  const c=selectedCouple;
+  if (!confirm(`לבטל את השייק עם ${c.name} & ${c.partner_name||'?'}?`)) return;
+  _panelUnmatched=true;
+  await sb.from('shakes').delete().or(`and(from_id.eq.${currentUser.id},to_id.eq.${c.id}),and(from_id.eq.${c.id},to_id.eq.${currentUser.id})`);
+  // עדכון כפתורים
+  const btn=document.getElementById('fp-shake-btn');
+  const chatBtn=document.getElementById('fp-chat-btn');
+  const unmatchBtn=document.getElementById('fp-unmatch-btn');
+  if (btn) {btn.textContent='💞 Double Shake!';btn.disabled=false;btn.style.opacity='1';btn.onclick=()=>sendShake();}
+  if (chatBtn) chatBtn.style.display='none';
+  if (unmatchBtn) unmatchBtn.style.display='none';
+  showToast(`💔 השייק בוטל`);
 }
 
 
