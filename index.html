@@ -702,6 +702,7 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
   </div>
 
   <button class="btn-secondary" style="margin-top:4px;color:var(--pink);border-color:rgba(255,75,110,0.3)" onclick="signOut()">🚪 יציאה מהחשבון</button>
+  <button onclick="resetStarterCard()" style="background:none;border:none;color:var(--text3);font-family:'Heebo',sans-serif;font-size:12px;cursor:pointer;margin-top:10px;width:100%;text-align:center;padding:6px 0">🚀 הצג מדריך התחלה</button>
   <div class="legal-footer" style="margin-top:8px">
     <div class="legal-footer-links">
       <a href="/privacy.html" target="_blank">פרטיות</a>
@@ -1045,10 +1046,7 @@ async function loadMyProfile() {
     showScreen('main'); initNav(); updateProfileNavIcon();
     await initMap(); subscribeRealtime(); subscribeNewMessages(); subscribeShakes();
     loadShakes();
-    // הצג כרטיס רק אם לא גמר את כל השלבים
-    const _hasPartner = !!(myProfile?.partner_id && myProfile?.partner_confirmed);
-    const _hasEvent = myProfile?.status === 'hot';
-    if (!(_hasPartner && _hasEvent)) renderStarterCard();
+    renderStarterCard();
   }
 }
 
@@ -2440,9 +2438,7 @@ function navTo(name) {
   showScreen(name);
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav===name));
   if (name === 'main') {
-    const _hasPartner = !!(myProfile?.partner_id && myProfile?.partner_confirmed);
-    const _hasEvent = myProfile?.status === 'hot';
-    if (!(_hasPartner && _hasEvent)) renderStarterCard();
+    renderStarterCard();
   }
   const navIcon = document.querySelector('[data-nav="'+name+'"] .nav-icon');
   if (navIcon) { navIcon.style.transform='scale(1.35)'; setTimeout(()=>navIcon.style.transform='',220); }
@@ -2779,6 +2775,8 @@ function selectLooking(el) {
 // ═══ FULL COUPLE PROFILE ═══
 function openFullProfile() {
   if (!selectedCouple) return;
+  const sc = document.getElementById('starter-card');
+  if (sc) sc.style.display = 'none';
   const c = selectedCouple;
   const meta = STATUS_META[effectiveStatus(c)];
 
@@ -2879,6 +2877,7 @@ function closeFullProfile() {
   showScreen('main');
   document.getElementById('bottom-nav').style.display = 'flex';
   document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.nav === 'main'));
+  renderStarterCard();
 }
 
 async function toggleFriendHeart() {
@@ -3201,13 +3200,14 @@ function starterCardState() {
   if (!myProfile) return 'hidden';
   const dismissed = localStorage.getItem('double_starter_dismissed_' + currentUser?.id);
   if (dismissed) return 'hidden';
-  // Only show on main screen
+  // רק במסך הבית
   const mainScreen = document.getElementById('screen-main');
   if (!mainScreen || !mainScreen.classList.contains('active')) return 'hidden';
-  const hasPartner = !!(myProfile.partner_id && myProfile.partner_confirmed);
-  const hasEvent = myProfile.status === 'hot';
-  // אם כבר עשה הכל — הצג done רק אם נרשם לאחרונה (תוך 24 שעות)
-  if (hasPartner && hasEvent) return 'done';
+  const hasPartner = !!(myProfile.partner_id);
+  // "פרסם אי פעם" = יש event_expires_at בכלל, לא משנה אם פג
+  const hasEverPublished = !!(myProfile.event_expires_at);
+  // הכל הושלם — אל תציג
+  if (hasPartner && hasEverPublished) return 'hidden';
   if (hasPartner) return 'step3';
   return 'step2';
 }
@@ -3269,11 +3269,9 @@ function renderStarterCard() {
   if (state === 'done') {
     progress.style.width = '100%';
     progress.style.background = '#1dd1a1';
-    // step2 = done
     step2.style.cssText = 'flex:1;border-radius:10px;padding:8px 5px;text-align:center;background:rgba(29,209,161,0.08);border:1px solid rgba(29,209,161,0.25)';
     step2num.style.color = '#1dd1a1'; step2num.textContent = '✓ שלב 2';
     step2text.style.color = 'rgba(29,209,161,0.8)'; step2text.innerHTML = 'זוג<br/>מחובר';
-    // step3 = done
     step3.style.cssText = 'flex:1;border-radius:10px;padding:8px 5px;text-align:center;background:rgba(29,209,161,0.08);border:1px solid rgba(29,209,161,0.25);opacity:1';
     step3num.style.color = '#1dd1a1'; step3num.textContent = '✓ שלב 3';
     step3text.style.color = 'rgba(29,209,161,0.8)'; step3text.innerHTML = 'אירוע<br/>פורסם';
@@ -3281,8 +3279,8 @@ function renderStarterCard() {
     card.style.borderTop = '1px solid rgba(29,209,161,0.2)';
     cta.style.display = 'none';
     title.innerHTML = '🎉 <span style="color:#1dd1a1">מוכנים לפעולה!</span>';
-    // auto-dismiss after 3s
-    setTimeout(() => dismissStarterCard(), 3000);
+    // dismiss after 4s — user can close manually too
+    setTimeout(() => dismissStarterCard(), 4000);
   }
 }
 
@@ -3304,6 +3302,12 @@ function dismissStarterCard() {
   const card = document.getElementById('starter-card');
   if (card) card.style.display = 'none';
   if (currentUser?.id) localStorage.setItem('double_starter_dismissed_' + currentUser.id, '1');
+}
+
+function resetStarterCard() {
+  if (currentUser?.id) localStorage.removeItem('double_starter_dismissed_' + currentUser.id);
+  navTo('main');
+  setTimeout(() => renderStarterCard(), 100);
 }
 
 // START
