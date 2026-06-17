@@ -1046,7 +1046,7 @@ async function loadMyProfile() {
     showScreen('main'); initNav(); updateProfileNavIcon();
     await initMap(); subscribeRealtime(); subscribeNewMessages(); subscribeShakes();
     loadShakes();
-    renderStarterCard();
+    setTimeout(() => renderStarterCard(), 500);
   }
 }
 
@@ -3200,13 +3200,8 @@ function starterCardState() {
   if (!myProfile) return 'hidden';
   const dismissed = localStorage.getItem('double_starter_dismissed_' + currentUser?.id);
   if (dismissed) return 'hidden';
-  // רק במסך הבית
-  const mainScreen = document.getElementById('screen-main');
-  if (!mainScreen || !mainScreen.classList.contains('active')) return 'hidden';
   const hasPartner = !!(myProfile.partner_id);
-  // "פרסם אי פעם" = יש event_expires_at בכלל, לא משנה אם פג
   const hasEverPublished = !!(myProfile.event_expires_at);
-  // הכל הושלם — אל תציג
   if (hasPartner && hasEverPublished) return 'hidden';
   if (hasPartner) return 'step3';
   return 'step2';
