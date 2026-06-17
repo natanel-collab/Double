@@ -398,7 +398,7 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
   <div class="setup-section">
     <div class="setup-section-title">קוד שיתוף לבן/בת הזוג</div>
     <div class="partner-invite-box">
-      <p>שלחו לבן/בת הזוג את הקוד הבא. הם יוכלו להזין אותו בפרופיל שלהם כדי להתחבר אליכם.</p>
+      <p>שלחו לבן/בת הזוג את הקוד הבא. הם יוכלו להזין אותו בפרופיל שלהם תחת "חיבור זוגי".</p>
       <div class="invite-link-row">
         <input class="invite-link-input" id="invite-link" readonly style="text-align:center;font-weight:800;letter-spacing:3px;font-size:18px"/>
         <button class="btn-copy" onclick="copyInviteLink()">העתק</button>
@@ -591,7 +591,7 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
   <div style="display:flex;gap:8px;margin-bottom:8px">
     <div style="flex:2"><label class="field-label">עיר מגורים</label><input class="field-input" id="profile-city-input" placeholder="תל אביב, חיפה..."/></div>
     <div style="flex:1"><label class="field-label">גיל שלך</label><input class="field-input" type="number" id="profile-age-him" placeholder="28"/></div>
-    <div style="flex:1"><label class="field-label">גיל זוג</label><input class="field-input" type="number" id="profile-age-her" placeholder="26"/></div>
+    <div style="flex:1"><label class="field-label">גיל בן/בת הזוג</label><input class="field-input" type="number" id="profile-age-her" placeholder="26"/></div>
   </div>
   <div style="margin-bottom:8px"><label class="field-label">כמה זמן ביחד?</label><input class="field-input" id="profile-together" placeholder='לדוגמה: "שנה וחצי", "3 שנים"'/></div>
   <div style="margin-bottom:8px">
@@ -617,19 +617,17 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
     <div style="font-size:11px;color:var(--text3);margin-top:4px">הפרידו בפסיקים</div>
   </div>
   <button class="btn-primary" onclick="saveProfile()" style="margin-bottom:16px">שמור שינויים ✅</button>
+  <p class="auth-err" id="profile-err"></p>
 
   <div class="partner-invite-box" style="margin-bottom:20px">
-    <p>קוד שיתוף - שתפו עם בן/בת הזוג כדי שיתחברו לאותו חשבון משותף</p>
+    <p>קוד שיתוף — שלחו לבן/בת הזוג כדי להתחבר אליכם</p>
     <div class="invite-link-row">
       <input class="invite-link-input" id="profile-invite-link" readonly style="text-align:center;font-weight:800;letter-spacing:3px;font-size:18px"/>
       <button class="btn-copy" onclick="copyProfileInvite()">העתק</button>
     </div>
     <div id="profile-invite-setup" style="display:none;margin-top:10px">
-      <p style="font-size:12px;margin-bottom:8px">לא נוצר עדיין קוד שיתוף לחשבון הזה. הזינו את הסיסמה הנוכחית שלכם כדי ליצור קוד:</p>
-      <div class="invite-link-row">
-        <input class="invite-link-input" type="password" id="profile-invite-pass" placeholder="הסיסמה שלך" dir="ltr"/>
-        <button class="btn-copy" onclick="createCoupleCode()">צור קוד</button>
-      </div>
+      <p style="font-size:12px;margin-bottom:8px">לא נוצר עדיין קוד שיתוף. לחצו ליצירה:</p>
+      <button class="btn-copy" onclick="createCoupleCode()" style="width:100%">✨ צור קוד שיתוף</button>
     </div>
     <div id="profile-invite-sync" style="display:none;margin-top:10px">
       <p style="font-size:12px;color:var(--orange);margin-bottom:8px">⚠️ הקוד קיים אבל לא מסונכרן — הזינו סיסמה כדי לאפשר כניסה עם הקוד:</p>
@@ -676,7 +674,6 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
   </div>
 
   <button class="btn-secondary" style="margin-top:4px;color:var(--pink);border-color:rgba(255,75,110,0.3)" onclick="signOut()">🚪 יציאה מהחשבון</button>
-  <p class="auth-err" id="profile-err"></p>
 </div>
 
 <!-- Bottom Nav -->
@@ -762,8 +759,8 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
     <div style="margin-bottom:12px"><label class="field-label">כותרת</label><input class="field-input" id="event-title" placeholder="BBQ בפארק, ערב בורד גיימס..."/></div>
     <div style="margin-bottom:12px"><label class="field-label">תיאור</label><input class="field-input" id="event-desc" placeholder="פרטים נוספים..."/></div>
     <div style="margin-bottom:16px">
-      <label class="field-label" style="display:block;margin-bottom:8px">וויב האירוע (יופיע על המפה 🗺️)</label>
-      <div style="font-size:11px;color:var(--text3);margin-bottom:8px">בחרו וויב ספציפי לאירוע זה — נפרד מתחומי העניין בפרופיל</div>
+      <label class="field-label" style="display:block;margin-bottom:8px">ויב האירוע (יופיע על המפה 🗺️)</label>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px">בחרו ויב ספציפי לאירוע זה — נפרד מתחומי העניין בפרופיל</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px" id="event-vibes"></div>
     </div>
     <div style="margin-bottom:20px">
@@ -929,7 +926,6 @@ let feedVibeFilter = 'all', listVibeFilter = 'all';
 let profileSelectedVibes = [];
 let statusChannel = null;
 let _panelUnmatched = false;
-let toastTimer;
 
 // ═══════════════════════════════════
 // HELPERS
@@ -1144,26 +1140,6 @@ function applyVibeFilter(vibe) {
 async function loadCouples() {
   const {data} = await sb.from('profiles').select('*').not('lat','is',null).neq('id',currentUser.id);
   allCouples = data||[];
-  // מזג אירוע פרטנר ל-myProfile אם אין לנו אירוע פעיל
-  if (myProfile?.partner_id) {
-    const {data:partner} = await sb.from('profiles').select('*').eq('id',myProfile.partner_id).single();
-    if (partner) {
-      const myActive = effectiveStatus(myProfile)==='hot';
-      const partnerActive = effectiveStatus(partner)==='hot';
-      if (!myActive && partnerActive) {
-        myProfile = {...myProfile,
-          status: partner.status,
-          status_text: partner.status_text,
-          lat: partner.lat,
-          lng: partner.lng,
-          event_vibe: partner.event_vibe,
-          event_expires_at: partner.event_expires_at
-        };
-      }
-      // סנן את הפרטנר — הוא חלק מ"הזוג שלנו", לא זוג אחר
-      allCouples = allCouples.filter(c => c.id !== partner.id);
-    }
-  }
   renderMarkers(); updateLiveCount();
 }
 
@@ -1277,6 +1253,7 @@ function subscribeRealtime() {
     .on('postgres_changes',{event:'*',schema:'public',table:'profiles'},payload=>{
       const updated=payload.new;
       if (!updated||updated.id===currentUser.id) return;
+      if (updated.id===myProfile?.partner_id) return;
       const idx=allCouples.findIndex(c=>c.id===updated.id);
       if (payload.eventType==='DELETE'||(updated.status==='cold'||!updated.status)) {
         if(idx>-1) allCouples.splice(idx,1);
@@ -1546,7 +1523,7 @@ function renderFeed(searchQ) {
   if (!list) return;
   const q = (searchQ || document.getElementById('feed-search')?.value || '').trim().toLowerCase();
   const couples=allCouples.filter(c=>{
-    if (c.id===currentUser.id) return false;
+    if (c.id===currentUser.id||c.id===myProfile?.partner_id) return false;
     const status=effectiveStatus(c);
     if (status==='cold') return false;
     if (feedVibeFilter==='hot'&&status!=='hot') return false;
@@ -1624,7 +1601,7 @@ async function loadShakes() {
     const photoEl=p?.photo_url
       ?`<img src="${p.photo_url}" style="width:56px;height:56px;border-radius:14px;object-fit:cover;flex-shrink:0;border:2px solid var(--pink)"/>`
       :`<div style="width:56px;height:56px;border-radius:14px;background:rgba(255,75,110,0.15);border:2px solid rgba(255,75,110,0.3);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">💞</div>`;
-    return `<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,75,110,0.2);border-radius:18px;padding:16px;margin-bottom:12px"><div style="display:flex;gap:12px;align-items:center;margin-bottom:14px">${photoEl}<div style="flex:1"><div style="font-family:'Syne';font-weight:800;font-size:16px">${escapeHtml(p?.name||'?')} <span style="font-family:'Heebo',sans-serif;font-weight:400;opacity:0.7">&</span> ${escapeHtml(p?.partner_name||'?')}</div><div style="color:var(--text3);font-size:12px;margin-top:2px">${escapeHtml(p?.city||'ישראל')}</div>${p?.status_text?`<div style="color:var(--text2);font-size:13px;margin-top:4px">"${escapeHtml(p.status_text)}"</div>`:''}</div></div><div style="display:flex;gap:8px"><button onclick="respondShake(${s.id},'accepted',${JSON.stringify(p?.name||'').replace(/"/g,'&quot;')})" style="flex:1;padding:12px;background:linear-gradient(135deg,var(--pink),var(--pink2));border:none;color:white;border-radius:12px;font-family:'Heebo';font-weight:700;font-size:14px;cursor:pointer">💞 קבלו!</button><button onclick="respondShake(${s.id},'declined','')" style="flex:1;padding:12px;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text2);border-radius:12px;font-family:'Heebo';font-weight:600;font-size:14px;cursor:pointer">לא עכשיו</button></div></div>`;
+    return `<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,75,110,0.2);border-radius:18px;padding:16px;margin-bottom:12px"><div style="display:flex;gap:12px;align-items:center;margin-bottom:14px">${photoEl}<div style="flex:1"><div style="font-family:'Syne';font-weight:800;font-size:16px">${escapeHtml(p?.name||'?')} <span style="font-family:'Heebo',sans-serif;font-weight:400;opacity:0.7">&</span> ${escapeHtml(p?.partner_name||'?')}</div><div style="color:var(--text3);font-size:12px;margin-top:2px">${escapeHtml(p?.city||'ישראל')}</div>${p?.status_text?`<div style="color:var(--text2);font-size:13px;margin-top:4px">"${escapeHtml(p.status_text)}"</div>`:''}</div></div><div style="display:flex;gap:8px"><button onclick="respondShake(${s.id},'accepted',${JSON.stringify(p?.name||'').replace(/"/g,'&quot;')})" style="flex:1;padding:12px;background:linear-gradient(135deg,var(--pink),var(--pink2));border:none;color:white;border-radius:12px;font-family:'Heebo';font-weight:700;font-size:14px;cursor:pointer">💞 קבלו!</button><button onclick="respondShake(${s.id},'declined','')" style="flex:1;padding:12px;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text2);border-radius:12px;font-family:'Heebo';font-weight:600;font-size:14px;cursor:pointer">לא תודה</button></div></div>`;
   }).join('');
 }
 
@@ -1818,9 +1795,13 @@ function updateEventCountdown() {
 }
 
 async function cancelActiveEvent(expired) {
-  const {error} = await sb.from('profiles').update({status:'cold',status_text:'',event_expires_at:null,event_photo_url:null}).eq('id',currentUser.id);
+  const resetData={status:'cold',status_text:'',event_expires_at:null,event_photo_url:null,event_vibe:null};
+  const {error} = await sb.from('profiles').update(resetData).eq('id',currentUser.id);
   if (error) {showToast('שגיאה: '+error.message);return;}
-  myProfile={...myProfile,status:'cold',status_text:'',event_expires_at:null,event_photo_url:null};
+  if (myProfile?.partner_id) {
+    await sb.from('profiles').update(resetData).eq('id',myProfile.partner_id);
+  }
+  myProfile={...myProfile,...resetData};
   stopEventCountdown();
   const fab=document.getElementById('event-fab');
   if (fab) {fab.textContent='➕ אירוע';fab.style.background='linear-gradient(135deg,#1dd1a1,#00b894)';fab.onclick=openEventModal;}
@@ -1932,8 +1913,8 @@ async function searchCity(q) {
   } catch {results.innerHTML='<div style="color:var(--pink);font-size:13px;padding:8px">שגיאת חיפוש</div>';}
 }
 function pickCity(name,lat,lng) {
-  eventLat=lat+(Math.random()-0.5)*0.006;
-  eventLng=lng+(Math.random()-0.5)*0.006;
+  eventLat=lat;
+  eventLng=lng;
   document.getElementById('city-results').innerHTML='';
   document.getElementById('event-city-search').style.display='none';
   document.getElementById('selected-location').style.display='flex';
@@ -2022,7 +2003,7 @@ function filterList(vibe) {
   listVibeFilter=vibe;
   document.querySelectorAll('[data-list-vibe]').forEach(b=>b.classList.toggle('active',b.dataset.listVibe===vibe));
   const c=document.getElementById('list-couples');
-  const all=allCouples.filter(cc=>cc.id!==currentUser.id);
+  const all=allCouples.filter(cc=>cc.id!==currentUser.id&&cc.id!==myProfile?.partner_id);
   const filtered=all.filter(cc=>{
     if (vibe==='all') return true;
     if (vibe==='hot') return effectiveStatus(cc)==='hot';
@@ -2072,13 +2053,11 @@ async function openProfile() {
   if (myProfile?.couple_code) {
     document.getElementById('profile-invite-link').value=myProfile.couple_code;
     document.getElementById('profile-invite-setup').style.display='none';
-    const syncDiv=document.getElementById('profile-invite-sync');
-    if (syncDiv) syncDiv.style.display='none';
+
   } else {
     document.getElementById('profile-invite-link').value='—';
     document.getElementById('profile-invite-setup').style.display='';
-    const syncDiv=document.getElementById('profile-invite-sync');
-    if (syncDiv) syncDiv.style.display='none';
+
   }
   const partnerStatus=document.getElementById('partner-link-status');
   if (partnerStatus) partnerStatus.innerHTML=myProfile?.partner_id&&myProfile?.partner_confirmed?'<span style="display:inline-flex;align-items:center;gap:6px;background:rgba(29,209,161,0.12);border:1px solid rgba(29,209,161,0.3);color:#1dd1a1;padding:6px 14px;border-radius:100px;font-size:13px;font-weight:700">✅ זוג מאומת</span>':'<span style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,159,67,0.12);border:1px solid rgba(255,159,67,0.3);color:#ff9f43;padding:6px 14px;border-radius:100px;font-size:13px;font-weight:700">⏳ ממתין לחיבור בן/בת הזוג</span>';
@@ -2157,17 +2136,11 @@ function copyProfileInvite() {
   navigator.clipboard.writeText(document.getElementById('profile-invite-link').value).then(()=>showToast('קוד הועתק! 📋'));
 }
 async function createCoupleCode() {
-  const pass=document.getElementById('profile-invite-pass').value;
-  if (!pass) {showToast('נא להזין סיסמה');return;}
-  const email=myProfile?.email||currentUser.email;
-  const {error:checkErr}=await sb.auth.signInWithPassword({email,password:pass});
-  if (checkErr) {showToast('סיסמה שגויה');return;}
   const newCode=generateCoupleCode();
   await sb.from('profiles').update({couple_code:newCode}).eq('id',currentUser.id);
   myProfile={...myProfile,couple_code:newCode};
   document.getElementById('profile-invite-link').value=newCode;
   document.getElementById('profile-invite-setup').style.display='none';
-  document.getElementById('profile-invite-pass').value='';
   showToast('✅ קוד שיתוף נוצר!');
 }
 
