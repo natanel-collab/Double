@@ -714,7 +714,7 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
 </div>
 
 <!-- Starter Card -->
-<div id="starter-card" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:50;background:#13131f;border-top:1px solid rgba(255,255,255,0.1);border-radius:20px 20px 0 0;padding:14px 14px 20px;box-shadow:0 -8px 40px rgba(0,0,0,0.6)">
+<div id="starter-card" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:50;background:#13131f;border-top:1px solid rgba(255,255,255,0.1);border-radius:20px 20px 0 0;padding:14px 14px calc(env(safe-area-inset-bottom) + 72px);box-shadow:0 -8px 40px rgba(0,0,0,0.6)">
   <div style="width:36px;height:4px;background:rgba(255,255,255,0.15);border-radius:100px;margin:0 auto 12px"></div>
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
     <div id="starter-card-title" style="font-family:'Syne',sans-serif;font-size:13px;font-weight:800;display:flex;align-items:center;gap:6px">🚀 <span>מתחילים</span></div>
@@ -1046,7 +1046,7 @@ async function loadMyProfile() {
     showScreen('main'); initNav(); updateProfileNavIcon();
     await initMap(); subscribeRealtime(); subscribeNewMessages(); subscribeShakes();
     loadShakes();
-    setTimeout(() => renderStarterCard(), 500);
+    setTimeout(() => renderStarterCard(), 800);
   }
 }
 
@@ -2128,6 +2128,8 @@ function filterList(vibe) {
 // PROFILE
 // ═══════════════════════════════════
 async function openProfile() {
+  const sc = document.getElementById('starter-card');
+  if (sc) sc.style.display = 'none';
   showScreen('profile');
   document.getElementById('bottom-nav').style.display='flex';
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav==='profile'));
@@ -2425,15 +2427,10 @@ function showScreen(name) {
 function initNav() { document.getElementById('bottom-nav').style.display='flex'; }
 
 function navTo(name) {
-  // הסתר כרטיס מתחילים כשעוברים ממסך הבית
-  if (name !== 'main') {
-    const sc = document.getElementById('starter-card');
-    if (sc) sc.style.display = 'none';
-  }
   if (name==='profile') {openProfile();return;}
-  if (name==='feed') {showScreen('feed');document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav===name));loadFeed();return;}
-  if (name==='chats') {showScreen('chats');document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav===name));const cb=document.getElementById('chats-badge');if(cb)cb.style.display='none';loadChats();return;}
-  if (name==='shakes') {showScreen('shakes');document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav===name));loadShakes();return;}
+  if (name==='feed') {const scFeed=document.getElementById('starter-card');if(scFeed)scFeed.style.display='none';showScreen('feed');document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav===name));loadFeed();return;}
+  if (name==='chats') {const scChats=document.getElementById('starter-card');if(scChats)scChats.style.display='none';showScreen('chats');document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav===name));const cb=document.getElementById('chats-badge');if(cb)cb.style.display='none';loadChats();return;}
+  if (name==='shakes') {const scShakes=document.getElementById('starter-card');if(scShakes)scShakes.style.display='none';showScreen('shakes');document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav===name));loadShakes();return;}
   if (name==='status') {showScreen('status');document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav===name));selectedStatusOption=myProfile?.status||'cold';document.getElementById('status-text').value=myProfile?.status_text||'';renderStatusOptions();return;}
   showScreen(name);
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav===name));
