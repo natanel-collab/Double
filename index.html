@@ -702,7 +702,6 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
   </div>
 
   <button class="btn-secondary" style="margin-top:4px;color:var(--pink);border-color:rgba(255,75,110,0.3)" onclick="signOut()">🚪 יציאה מהחשבון</button>
-  <button onclick="resetStarterCard()" style="background:none;border:none;color:var(--text3);font-family:'Heebo',sans-serif;font-size:12px;cursor:pointer;margin-top:10px;width:100%;text-align:center;padding:6px 0">🚀 הצג מדריך התחלה</button>
   <div class="legal-footer" style="margin-top:8px">
     <div class="legal-footer-links">
       <a href="/privacy.html" target="_blank">פרטיות</a>
@@ -711,37 +710,6 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
     </div>
     <div class="legal-copy">© 2025 Double — נתנאל בנטולילה</div>
   </div>
-</div>
-
-<!-- Starter Card -->
-<div id="starter-card" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:50;background:#13131f;border-top:1px solid rgba(255,255,255,0.1);border-radius:20px 20px 0 0;padding:14px 14px calc(env(safe-area-inset-bottom) + 72px);box-shadow:0 -8px 40px rgba(0,0,0,0.6)">
-  <div style="width:36px;height:4px;background:rgba(255,255,255,0.15);border-radius:100px;margin:0 auto 12px"></div>
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-    <div id="starter-card-title" style="font-family:'Syne',sans-serif;font-size:13px;font-weight:800;display:flex;align-items:center;gap:6px">🚀 <span>מתחילים</span></div>
-    <button onclick="dismissStarterCard()" style="width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,0.08);border:none;color:#666688;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
-  </div>
-  <div style="height:3px;background:rgba(255,255,255,0.08);border-radius:100px;overflow:hidden;margin-bottom:12px">
-    <div id="starter-progress" style="height:100%;border-radius:100px;background:linear-gradient(90deg,#ff4b6e,#ff9f43);transition:width 0.6s cubic-bezier(0.4,0,0.2,1);width:33%"></div>
-  </div>
-  <div style="display:flex;gap:5px;margin-bottom:11px">
-    <div id="sc-step1" style="flex:1;border-radius:10px;padding:8px 5px;text-align:center;background:rgba(29,209,161,0.08);border:1px solid rgba(29,209,161,0.25)">
-      <div style="font-size:7.5px;font-weight:800;color:#1dd1a1;margin-bottom:4px">✓ שלב 1</div>
-      <div style="font-size:15px;line-height:1;margin-bottom:3px">👤</div>
-      <div style="font-size:8px;color:rgba(29,209,161,0.8);line-height:1.3;font-weight:600">פרופיל<br/>נוצר</div>
-    </div>
-    <div id="sc-step2" style="flex:1;border-radius:10px;padding:8px 5px;text-align:center;background:rgba(255,75,110,0.1);border:1px solid rgba(255,75,110,0.4);box-shadow:0 0 14px rgba(255,75,110,0.12)">
-      <div id="sc-step2-num" style="font-size:7.5px;font-weight:800;color:#ff4b6e;margin-bottom:4px">● שלב 2</div>
-      <div style="font-size:15px;line-height:1;margin-bottom:3px">💑</div>
-      <div id="sc-step2-text" style="font-size:8px;color:rgba(255,255,255,0.85);line-height:1.3;font-weight:600">חיבור<br/>בן/בת זוג</div>
-    </div>
-    <div id="sc-step3" style="flex:1;border-radius:10px;padding:8px 5px;text-align:center;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);opacity:0.55">
-      <div id="sc-step3-num" style="font-size:7.5px;font-weight:800;color:#666688;margin-bottom:4px">שלב 3</div>
-      <div style="font-size:15px;line-height:1;margin-bottom:3px">🗺️</div>
-      <div id="sc-step3-text" style="font-size:8px;color:#666688;line-height:1.3;font-weight:600">פרסמו<br/>אירוע</div>
-    </div>
-  </div>
-  <button id="starter-cta" onclick="starterCtaClick()" style="width:100%;padding:10px;border:none;border-radius:11px;background:linear-gradient(135deg,#ff4b6e,#ff9f43);color:white;font-family:'Heebo',sans-serif;font-weight:800;font-size:12px;cursor:pointer;box-shadow:0 4px 18px rgba(255,75,110,0.32)">💑 שלחו קוד לבן/בת הזוג</button>
-  <button onclick="dismissStarterCard()" style="background:none;border:none;color:#666688;font-family:'Heebo',sans-serif;font-size:11px;cursor:pointer;width:100%;padding:7px 0 2px;text-align:center">דלג לעכשיו ›</button>
 </div>
 
 <!-- Bottom Nav -->
@@ -1046,7 +1014,6 @@ async function loadMyProfile() {
     showScreen('main'); initNav(); updateProfileNavIcon();
     await initMap(); subscribeRealtime(); subscribeNewMessages(); subscribeShakes();
     loadShakes();
-    setTimeout(() => renderStarterCard(), 800);
   }
 }
 
@@ -1124,7 +1091,6 @@ async function connectFromProfile() {
   document.getElementById('profile-connect-code-section').style.display='none';
   showToast('💑 חשבון זוגי חובר בהצלחה!');
   loadProfileScreen();
-  renderStarterCard();
 }
 async function connectSetupPartnerCode() {
   const code=(document.getElementById('setup-partner-code')?.value||'').trim().toUpperCase();
@@ -2056,7 +2022,6 @@ async function saveEvent() {
   if (idx>-1) allCouples[idx]=myProfile; else allCouples.push(myProfile);
   renderMarkers(); updateLiveCount();
   if (mapInstance) mapInstance.flyTo([lat,lng],13,{duration:1.5});
-  renderStarterCard();
 }
 
 // ═══════════════════════════════════
@@ -2128,8 +2093,6 @@ function filterList(vibe) {
 // PROFILE
 // ═══════════════════════════════════
 async function openProfile() {
-  const sc = document.getElementById('starter-card');
-  if (sc) sc.style.display = 'none';
   showScreen('profile');
   document.getElementById('bottom-nav').style.display='flex';
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav==='profile'));
@@ -2428,15 +2391,12 @@ function initNav() { document.getElementById('bottom-nav').style.display='flex';
 
 function navTo(name) {
   if (name==='profile') {openProfile();return;}
-  if (name==='feed') {const scFeed=document.getElementById('starter-card');if(scFeed)scFeed.style.display='none';showScreen('feed');document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav===name));loadFeed();return;}
-  if (name==='chats') {const scChats=document.getElementById('starter-card');if(scChats)scChats.style.display='none';showScreen('chats');document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav===name));const cb=document.getElementById('chats-badge');if(cb)cb.style.display='none';loadChats();return;}
-  if (name==='shakes') {const scShakes=document.getElementById('starter-card');if(scShakes)scShakes.style.display='none';showScreen('shakes');document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav===name));loadShakes();return;}
+  if (name==='feed') {showScreen('feed');document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav===name));loadFeed();return;}
+  if (name==='chats') {showScreen('chats');document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav===name));const cb=document.getElementById('chats-badge');if(cb)cb.style.display='none';loadChats();return;}
+  if (name==='shakes') {showScreen('shakes');document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav===name));loadShakes();return;}
   if (name==='status') {showScreen('status');document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav===name));selectedStatusOption=myProfile?.status||'cold';document.getElementById('status-text').value=myProfile?.status_text||'';renderStatusOptions();return;}
   showScreen(name);
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav===name));
-  if (name === 'main') {
-    renderStarterCard();
-  }
   const navIcon = document.querySelector('[data-nav="'+name+'"] .nav-icon');
   if (navIcon) { navIcon.style.transform='scale(1.35)'; setTimeout(()=>navIcon.style.transform='',220); }
   if (name==='main'&&mapInstance) setTimeout(()=>mapInstance.invalidateSize(),100);
@@ -2772,8 +2732,6 @@ function selectLooking(el) {
 // ═══ FULL COUPLE PROFILE ═══
 function openFullProfile() {
   if (!selectedCouple) return;
-  const sc = document.getElementById('starter-card');
-  if (sc) sc.style.display = 'none';
   const c = selectedCouple;
   const meta = STATUS_META[effectiveStatus(c)];
 
@@ -2874,7 +2832,6 @@ function closeFullProfile() {
   showScreen('main');
   document.getElementById('bottom-nav').style.display = 'flex';
   document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.nav === 'main'));
-  renderStarterCard();
 }
 
 async function toggleFriendHeart() {
@@ -3189,119 +3146,6 @@ function updateHeatmapIfOn() {
 }
 
 // ═══════════════════════════════════
-
-// ═══════════════════════════════════
-// STARTER CARD
-// ═══════════════════════════════════
-function starterCardState() {
-  if (!myProfile) return 'hidden';
-  const dismissed = localStorage.getItem('double_starter_dismissed_' + currentUser?.id);
-  if (dismissed) return 'hidden';
-  const hasPartner = !!(myProfile.partner_id);
-  const hasEverPublished = !!(myProfile.event_expires_at);
-  if (hasPartner && hasEverPublished) return 'hidden';
-  if (hasPartner) return 'step3';
-  return 'step2';
-}
-
-function renderStarterCard() {
-  const state = starterCardState();
-  const card = document.getElementById('starter-card');
-  if (!card) return;
-
-  if (state === 'hidden') { card.style.display = 'none'; return; }
-
-  card.style.display = 'block';
-  const progress = document.getElementById('starter-progress');
-  const cta = document.getElementById('starter-cta');
-  const title = document.getElementById('starter-card-title');
-  const step2 = document.getElementById('sc-step2');
-  const step2num = document.getElementById('sc-step2-num');
-  const step2text = document.getElementById('sc-step2-text');
-  const step3 = document.getElementById('sc-step3');
-  const step3num = document.getElementById('sc-step3-num');
-  const step3text = document.getElementById('sc-step3-text');
-
-  if (state === 'step2') {
-    progress.style.width = '33%';
-    progress.style.background = 'linear-gradient(90deg,#ff4b6e,#ff9f43)';
-    // step2 = active
-    step2.style.cssText = 'flex:1;border-radius:10px;padding:8px 5px;text-align:center;background:rgba(255,75,110,0.1);border:1px solid rgba(255,75,110,0.4);box-shadow:0 0 14px rgba(255,75,110,0.12)';
-    step2num.style.color = '#ff4b6e'; step2num.textContent = '● שלב 2';
-    step2text.style.color = 'rgba(255,255,255,0.85)'; step2text.textContent = 'חיבור';
-    step2text.innerHTML = 'חיבור<br/>בן/בת זוג';
-    // step3 = upcoming
-    step3.style.cssText = 'flex:1;border-radius:10px;padding:8px 5px;text-align:center;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);opacity:0.55';
-    step3num.style.color = '#666688'; step3num.textContent = 'שלב 3';
-    step3text.style.color = '#666688'; step3text.innerHTML = 'פרסמו<br/>אירוע';
-    cta.textContent = '💑 שלחו קוד לבן/בת הזוג';
-    cta.style.background = 'linear-gradient(135deg,#ff4b6e,#ff9f43)';
-    cta.style.color = 'white';
-    cta.style.boxShadow = '0 4px 18px rgba(255,75,110,0.32)';
-    title.innerHTML = '🚀 <span>מתחילים</span>';
-  }
-
-  if (state === 'step3') {
-    progress.style.width = '66%';
-    // step2 = done
-    step2.style.cssText = 'flex:1;border-radius:10px;padding:8px 5px;text-align:center;background:rgba(29,209,161,0.08);border:1px solid rgba(29,209,161,0.25)';
-    step2num.style.color = '#1dd1a1'; step2num.textContent = '✓ שלב 2';
-    step2text.style.color = 'rgba(29,209,161,0.8)'; step2text.innerHTML = 'זוג<br/>מחובר!';
-    // step3 = active
-    step3.style.cssText = 'flex:1;border-radius:10px;padding:8px 5px;text-align:center;background:rgba(255,75,110,0.1);border:1px solid rgba(255,75,110,0.4);box-shadow:0 0 14px rgba(255,75,110,0.12);opacity:1';
-    step3num.style.color = '#ff4b6e'; step3num.textContent = '● שלב 3';
-    step3text.style.color = 'rgba(255,255,255,0.85)'; step3text.innerHTML = 'פרסמו<br/>אירוע';
-    cta.textContent = '➕ פרסמו אירוע ראשון 🗺️';
-    cta.style.background = 'linear-gradient(135deg,#1dd1a1,#00b894)';
-    cta.style.color = '#06060c';
-    cta.style.boxShadow = '0 4px 18px rgba(29,209,161,0.32)';
-    title.innerHTML = '🚀 <span>מתחילים</span>';
-  }
-
-  if (state === 'done') {
-    progress.style.width = '100%';
-    progress.style.background = '#1dd1a1';
-    step2.style.cssText = 'flex:1;border-radius:10px;padding:8px 5px;text-align:center;background:rgba(29,209,161,0.08);border:1px solid rgba(29,209,161,0.25)';
-    step2num.style.color = '#1dd1a1'; step2num.textContent = '✓ שלב 2';
-    step2text.style.color = 'rgba(29,209,161,0.8)'; step2text.innerHTML = 'זוג<br/>מחובר';
-    step3.style.cssText = 'flex:1;border-radius:10px;padding:8px 5px;text-align:center;background:rgba(29,209,161,0.08);border:1px solid rgba(29,209,161,0.25);opacity:1';
-    step3num.style.color = '#1dd1a1'; step3num.textContent = '✓ שלב 3';
-    step3text.style.color = 'rgba(29,209,161,0.8)'; step3text.innerHTML = 'אירוע<br/>פורסם';
-    card.style.background = 'rgba(29,209,161,0.08)';
-    card.style.borderTop = '1px solid rgba(29,209,161,0.2)';
-    cta.style.display = 'none';
-    title.innerHTML = '🎉 <span style="color:#1dd1a1">מוכנים לפעולה!</span>';
-    // dismiss after 4s — user can close manually too
-    setTimeout(() => dismissStarterCard(), 4000);
-  }
-}
-
-function starterCtaClick() {
-  const state = starterCardState();
-  if (state === 'step2') {
-    // גלול לסקשן החיבור בפרופיל
-    navTo('profile');
-    setTimeout(() => {
-      const el = document.getElementById('profile-connect-code-section');
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 300);
-  } else if (state === 'step3') {
-    openEventModal();
-  }
-}
-
-function dismissStarterCard() {
-  const card = document.getElementById('starter-card');
-  if (card) card.style.display = 'none';
-  if (currentUser?.id) localStorage.setItem('double_starter_dismissed_' + currentUser.id, '1');
-}
-
-function resetStarterCard() {
-  if (currentUser?.id) localStorage.removeItem('double_starter_dismissed_' + currentUser.id);
-  navTo('main');
-  setTimeout(() => renderStarterCard(), 100);
-}
-
 // START
 // ═══════════════════════════════════
 _obInitSwipe();
