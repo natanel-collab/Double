@@ -354,7 +354,6 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
     <div class="auth-tabs">
       <button class="auth-tab active" onclick="switchAuthTab('login')">כניסה</button>
       <button class="auth-tab" onclick="switchAuthTab('register')">הרשמה</button>
-      <button class="auth-tab" onclick="switchAuthTab('code')">קוד שיתוף</button>
     </div>
     <div id="auth-login">
       <div class="field-group"><label class="field-label">אימייל</label><input class="field-input" type="email" id="login-email" placeholder="your@email.com" dir="ltr"/></div>
@@ -374,8 +373,8 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
       <button class="btn-primary" onclick="doRegister()">יצירת חשבון</button>
       <p class="auth-err" id="reg-err"></p>
     </div>
+    <!-- auth-code נשמר בDOM בשביל doCodeLogin אבל אינו נגיש דרך טאב -->
     <div id="auth-code" style="display:none">
-      <p style="color:var(--text2);font-size:13px;margin-bottom:16px;line-height:1.5">קיבלתם קוד שיתוף מבן/בת הזוג? הזינו אותו כדי להתחבר לאותו חשבון משותף.</p>
       <div class="field-group"><label class="field-label">קוד שיתוף</label><input class="field-input" type="text" id="code-input" placeholder="ABC123" dir="ltr" style="text-transform:uppercase;letter-spacing:2px;text-align:center;font-weight:800"/></div>
       <button class="btn-primary" onclick="doCodeLogin()">התחברות עם קוד</button>
       <p class="auth-err" id="code-err"></p>
@@ -399,7 +398,7 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
   <div class="setup-section">
     <div class="setup-section-title">קוד שיתוף לבן/בת הזוג</div>
     <div class="partner-invite-box">
-      <p>שלחו לבן/בת הזוג את הקוד הבא. הם יזינו אותו במסך הכניסה בלשונית "קוד שיתוף" כדי להתחבר לאותו חשבון משותף.</p>
+      <p>שלחו לבן/בת הזוג את הקוד הבא. הם יוכלו להזין אותו בפרופיל שלהם כדי להתחבר אליכם.</p>
       <div class="invite-link-row">
         <input class="invite-link-input" id="invite-link" readonly style="text-align:center;font-weight:800;letter-spacing:3px;font-size:18px"/>
         <button class="btn-copy" onclick="copyInviteLink()">העתק</button>
@@ -638,6 +637,15 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
         <input class="invite-link-input" type="password" id="profile-sync-pass" placeholder="הסיסמה שלך" dir="ltr"/>
         <button class="btn-copy" onclick="syncCoupleCode()">סנכרן</button>
       </div>
+    </div>
+    <!-- חיבור עם קוד שקיבלתם — מוצג רק אם עדיין לא מחוברים -->
+    <div id="profile-connect-code-section" style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.08)">
+      <p style="font-size:12px;color:var(--text2);margin-bottom:8px;font-weight:700">💑 קיבלתם קוד מבן/בת הזוג?</p>
+      <div class="invite-link-row">
+        <input class="invite-link-input" type="text" id="profile-partner-code-input" placeholder="הזינו קוד..." dir="ltr" style="text-transform:uppercase;letter-spacing:2px;text-align:center;font-weight:800"/>
+        <button class="btn-copy" style="background:var(--green);color:#06060c" onclick="connectFromProfile()">חבר ✓</button>
+      </div>
+      <p style="font-size:11px;color:var(--text3);margin-top:4px;text-align:center" id="profile-connect-err"></p>
     </div>
   </div>
   <!-- Share button -->
@@ -981,10 +989,10 @@ async function loadMyProfile() {
 // AUTH
 // ═══════════════════════════════════
 function switchAuthTab(tab) {
-  document.querySelectorAll('.auth-tab').forEach((t,i)=>t.classList.toggle('active',(i===0&&tab==='login')||(i===1&&tab==='register')||(i===2&&tab==='code')));
+  document.querySelectorAll('.auth-tab').forEach((t,i)=>t.classList.toggle('active',(i===0&&tab==='login')||(i===1&&tab==='register')));
   document.getElementById('auth-login').style.display = tab==='login'?'':'none';
   document.getElementById('auth-register').style.display = tab==='register'?'':'none';
-  document.getElementById('auth-code').style.display = tab==='code'?'':'none';
+  document.getElementById('auth-code').style.display = 'none';
 }
 function friendlyAuthError(msg) {
   const m=(msg||'').toLowerCase();
@@ -1037,6 +1045,23 @@ async function doRegister() {
   }
   btn.disabled=false; btn.textContent='יצירת חשבון';
   await loadMyProfile();
+}
+async function connectFromProfile() {
+  const code=(document.getElementById('profile-partner-code-input')?.value||'').trim().toUpperCase();
+  const errEl=document.getElementById('profile-connect-err');
+  if (!code) {errEl.textContent='נא להזין קוד';return;}
+  const {data:partnerRow} = await sb.from('couple_codes').select('email').eq('code',code).single();
+  if (!partnerRow?.email) {errEl.textContent='קוד לא נמצא — בדקו שהזנתם נכון';return;}
+  const {data:partnerProfile} = await sb.from('profiles').select('id').eq('email',partnerRow.email).single();
+  if (!partnerProfile?.id) {errEl.textContent='לא נמצא פרופיל עם קוד זה';return;}
+  if (partnerProfile.id===currentUser.id) {errEl.textContent='לא ניתן להתחבר לעצמך';return;}
+  await sb.from('profiles').update({partner_id:partnerProfile.id,partner_confirmed:true}).eq('id',currentUser.id);
+  await sb.from('profiles').update({partner_id:currentUser.id,partner_confirmed:true}).eq('id',partnerProfile.id);
+  myProfile={...myProfile,partner_id:partnerProfile.id,partner_confirmed:true};
+  errEl.textContent='';
+  document.getElementById('profile-connect-code-section').style.display='none';
+  showToast('💑 חשבון זוגי חובר בהצלחה!');
+  loadProfileScreen();
 }
 async function connectSetupPartnerCode() {
   const code=(document.getElementById('setup-partner-code')?.value||'').trim().toUpperCase();
@@ -2073,6 +2098,8 @@ async function openProfile() {
   }
   const partnerStatus=document.getElementById('partner-link-status');
   if (partnerStatus) partnerStatus.innerHTML=myProfile?.partner_id&&myProfile?.partner_confirmed?'<span style="display:inline-flex;align-items:center;gap:6px;background:rgba(29,209,161,0.12);border:1px solid rgba(29,209,161,0.3);color:#1dd1a1;padding:6px 14px;border-radius:100px;font-size:13px;font-weight:700">✅ זוג מאומת</span>':'<span style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,159,67,0.12);border:1px solid rgba(255,159,67,0.3);color:#ff9f43;padding:6px 14px;border-radius:100px;font-size:13px;font-weight:700">⏳ ממתין לחיבור בן/בת הזוג</span>';
+  const connectSection=document.getElementById('profile-connect-code-section');
+  if (connectSection) connectSection.style.display=myProfile?.partner_confirmed?'none':'';
   // event card
   const card=document.getElementById('active-event-card');
   const txt=document.getElementById('active-event-text');
