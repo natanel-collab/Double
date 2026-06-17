@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>מדיניות פרטיות — Double</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07070f;
+  --surface:#0f0f1c;
+  --border:rgba(255,255,255,0.08);
+  --text:#e8e8f4;
+  --text2:#9090b0;
+  --text3:#55556a;
+  --pink:#ff4b6e;
+  --pink2:#ff6b9d;
+  --purple:#6c5ce7;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Heebo',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  direction:rtl;
+  line-height:1.8;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* Header */
+.header{
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  padding:16px 24px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  position:sticky;
+  top:0;
+  z-index:10;
+}
+.logo{
+  font-size:20px;
+  font-weight:800;
+  background:linear-gradient(135deg,var(--pink),var(--purple));
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.back{
+  font-size:13px;
+  color:var(--text2);
+  text-decoration:none;
+}
+.back:hover{color:var(--text)}
+
+/* Hero */
+.hero{
+  padding:48px 24px 32px;
+  max-width:680px;
+  margin:0 auto;
+  border-bottom:1px solid var(--border);
+}
+.hero-label{
+  font-size:11px;
+  font-weight:700;
+  color:var(--pink);
+  letter-spacing:2px;
+  text-transform:uppercase;
+  margin-bottom:12px;
+}
+.hero h1{
+  font-size:32px;
+  font-weight:800;
+  line-height:1.2;
+  margin-bottom:12px;
+}
+.hero .updated{
+  font-size:12px;
+  color:var(--text3);
+}
+
+/* Content */
+.content{
+  max-width:680px;
+  margin:0 auto;
+  padding:40px 24px 80px;
+}
+.section{
+  margin-bottom:40px;
+}
+.section h2{
+  font-size:17px;
+  font-weight:700;
+  margin-bottom:12px;
+  padding-bottom:8px;
+  border-bottom:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.section h2 .num{
+  width:24px;
+  height:24px;
+  border-radius:50%;
+  background:linear-gradient(135deg,var(--pink),var(--purple));
+  color:white;
+  font-size:11px;
+  font-weight:800;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
+}
+.section p{
+  color:var(--text2);
+  font-size:14px;
+  margin-bottom:10px;
+}
+.section ul{
+  list-style:none;
+  margin-bottom:10px;
+}
+.section ul li{
+  color:var(--text2);
+  font-size:14px;
+  padding:5px 0;
+  padding-right:16px;
+  position:relative;
+}
+.section ul li::before{
+  content:'•';
+  position:absolute;
+  right:0;
+  color:var(--pink);
+}
+
+/* Contact box */
+.contact-box{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:20px 24px;
+  margin-top:40px;
+}
+.contact-box h3{
+  font-size:15px;
+  font-weight:700;
+  margin-bottom:8px;
+}
+.contact-box p{
+  color:var(--text2);
+  font-size:13px;
+  margin-bottom:4px;
+}
+.contact-box a{
+  color:var(--pink);
+  text-decoration:none;
+}
+
+/* Nav pills */
+.toc{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:16px 20px;
+  margin-bottom:32px;
+}
+.toc-title{
+  font-size:12px;
+  font-weight:700;
+  color:var(--text3);
+  margin-bottom:10px;
+}
+.toc a{
+  display:block;
+  font-size:13px;
+  color:var(--text2);
+  text-decoration:none;
+  padding:4px 0;
+  border-bottom:1px solid var(--border);
+}
+.toc a:last-child{border-bottom:none}
+.toc a:hover{color:var(--pink)}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">💞 Double</div>
+  <a href="/" class="back">← חזרה לאפליקציה</a>
+</div>
+
+<div class="hero">
+  <div class="hero-label">מסמך משפטי</div>
+  <h1>מדיניות פרטיות</h1>
+  <div class="updated">עודכן לאחרונה: יוני 2025</div>
+</div>
+
+<div class="content">
+
+  <div class="toc">
+    <div class="toc-title">תוכן העניינים</div>
+    <a href="#s1">1. איזה מידע אנו אוספים</a>
+    <a href="#s2">2. כיצד אנו משתמשים במידע</a>
+    <a href="#s3">3. שיתוף מידע</a>
+    <a href="#s4">4. אבטחת מידע</a>
+    <a href="#s5">5. שמירת מידע</a>
+    <a href="#s6">6. זכויות המשתמש</a>
+    <a href="#s7">7. פרטיות ילדים</a>
+    <a href="#s8">8. יצירת קשר</a>
+  </div>
+
+  <div class="section" id="s1">
+    <h2><span class="num">1</span> איזה מידע אנו אוספים</h2>
+    <p>בעת שימוש באפליקציית Double, אנו אוספים את המידע הבא:</p>
+    <ul>
+      <li>שם פרטי וכתובת אימייל — לצורך יצירת חשבון</li>
+      <li>מיקום גיאוגרפי — לצורך הצגת זוגות על המפה (נאסף רק בעת שימוש פעיל)</li>
+      <li>תמונות פרופיל — שאתם בוחרים להעלות</li>
+      <li>מידע על בן/בת הזוג — שם וגיל, שתזינו ידנית</li>
+      <li>תחומי עניין ומידע על העדפות בידור</li>
+      <li>היסטוריית דייטים ואינטראקציות עם זוגות אחרים</li>
+    </ul>
+  </div>
+
+  <div class="section" id="s2">
+    <h2><span class="num">2</span> כיצד אנו משתמשים במידע</h2>
+    <p>אנו משתמשים במידע שנאסף אך ורק לצורך:</p>
+    <ul>
+      <li>הפעלת שירות האפליקציה והצגת זוגות על המפה</li>
+      <li>חיבור בין זוגות שמחפשים דאבל דייט</li>
+      <li>שליחת התראות ועדכונים הקשורים לשימוש באפליקציה</li>
+      <li>שיפור חוויית המשתמש ותיקון תקלות</li>
+    </ul>
+    <p>אנו <strong>לא</strong> מוכרים מידע אישי לצדדים שלישיים ולא משתמשים בו לצרכי פרסום.</p>
+  </div>
+
+  <div class="section" id="s3">
+    <h2><span class="num">3</span> שיתוף מידע</h2>
+    <p>מידע אישי שלכם נשמר בשרתי Supabase (ספק תשתית אמריקאי עם עמידה ב-GDPR). חלק מהמידע — שם, תמונה, מיקום ותחומי עניין — גלוי למשתמשים אחרים של האפליקציה במסגרת השירות.</p>
+    <p>אנו לא חולקים מידע עם צדדים שלישיים כלשהם מעבר לנדרש להפעלת השירות.</p>
+  </div>
+
+  <div class="section" id="s4">
+    <h2><span class="num">4</span> אבטחת מידע</h2>
+    <p>אנו נוקטים באמצעי אבטחה סבירים להגנה על המידע שלכם:</p>
+    <ul>
+      <li>הצפנת נתונים בהעברה (HTTPS/TLS)</li>
+      <li>אימות משתמשים מאובטח דרך Supabase Auth</li>
+      <li>הגבלת גישה למידע (Row Level Security)</li>
+    </ul>
+    <p>יחד עם זאת, אין אבטחה מוחלטת. אנחנו ממליצים לא לשתף מידע רגיש מיותר באפליקציה.</p>
+  </div>
+
+  <div class="section" id="s5">
+    <h2><span class="num">5</span> שמירת מידע</h2>
+    <p>המידע שלכם נשמר כל עוד חשבונכם פעיל. במחיקת חשבון — המידע האישי יימחק תוך 30 ימים. מידע אנונימי לצורכי סטטיסטיקה עשוי להישמר.</p>
+  </div>
+
+  <div class="section" id="s6">
+    <h2><span class="num">6</span> זכויות המשתמש</h2>
+    <p>בהתאם לחוק הגנת הפרטיות הישראלי, יש לכם זכות:</p>
+    <ul>
+      <li>לעיין במידע שנשמר עליכם</li>
+      <li>לתקן מידע שגוי</li>
+      <li>למחוק את חשבונכם ואת המידע הקשור אליו</li>
+      <li>להתנגד לעיבוד מידע מסוים</li>
+    </ul>
+    <p>לממוש זכויות אלה, פנו אלינו בכתובת המייל שלמטה.</p>
+  </div>
+
+  <div class="section" id="s7">
+    <h2><span class="num">7</span> פרטיות ילדים</h2>
+    <p>האפליקציה מיועדת לבני 18 ומעלה בלבד. אנו לא אוספים ביודעין מידע מקטינים. אם נודע לנו שנאסף מידע כזה — נמחק אותו לאלתר.</p>
+  </div>
+
+  <div class="section" id="s8">
+    <h2><span class="num">8</span> שינויים במדיניות</h2>
+    <p>אנו עשויים לעדכן מדיניות זו מעת לעת. שינויים מהותיים יפורסמו באפליקציה. המשך השימוש לאחר עדכון מהווה הסכמה למדיניות החדשה.</p>
+  </div>
+
+  <div class="contact-box">
+    <h3>יצירת קשר</h3>
+    <p>נתנאל בנטולילה — מפתח Double</p>
+    <p>לכל שאלה בנושא פרטיות: <a href="mailto:natanel0998@gmail.com">natanel0998@gmail.com</a></p>
+    <p>double-lyart.vercel.app</p>
+  </div>
+
+</div>
+</body>
+</html>

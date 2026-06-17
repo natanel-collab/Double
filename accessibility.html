@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>הצהרת נגישות — Double</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#07070f;--surface:#0f0f1c;--border:rgba(255,255,255,0.08);--text:#e8e8f4;--text2:#9090b0;--text3:#55556a;--pink:#ff4b6e;--purple:#6c5ce7;--green:#1dd1a1;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direction:rtl;line-height:1.8;-webkit-font-smoothing:antialiased;}
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;}
+.logo{font-size:20px;font-weight:800;background:linear-gradient(135deg,var(--pink),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.back{font-size:13px;color:var(--text2);text-decoration:none;}
+.back:hover{color:var(--text)}
+.hero{padding:48px 24px 32px;max-width:680px;margin:0 auto;border-bottom:1px solid var(--border);}
+.hero-label{font-size:11px;font-weight:700;color:var(--pink);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;}
+.hero h1{font-size:32px;font-weight:800;line-height:1.2;margin-bottom:12px;}
+.hero .updated{font-size:12px;color:var(--text3);}
+.content{max-width:680px;margin:0 auto;padding:40px 24px 80px;}
+.section{margin-bottom:40px;}
+.section h2{font-size:17px;font-weight:700;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+.section h2 .num{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--pink),var(--purple));color:white;font-size:11px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
+.section p{color:var(--text2);font-size:14px;margin-bottom:10px;}
+.section ul{list-style:none;margin-bottom:10px;}
+.section ul li{color:var(--text2);font-size:14px;padding:5px 0;padding-right:16px;position:relative;}
+.section ul li::before{content:'•';position:absolute;right:0;color:var(--pink);}
+
+/* Status badges */
+.status-row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px;}
+.status-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:100px;font-size:12px;font-weight:700;}
+.status-badge.done{background:rgba(29,209,161,0.12);border:1px solid rgba(29,209,161,0.3);color:var(--green);}
+.status-badge.partial{background:rgba(255,159,67,0.12);border:1px solid rgba(255,159,67,0.3);color:#ff9f43;}
+.status-badge.planned{background:rgba(108,92,231,0.12);border:1px solid rgba(108,92,231,0.3);color:var(--purple);}
+
+.coordinator-box{background:var(--surface);border:1px solid rgba(29,209,161,0.25);border-radius:16px;padding:20px 24px;margin-top:40px;}
+.coordinator-box h3{font-size:15px;font-weight:700;margin-bottom:12px;color:var(--green);}
+.coordinator-box p{color:var(--text2);font-size:13px;margin-bottom:6px;}
+.coordinator-box a{color:var(--pink);text-decoration:none;}
+.coordinator-box strong{color:var(--text);}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">💞 Double</div>
+  <a href="/" class="back">← חזרה לאפליקציה</a>
+</div>
+
+<div class="hero">
+  <div class="hero-label">נגישות</div>
+  <h1>הצהרת נגישות</h1>
+  <div class="updated">עודכן לאחרונה: יוני 2025</div>
+</div>
+
+<div class="content">
+
+  <div class="section">
+    <h2><span class="num">1</span> מחויבות לנגישות</h2>
+    <p>אפליקציית Double שואפת להיות נגישה לכל המשתמשים, לרבות אנשים עם מוגבלויות. אנו פועלים לעמוד בדרישות תקנות שוויון זכויות לאנשים עם מוגבלות (התאמות נגישות לשירות) התשע"ג-2013 ובהנחיות WCAG 2.1 ברמה AA.</p>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">2</span> מצב נגישות נוכחי</h2>
+    <p>הנגישות באפליקציה נמצאת בתהליך שיפור מתמיד. להלן מצב יישום עיקרי הדרישות:</p>
+
+    <div class="status-row">
+      <span class="status-badge done">✓ שפה מוגדרת (lang=he)</span>
+      <span class="status-badge done">✓ כיוון RTL</span>
+      <span class="status-badge done">✓ גדלי גופן קריאים</span>
+      <span class="status-badge done">✓ ניגודיות צבעים בסיסית</span>
+      <span class="status-badge partial">~ תיאורי alt לתמונות — חלקי</span>
+      <span class="status-badge partial">~ ניווט מקלדת — חלקי</span>
+      <span class="status-badge planned">↗ ARIA labels — בפיתוח</span>
+      <span class="status-badge planned">↗ תאימות קורא מסך — בפיתוח</span>
+    </div>
+
+    <p>אנו מודעים שישנן מגבלות נגישות קיימות ועובדים לשפרן בגרסאות הבאות.</p>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">3</span> טכנולוגיות נתמכות</h2>
+    <p>האפליקציה מותאמת לשימוש עם:</p>
+    <ul>
+      <li>דפדפני Safari ו-Chrome בגרסאות עדכניות</li>
+      <li>מכשירי iOS ו-Android</li>
+      <li>VoiceOver (iOS) — תמיכה חלקית</li>
+      <li>TalkBack (Android) — תמיכה חלקית</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">4</span> מגבלות נגישות ידועות</h2>
+    <p>כרגע ישנן מגבלות הבאות בנגישות האפליקציה:</p>
+    <ul>
+      <li>מפת Google Maps אינה נגישה במלואה לקוראי מסך</li>
+      <li>חלק מהכפתורים חסרי תיאור טקסטואלי לקוראי מסך</li>
+      <li>אנימציות מסוימות אינן עוצרות במצב Reduce Motion</li>
+    </ul>
+    <p>אנו עובדים לתקן מגבלות אלה בגרסאות הקרובות.</p>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">5</span> משוב ובקשות נגישות</h2>
+    <p>נתקלתם בבעיית נגישות? אנו מעוניינים לדעת ולתקן. ניתן לפנות אלינו בכל עת.</p>
+    <p>אנו מתחייבים להגיב לפניות נגישות תוך 5 ימי עסקים.</p>
+  </div>
+
+  <div class="coordinator-box">
+    <h3>♿ רכז נגישות</h3>
+    <p><strong>נתנאל בנטולילה</strong></p>
+    <p>תפקיד: מפתח ורכז נגישות — Double</p>
+    <p>אימייל: <a href="mailto:natanel0998@gmail.com">natanel0998@gmail.com</a></p>
+    <p style="margin-top:10px;font-size:12px;color:var(--text3)">לפניות בנושא נגישות, ציינו בנושא המייל: "פנייה בנושא נגישות — Double"</p>
+  </div>
+
+</div>
+</body>
+</html>
