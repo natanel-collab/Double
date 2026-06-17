@@ -366,6 +366,11 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
       <div class="field-group"><label class="field-label">שם פרטי</label><input class="field-input" type="text" id="reg-name" placeholder="השם שלך"/></div>
       <div class="field-group"><label class="field-label">אימייל</label><input class="field-input" type="email" id="reg-email" placeholder="your@email.com" dir="ltr"/></div>
       <div class="field-group"><label class="field-label">סיסמה</label><input class="field-input" type="password" id="reg-pass" placeholder="לפחות 6 תווים" dir="ltr"/></div>
+      <div style="background:rgba(29,209,161,0.06);border:1px solid rgba(29,209,161,0.25);border-radius:14px;padding:12px 14px;margin-bottom:12px">
+        <div style="font-size:12px;font-weight:700;color:#1dd1a1;margin-bottom:8px">💑 קיבלתם קוד מבן/בת הזוג? (אופציונלי)</div>
+        <input class="field-input" type="text" id="reg-partner-code" placeholder="הזינו קוד שיתוף..." dir="ltr" style="text-transform:uppercase;letter-spacing:2px;text-align:center;font-weight:800;margin-bottom:4px"/>
+        <div style="font-size:11px;color:var(--text3)">יחבר את שני החשבונות אוטומטית</div>
+      </div>
       <button class="btn-primary" onclick="doRegister()">יצירת חשבון</button>
       <p class="auth-err" id="reg-err"></p>
     </div>
@@ -398,6 +403,13 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
       <div class="invite-link-row">
         <input class="invite-link-input" id="invite-link" readonly style="text-align:center;font-weight:800;letter-spacing:3px;font-size:18px"/>
         <button class="btn-copy" onclick="copyInviteLink()">העתק</button>
+      </div>
+    </div>
+    <div style="background:rgba(29,209,161,0.06);border:1px solid rgba(29,209,161,0.25);border-radius:14px;padding:12px 14px;margin-top:10px">
+      <div style="font-size:12px;font-weight:700;color:#1dd1a1;margin-bottom:8px">💑 קיבלתם קוד מבן/בת הזוג?</div>
+      <div style="display:flex;gap:8px">
+        <input class="field-input" type="text" id="setup-partner-code" placeholder="הזינו קוד..." dir="ltr" style="flex:1;text-transform:uppercase;letter-spacing:2px;text-align:center;font-weight:800"/>
+        <button onclick="connectSetupPartnerCode()" style="padding:9px 14px;background:#1dd1a1;border:none;border-radius:9px;color:#06060c;font-weight:700;font-size:12px;white-space:nowrap;cursor:pointer;font-family:'Heebo'">חבר</button>
       </div>
     </div>
   </div>
@@ -742,7 +754,8 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
     <div style="margin-bottom:12px"><label class="field-label">כותרת</label><input class="field-input" id="event-title" placeholder="BBQ בפארק, ערב בורד גיימס..."/></div>
     <div style="margin-bottom:12px"><label class="field-label">תיאור</label><input class="field-input" id="event-desc" placeholder="פרטים נוספים..."/></div>
     <div style="margin-bottom:16px">
-      <label class="field-label" style="display:block;margin-bottom:8px">ויב</label>
+      <label class="field-label" style="display:block;margin-bottom:8px">וויב האירוע (יופיע על המפה 🗺️)</label>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px">בחרו וויב ספציפי לאירוע זה — נפרד מתחומי העניין בפרופיל</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px" id="event-vibes"></div>
     </div>
     <div style="margin-bottom:20px">
@@ -999,6 +1012,7 @@ async function doRegister() {
   const name=document.getElementById('reg-name').value.trim();
   const email=document.getElementById('reg-email').value.trim();
   const pass=document.getElementById('reg-pass').value;
+  const partnerCodeRaw=(document.getElementById('reg-partner-code')?.value||'').trim().toUpperCase();
   if (!name) {document.getElementById('reg-err').textContent='נא להזין שם';return;}
   const btn=document.querySelector('#auth-register .btn-primary');
   btn.disabled=true; btn.textContent='יוצר חשבון...';
@@ -1008,8 +1022,35 @@ async function doRegister() {
   const coupleCode=generateCoupleCode();
   await sb.from('profiles').upsert({id:currentUser.id,name,email,couple_code:coupleCode});
   await sb.from('couple_codes').upsert({code:coupleCode,email,password:pass});
+  // אם הוזן קוד זוגי — נסה לחבר
+  if (partnerCodeRaw) {
+    const {data:partnerRow} = await sb.from('couple_codes').select('email').eq('code',partnerCodeRaw).single();
+    if (partnerRow?.email) {
+      const {data:partnerProfile} = await sb.from('profiles').select('id').eq('email',partnerRow.email).single();
+      if (partnerProfile?.id) {
+        // סמן אישור זוגי על שני הפרופילים
+        await sb.from('profiles').update({partner_confirmed:true,linked_partner_id:partnerProfile.id}).eq('id',currentUser.id);
+        await sb.from('profiles').update({partner_confirmed:true,linked_partner_id:currentUser.id}).eq('id',partnerProfile.id);
+        showToast('💑 חשבון זוגי חובר בהצלחה!');
+      }
+    }
+  }
   btn.disabled=false; btn.textContent='יצירת חשבון';
   await loadMyProfile();
+}
+async function connectSetupPartnerCode() {
+  const code=(document.getElementById('setup-partner-code')?.value||'').trim().toUpperCase();
+  const err=document.getElementById('setup-err');
+  if (!code) {err.textContent='נא להזין קוד';return;}
+  const {data:partnerRow} = await sb.from('couple_codes').select('email').eq('code',code).single();
+  if (!partnerRow?.email) {err.textContent='קוד לא נמצא — בדקו שהזנתם נכון';return;}
+  const {data:partnerProfile} = await sb.from('profiles').select('id').eq('email',partnerRow.email).single();
+  if (!partnerProfile?.id) {err.textContent='לא נמצא פרופיל עם קוד זה';return;}
+  await sb.from('profiles').update({partner_confirmed:true,linked_partner_id:partnerProfile.id}).eq('id',currentUser.id);
+  await sb.from('profiles').update({partner_confirmed:true,linked_partner_id:currentUser.id}).eq('id',partnerProfile.id);
+  err.textContent='';
+  showToast('💑 חשבון זוגי חובר בהצלחה!');
+  document.getElementById('setup-partner-code').value='';
 }
 function generateCoupleCode() {
   const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -1024,7 +1065,7 @@ async function doCodeLogin() {
   const btn=document.querySelector('#auth-code .btn-primary');
   btn.disabled=true; btn.textContent='מתחבר...'; errEl.textContent='';
   const {data:codeRow,error:codeErr} = await sb.from('couple_codes').select('email,password').eq('code',code).single();
-  if (codeErr||!codeRow) {btn.disabled=false; btn.textContent='התחברות עם קוד'; errEl.textContent='קוד לא נמצא, בדקו שהקלדתם נכון';return;}
+  if (codeErr||!codeRow) {btn.disabled=false; btn.textContent='התחברות עם קוד'; errEl.textContent='קוד לא נמצא — בדקו שהזנתם נכון';return;}
   const {error} = await sb.auth.signInWithPassword({email:codeRow.email,password:codeRow.password});
   btn.disabled=false; btn.textContent='התחברות עם קוד';
   if (error) {errEl.textContent=friendlyAuthError(error.message);return;}
@@ -1134,7 +1175,7 @@ function renderMarkers() {
     if (!couple.lat||!couple.lng) return;
     const status=effectiveStatus(couple);
     const meta=STATUS_META[status]||STATUS_META.cold;
-    const emoji=vibeEmoji((couple.vibes||[])[0]);
+    const emoji=vibeEmoji(couple.event_vibe||(couple.vibes||[])[0]);
     const isSelf=couple.id===currentUser.id;
     // fix: use data attribute for emoji
     const verifiedDot = couple.partner_confirmed ? '<div style="position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;border-radius:50%;background:#1dd1a1;border:2px solid white;display:flex;align-items:center;justify-content:center;font-size:8px;color:white">✓</div>' : '';
