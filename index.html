@@ -1052,6 +1052,10 @@ async function loadMyProfile() {
   const {data} = await sb.from('profiles').select('*').eq('id',currentUser.id).single();
   myProfile = data;
   hideLoading();
+  // סימון רטרואקטיבי: משתמש קיים עם היסטוריית אירוע = השלים את המדריך
+  if (myProfile?.event_expires_at && currentUser?.id) {
+    localStorage.setItem('double_event_done_' + currentUser.id, '1');
+  }
   if (!myProfile || !myProfile.name) {
     showScreen('setup'); initSetupScreen();
   } else {
@@ -1956,6 +1960,7 @@ async function cancelActiveEvent(expired) {
     if (pe) console.warn('שגיאת ביטול פרטנר:', pe.message);
   }
   myProfile={...myProfile,...resetData};
+  if (currentUser?.id) localStorage.setItem('double_event_done_' + currentUser.id, '1');
   stopEventCountdown();
   const fab=document.getElementById('event-fab');
   if (fab) {fab.textContent='➕ אירוע';fab.style.background='linear-gradient(135deg,#1dd1a1,#00b894)';fab.onclick=openEventModal;}
@@ -2115,6 +2120,7 @@ async function saveEvent() {
   if (idx>-1) allCouples[idx]=myProfile; else allCouples.push(myProfile);
   renderMarkers(); updateLiveCount();
   if (mapInstance) mapInstance.flyTo([lat,lng],13,{duration:1.5});
+  if (currentUser?.id) localStorage.setItem('double_event_done_' + currentUser.id, '1');
   renderStarterCard();
 }
 
@@ -3253,13 +3259,14 @@ function updateHeatmapIfOn() {
 // ═══════════════════════════════════
 function starterCardState() {
   if (!myProfile) return 'hidden';
+  const uid = currentUser?.id;
   const hasPartner = !!(myProfile.partner_id);
-  const hasEverPublished = !!(myProfile.event_expires_at || myProfile._partnerHasEvent);
-  const allDone = hasPartner && hasEverPublished;
-  // אם גמר הכל: הצג 'done' רק בלחיצה מפורשת על "הצג מדריך"
+  // "פרסם אי-פעם" = אירוע חי כרגע, או אירוע שנרשם בעבר, או דגל קבוע ב-localStorage
+  const everPublished = !!(myProfile.event_expires_at || myProfile._partnerHasEvent
+    || localStorage.getItem('double_event_done_' + uid));
+  const allDone = hasPartner && everPublished;
   if (allDone) return window._forceShowStarter ? 'done' : 'hidden';
-  // אם דילג: הסתר (אלא אם לחץ "הצג מדריך")
-  if (localStorage.getItem('double_starter_dismissed_' + currentUser?.id) && !window._forceShowStarter) return 'hidden';
+  if (localStorage.getItem('double_starter_dismissed_' + uid) && !window._forceShowStarter) return 'hidden';
   if (hasPartner) return 'step3';
   return 'step2';
 }
