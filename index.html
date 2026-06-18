@@ -1191,11 +1191,11 @@ function applyVibeFilter(vibe) {
 }
 
 async function loadCouples() {
-  const {data} = await sb.from('profiles').select('*').not('lat','is',null).neq('id',currentUser.id);
+  const {data} = await sb.from('public_couples').select('*').not('lat','is',null).neq('id',currentUser.id);
   allCouples = data||[];
   // מזג אירוע פרטנר ל-myProfile אם אין לנו אירוע פעיל
   if (myProfile?.partner_id) {
-    const {data:partner} = await sb.from('profiles').select('*').eq('id',myProfile.partner_id).single();
+    const {data:partner} = await sb.from('public_couples').select('*').eq('id',myProfile.partner_id).single();
     if (partner) {
       const myActive = effectiveStatus(myProfile)==='hot';
       const partnerActive = effectiveStatus(partner)==='hot';
@@ -1601,7 +1601,7 @@ async function loadChats() {
     const ids=roomId.split(':');
     const otherId=ids.find(id=>id!==currentUser.id);
     if (!otherId) return null;
-    const {data:profile} = await sb.from('profiles').select('*').eq('id',otherId).single();
+    const {data:profile} = await sb.from('public_couples').select('*').eq('id',otherId).single();
     return {roomId,lastMsg,profile};
   }));
   const valid=profiles.filter(Boolean).sort((a,b)=>b.lastMsg.created_at.localeCompare(a.lastMsg.created_at));
@@ -1621,7 +1621,7 @@ async function loadChats() {
 }
 
 async function openChatById(profileId) {
-  const {data:profile} = await sb.from('profiles').select('*').eq('id',profileId).single();
+  const {data:profile} = await sb.from('public_couples').select('*').eq('id',profileId).single();
   if (!profile) return;
   selectedCouple=profile; openChat();
 }
@@ -1781,14 +1781,14 @@ function openChatWithCouple(couple) {
 
 async function openProfileFromConnected(couple) {
   // טען פרופיל מלא ועדכני מה-DB לפי ה-id
-  const {data:profile} = await sb.from('profiles').select('*').eq('id',couple.id).single();
+  const {data:profile} = await sb.from('public_couples').select('*').eq('id',couple.id).single();
   selectedCouple = profile || couple;
   openFullProfile();
 }
 
 async function openProfileFromChat() {
   if (!currentChatCouple?.id) return;
-  const {data:profile} = await sb.from('profiles').select('*').eq('id',currentChatCouple.id).single();
+  const {data:profile} = await sb.from('public_couples').select('*').eq('id',currentChatCouple.id).single();
   selectedCouple = profile || currentChatCouple;
   closeChat();
   openFullProfile();
@@ -1874,7 +1874,7 @@ async function respondShake(shakeId,status,fromName) {
   if (status==='accepted') {
     const {data} = await sb.from('shakes').select('from_id').eq('id',shakeId).single();
     if (data) {
-      const {data:profile} = await sb.from('profiles').select('*').eq('id',data.from_id).single();
+      const {data:profile} = await sb.from('public_couples').select('*').eq('id',data.from_id).single();
       if (profile) {
         selectedCouple = profile;
         document.getElementById('shake-approved-name').textContent = 'יש התאמה עם ' + profile.name + ' & ' + (profile.partner_name||'?') + '!';
@@ -2818,7 +2818,7 @@ async function loadFriends() {
 }
 
 async function openFriendPanel(friend) {
-  const {data:profile}=await sb.from('profiles').select('*').eq('id',friend.couple_b).single();
+  const {data:profile}=await sb.from('public_couples').select('*').eq('id',friend.couple_b).single();
   if (!profile) {showToast('פרופיל לא נמצא'); return;}
   selectedCouple = profile;
   openFullProfile();
