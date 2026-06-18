@@ -1058,7 +1058,6 @@ async function loadMyProfile() {
     showScreen('main'); initNav(); updateProfileNavIcon();
     await initMap(); subscribeRealtime(); subscribeNewMessages(); subscribeShakes();
     loadShakes();
-    setTimeout(() => renderStarterCard(), 800);
   }
 }
 
@@ -1242,9 +1241,12 @@ async function loadCouples() {
       }
       // סנן את הפרטנר — הוא חלק מ"הזוג שלנו", לא זוג אחר
       allCouples = allCouples.filter(c => c.id !== partner.id);
+      // שמור אם הפרטנר אי פעם פרסם אירוע (לבדיקת מדריך הכניסה)
+      if (partner.event_expires_at) myProfile._partnerHasEvent = true;
     }
   }
   renderMarkers(); updateLiveCount();
+  renderStarterCard();
 }
 
 function effectiveStatus(c) {
@@ -3253,7 +3255,7 @@ function starterCardState() {
   if (!myProfile) return 'hidden';
   if (localStorage.getItem('double_starter_dismissed_' + currentUser?.id)) return 'hidden';
   const hasPartner = !!(myProfile.partner_id);
-  const hasEverPublished = !!(myProfile.event_expires_at);
+  const hasEverPublished = !!(myProfile.event_expires_at || myProfile._partnerHasEvent);
   if (hasPartner && hasEverPublished) return 'hidden';
   if (hasPartner) return 'step3';
   return 'step2';
