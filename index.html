@@ -1077,7 +1077,7 @@ async function doRegister() {
   if (error) {btn.disabled=false; btn.textContent='יצירת חשבון'; document.getElementById('reg-err').textContent=friendlyAuthError(error.message);return;}
   currentUser=data.user;
   const coupleCode=generateCoupleCode();
-  await sb.from('profiles').upsert({id:currentUser.id,name,email,couple_code:coupleCode});
+  await sb.from('profiles').upsert({id:currentUser.id,name,couple_code:coupleCode});
   // אם הוזן קוד זוגי — חבר דרך הפעולה המאובטחת
   if (partnerCodeRaw) {
     const {error:linkErr}=await sb.rpc('link_partner',{p_code:partnerCodeRaw});
