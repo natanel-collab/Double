@@ -1600,7 +1600,7 @@ async function sendMsg() {
 // CHATS LIST
 // ═══════════════════════════════════
 async function loadChats() {
-  const {data:sent} = await sb.from('messages').select('room_id,text,created_at,sender_name,sender_id').order('created_at',{ascending:false}).limit(500);
+  const {data:sent} = await sb.from('messages').select('room_id,text,created_at,sender_name,sender_id').like('room_id',`%${currentUser.id}%`).order('created_at',{ascending:false}).limit(500);
   const list=document.getElementById('chats-list');
   if (!sent?.length) {
     list.innerHTML='<div style="text-align:center;padding:50px 24px"><div style="font-size:52px;margin-bottom:14px">💬</div><div style="font-family:\'Syne\',sans-serif;font-size:18px;font-weight:800;margin-bottom:8px">אין צ\u0027אטים עדיין</div><div style="font-size:13px;color:var(--text3);line-height:1.6;margin-bottom:20px">שלחו Double Shake לזוג, וכשהוא יקבל — תוכלו להתחיל לשוחח כאן!</div><button onclick="navTo(\'main\')" style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border:none;border-radius:100px;background:linear-gradient(135deg,var(--pink),var(--pink2));color:white;font-family:\'Heebo\';font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 20px rgba(255,75,110,0.35)">🗺️ מצאו זוגות</button></div>';
