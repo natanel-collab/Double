@@ -1078,12 +1078,15 @@ async function doRegister() {
   currentUser=data.user;
   const coupleCode=generateCoupleCode();
   await sb.from('profiles').upsert({id:currentUser.id,name,email,couple_code:coupleCode});
-  // אם הוזן קוד זוגי — חבר ישירות מ-profiles
+  // אם הוזן קוד זוגי — חבר דרך הפעולה המאובטחת
   if (partnerCodeRaw) {
-    const {data:partner} = await sb.from('profiles').select('id').eq('couple_code',partnerCodeRaw).single();
-    if (partner?.id && partner.id!==currentUser.id) {
-      await sb.from('profiles').update({partner_id:partner.id,partner_confirmed:true}).eq('id',currentUser.id);
-      await sb.from('profiles').update({partner_id:currentUser.id,partner_confirmed:true}).eq('id',partner.id);
+    const {error:linkErr}=await sb.rpc('link_partner',{p_code:partnerCodeRaw});
+    if (linkErr) {
+      const m=linkErr.message||'';
+      if (m.includes('already_linked')) showToast('הקוד שייך לזוג שכבר מחובר');
+      else if (m.includes('invalid_code')) showToast('קוד הזוג לא נמצא — אפשר לחבר מאוחר יותר מהפרופיל');
+      else showToast('לא הצלחנו לחבר את הקוד — אפשר לנסות שוב מהפרופיל');
+    } else {
       showToast('💑 חשבון זוגי חובר בהצלחה!');
     }
   }
@@ -1094,28 +1097,37 @@ async function connectFromProfile() {
   const code=(document.getElementById('profile-partner-code-input')?.value||'').trim().toUpperCase();
   const errEl=document.getElementById('profile-connect-err');
   if (!code) {errEl.textContent='נא להזין קוד';return;}
-  errEl.textContent='מחפש...';
-  const {data:partner} = await sb.from('profiles').select('id').eq('couple_code',code).single();
-  if (!partner?.id) {errEl.textContent='קוד לא נמצא — בדקו שהזנתם נכון';return;}
-  if (partner.id===currentUser.id) {errEl.textContent='לא ניתן להתחבר לעצמך';return;}
-  await sb.from('profiles').update({partner_id:partner.id,partner_confirmed:true}).eq('id',currentUser.id);
-  await sb.from('profiles').update({partner_id:currentUser.id,partner_confirmed:true}).eq('id',partner.id);
-  myProfile={...myProfile,partner_id:partner.id,partner_confirmed:true};
+  errEl.textContent='מחבר...';
+  const {error}=await sb.rpc('link_partner',{p_code:code});
+  if (error) {
+    const m=error.message||'';
+    if (m.includes('already_linked')) errEl.textContent='אחד מכם כבר מחובר לזוג אחר';
+    else if (m.includes('invalid_code')) errEl.textContent='קוד לא נמצא — בדקו שהזנתם נכון';
+    else errEl.textContent='😕 לא הצלחנו לחבר — נסו שוב';
+    return;
+  }
+  const {data:fresh}=await sb.from('profiles').select('*').eq('id',currentUser.id).single();
+  if (fresh) myProfile=fresh;
   errEl.textContent='';
   document.getElementById('profile-connect-code-section').style.display='none';
   showToast('💑 חשבון זוגי חובר בהצלחה!');
-  loadProfileScreen();
+  openProfile();
 }
 async function connectSetupPartnerCode() {
   const code=(document.getElementById('setup-partner-code')?.value||'').trim().toUpperCase();
   const err=document.getElementById('setup-err');
   if (!code) {err.textContent='נא להזין קוד';return;}
-  err.textContent='מחפש...';
-  const {data:partner} = await sb.from('profiles').select('id').eq('couple_code',code).single();
-  if (!partner?.id) {err.textContent='קוד לא נמצא — בדקו שהזנתם נכון';return;}
-  if (partner.id===currentUser.id) {err.textContent='לא ניתן להתחבר לעצמך';return;}
-  await sb.from('profiles').update({partner_id:partner.id,partner_confirmed:true}).eq('id',currentUser.id);
-  await sb.from('profiles').update({partner_id:currentUser.id,partner_confirmed:true}).eq('id',partner.id);
+  err.textContent='מחבר...';
+  const {error}=await sb.rpc('link_partner',{p_code:code});
+  if (error) {
+    const m=error.message||'';
+    if (m.includes('already_linked')) err.textContent='אחד מכם כבר מחובר לזוג אחר';
+    else if (m.includes('invalid_code')) err.textContent='קוד לא נמצא — בדקו שהזנתם נכון';
+    else err.textContent='😕 לא הצלחנו לחבר — נסו שוב';
+    return;
+  }
+  const {data:fresh}=await sb.from('profiles').select('*').eq('id',currentUser.id).single();
+  if (fresh) myProfile=fresh;
   err.textContent='';
   showToast('💑 חשבון זוגי חובר בהצלחה!');
   document.getElementById('setup-partner-code').value='';
