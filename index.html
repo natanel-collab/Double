@@ -1021,6 +1021,11 @@ async function init() {
 async function loadMyProfile() {
   const {data} = await sb.from('profiles').select('*').eq('id',currentUser.id).single();
   myProfile = data;
+  // קוד-הזוג נשמר עכשיו בטבלה נפרדת ונעולה — טוען את הקוד שלי בלבד
+  if (myProfile) {
+    const {data:cc} = await sb.from('couple_codes').select('code').eq('user_id',currentUser.id).maybeSingle();
+    if (cc?.code) myProfile.couple_code = cc.code;
+  }
   hideLoading();
   if (!myProfile || !myProfile.name) {
     showScreen('setup'); initSetupScreen();
@@ -1075,9 +1080,17 @@ async function doRegister() {
   btn.disabled=true; btn.textContent='יוצר חשבון...';
   const {data,error} = await sb.auth.signUp({email,password:pass,options:{data:{name}}});
   if (error) {btn.disabled=false; btn.textContent='יצירת חשבון'; document.getElementById('reg-err').textContent=friendlyAuthError(error.message);return;}
+  // זיהוי "אימייל כבר רשום" — Supabase לא מחזיר שגיאה במקרה הזה (הגנה מפני זליגת מידע), אלא משתמש עם identities ריק
+  if (data.user && Array.isArray(data.user.identities) && data.user.identities.length===0) {
+    btn.disabled=false; btn.textContent='יצירת חשבון';
+    errEl.textContent='כתובת האימייל כבר רשומה — נסו להתחבר';
+    switchAuthTab('login');
+    return;
+  }
   currentUser=data.user;
   const coupleCode=generateCoupleCode();
-  await sb.from('profiles').upsert({id:currentUser.id,name,couple_code:coupleCode});
+  await sb.from('profiles').upsert({id:currentUser.id,name});
+  await sb.from('couple_codes').upsert({user_id:currentUser.id,code:coupleCode});
   // אם הוזן קוד זוגי — חבר דרך הפעולה המאובטחת
   if (partnerCodeRaw) {
     const {error:linkErr}=await sb.rpc('link_partner',{p_code:partnerCodeRaw});
@@ -2385,7 +2398,7 @@ function copyProfileInvite() {
 }
 async function createCoupleCode() {
   const newCode=generateCoupleCode();
-  await sb.from('profiles').update({couple_code:newCode}).eq('id',currentUser.id);
+  await sb.from('couple_codes').upsert({user_id:currentUser.id,code:newCode});
   myProfile={...myProfile,couple_code:newCode};
   document.getElementById('profile-invite-link').value=newCode;
   document.getElementById('profile-invite-setup').style.display='none';
