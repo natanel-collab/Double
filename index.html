@@ -1058,6 +1058,7 @@ async function loadMyProfile() {
     showScreen('main'); initNav(); updateProfileNavIcon();
     await initMap(); subscribeRealtime(); subscribeNewMessages(); subscribeShakes();
     loadShakes();
+    renderStarterCard();
   }
 }
 
@@ -1246,7 +1247,6 @@ async function loadCouples() {
     }
   }
   renderMarkers(); updateLiveCount();
-  renderStarterCard();
 }
 
 function effectiveStatus(c) {
