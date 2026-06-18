@@ -290,6 +290,19 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
 .check-row-text{font-size:12px;color:var(--text2);line-height:1.5}
 .check-row-text a{color:var(--pink);text-decoration:underline}
 .check-row-text strong{color:var(--text)}
+
+/* Other couple's event timer */
+.timer-compact{display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,rgba(255,75,110,0.13),rgba(255,159,67,0.1));border:1px solid rgba(255,159,67,0.3);border-radius:12px;padding:9px 13px;margin-bottom:8px;position:relative;overflow:hidden}
+.timer-compact::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--pink),var(--orange));animation:tcPulse 2s infinite}
+@keyframes tcPulse{0%,100%{opacity:0.4}50%{opacity:1}}
+.tc-left{display:flex;align-items:center;gap:8px}
+.live-pill{display:inline-flex;align-items:center;gap:4px;background:var(--pink);color:#fff;padding:2px 8px;border-radius:100px;font-size:9px;font-weight:800}
+.live-blink{width:5px;height:5px;border-radius:50%;background:#fff;animation:tcBlink 1.2s infinite}
+@keyframes tcBlink{0%,100%{opacity:1}50%{opacity:0.3}}
+.tc-label{font-size:11px;color:var(--text3)}
+.tc-value{font-size:18px;font-weight:800;font-family:'Syne',sans-serif;background:linear-gradient(135deg,var(--pink),var(--orange));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:0.5px}
+.timer-compact-bar{height:3px;border-radius:4px;background:rgba(255,255,255,0.08);margin-bottom:10px;overflow:hidden}
+.timer-compact-fill{height:100%;background:linear-gradient(90deg,var(--pink),var(--orange));border-radius:4px;transition:width 1s linear}
 </style>
 </head>
 <body>
@@ -1362,6 +1375,16 @@ function openCouplePanel(couple) {
       </div>
     </div>
     ${couple.lat && couple.lng ? `<div style="margin-bottom:12px"><button onclick="navigateToCouple(${couple.lat},${couple.lng})" style="width:100%;padding:11px;border:1px solid rgba(84,160,255,0.3);border-radius:12px;background:rgba(84,160,255,0.08);color:#54a0ff;font-family:'Heebo';font-weight:600;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">🗺️ נווט למיקום הדייט</button></div>` : ''}
+    ${(status==='hot' && couple.event_expires_at && new Date(couple.event_expires_at)>new Date()) ? `
+      <div class="timer-compact">
+        <div class="tc-left">
+          <span class="live-pill"><span class="live-blink"></span>פעיל</span>
+          <span class="tc-label">נותרו לדייט</span>
+        </div>
+        <div class="tc-value" id="other-event-countdown">--:--:--</div>
+      </div>
+      <div class="timer-compact-bar"><div class="timer-compact-fill" id="other-event-progress" style="width:0%"></div></div>
+    ` : ''}
     ${couple.status_text?`<div class="info-card"><div class="info-card-label">הם מחפשים</div><div style="font-size:14px;color:var(--text2)">"${escapeHtml(couple.status_text)}"</div>${couple.event_photo_url?`<img src="${couple.event_photo_url}" style="width:100%;border-radius:10px;margin-top:10px;max-height:180px;object-fit:cover"/>`:''}</div>`:''}
     <div class="people-row">
       <div class="person-card"><div class="person-name">${escapeHtml(couple.name)}</div><div class="person-role">${escapeHtml([couple.role_him,couple.age_him?'גיל '+couple.age_him:''].filter(Boolean).join(' · '))||''}</div></div>
@@ -1409,6 +1432,7 @@ function openCouplePanel(couple) {
   document.getElementById('panel-overlay').classList.add('open');
   document.getElementById('couple-panel').classList.add('open');
   _panelUnmatched = false;
+  startOtherEventCountdown(couple);
   // Check shake status (only for other couples)
   if (!isOwn) sb.from('shakes').select('id,status').eq('from_id',currentUser.id).eq('to_id',couple.id).single().then(({data})=>{
     if (_panelUnmatched) return;
@@ -1438,6 +1462,41 @@ function openCouplePanel(couple) {
 function closePanel() {
   document.getElementById('panel-overlay').classList.remove('open');
   document.getElementById('couple-panel').classList.remove('open');
+  stopOtherEventCountdown();
+}
+
+let _otherEventTimer = null;
+function startOtherEventCountdown(couple) {
+  stopOtherEventCountdown();
+  if (effectiveStatus(couple) !== 'hot' || !couple.event_expires_at) return;
+  const expiresAt = new Date(couple.event_expires_at).getTime();
+  const startedAt = expiresAt - 24*60*60*1000; // הנחה: אירוע נמשך 24 שעות
+  const update = () => {
+    const now = Date.now();
+    const remaining = expiresAt - now;
+    const elEl = document.getElementById('other-event-countdown');
+    const barEl = document.getElementById('other-event-progress');
+    if (!elEl) { stopOtherEventCountdown(); return; }
+    if (remaining <= 0) {
+      elEl.textContent = 'הסתיים';
+      if (barEl) barEl.style.width = '100%';
+      stopOtherEventCountdown();
+      return;
+    }
+    const h = Math.floor(remaining / 3600000);
+    const m = Math.floor((remaining % 3600000) / 60000);
+    const s = Math.floor((remaining % 60000) / 1000);
+    elEl.textContent = `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    if (barEl) {
+      const pct = Math.max(0, Math.min(100, ((now - startedAt) / (expiresAt - startedAt)) * 100));
+      barEl.style.width = pct + '%';
+    }
+  };
+  update();
+  _otherEventTimer = setInterval(update, 1000);
+}
+function stopOtherEventCountdown() {
+  if (_otherEventTimer) { clearInterval(_otherEventTimer); _otherEventTimer = null; }
 }
 
 // ═══════════════════════════════════
