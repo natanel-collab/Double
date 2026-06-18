@@ -784,8 +784,8 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
 <div class="chat-panel" id="chat-panel">
   <div class="chat-header">
     <button class="panel-close" onclick="closeChat()">←</button>
-    <div style="flex:1">
-      <div class="chat-couple-name" id="chat-couple-name"></div>
+    <div style="flex:1;cursor:pointer;border-radius:10px;padding:4px 8px;margin:-4px -8px" onclick="openProfileFromChat()">
+      <div class="chat-couple-name" id="chat-couple-name" style="display:flex;align-items:center;gap:6px"></div>
       <div class="chat-status">Double Chat · 4 אנשים</div>
     </div>
     <span id="chat-emoji" style="font-size:24px">💞</span>
@@ -1505,11 +1505,13 @@ function stopOtherEventCountdown() {
 // ═══════════════════════════════════
 function getRoomId(a,b) { return [a,b].sort().join(':'); }
 
+let currentChatCouple = null;
 async function openChat() {
   closePanel();
   const couple=selectedCouple;
+  currentChatCouple=couple;
   currentRoomId=getRoomId(currentUser.id,couple.id);
-  document.getElementById('chat-couple-name').textContent=`${couple.name} & ${couple.partner_name||'?'}`;
+  document.getElementById('chat-couple-name').innerHTML=`${escapeHtml(couple.name)} & ${escapeHtml(couple.partner_name||'?')} <span style="color:var(--text3);font-size:15px">›</span>`;
   document.getElementById('chat-emoji').textContent=vibeEmoji((couple.vibes||[])[0]);
   document.getElementById('chat-messages').innerHTML='<div style="text-align:center;color:var(--text3);padding:20px;font-size:13px">טוען...</div>';
   document.getElementById('chat-panel').classList.add('open');
@@ -1758,15 +1760,16 @@ async function loadConnectedShakes() {
     const photoEl=c.photo_url
       ?`<img src="${c.photo_url}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--green)"/>`
       :`<div style="width:52px;height:52px;border-radius:50%;background:rgba(29,209,161,0.12);border:2px solid var(--green);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">💞</div>`;
+    const cJson=JSON.stringify(c).replace(/"/g,"&quot;").replace(/'/g,"&#39;");
     return `<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(29,209,161,0.2);border-radius:16px;padding:14px;margin-bottom:10px">
-      <div style="display:flex;gap:12px;align-items:center">${photoEl}
+      <div onclick='openProfileFromConnected(${cJson})' style="display:flex;gap:12px;align-items:center;cursor:pointer;border-radius:12px;padding:6px;margin:-6px">${photoEl}
         <div style="flex:1;min-width:0">
-          <div style="font-family:'Syne';font-weight:800;font-size:15px">${escapeHtml(c.name||'?')} <span style="font-family:'Heebo',sans-serif;font-weight:400;opacity:0.7">&</span> ${escapeHtml(c.partner_name||'?')}</div>
+          <div style="font-family:'Syne';font-weight:800;font-size:15px;display:flex;align-items:center;gap:6px">${escapeHtml(c.name||'?')} <span style="font-family:'Heebo',sans-serif;font-weight:400;opacity:0.7">&</span> ${escapeHtml(c.partner_name||'?')} <span style="color:var(--text3);font-size:16px">›</span></div>
           <div style="color:var(--text3);font-size:12px;margin-top:2px">${escapeHtml(c.city||'ישראל')}</div>
           <div style="display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;background:rgba(29,209,161,0.15);color:var(--green);border:1px solid rgba(29,209,161,0.3);margin-top:4px">✅ מחוברים</div>
         </div>
       </div>
-      <button onclick='openChatWithCouple(${JSON.stringify(c).replace(/"/g,"&quot;").replace(/'/g,"&#39;")})' style="width:100%;margin-top:12px;padding:10px;border:none;border-radius:11px;background:linear-gradient(135deg,var(--green),#00b894);color:#06060c;font-family:'Heebo';font-weight:800;font-size:13px;cursor:pointer">💬 פתחו צ'אט</button>
+      <button onclick='openChatWithCouple(${cJson})' style="width:100%;margin-top:12px;padding:10px;border:none;border-radius:11px;background:linear-gradient(135deg,var(--green),#00b894);color:#06060c;font-family:'Heebo';font-weight:800;font-size:13px;cursor:pointer">💬 פתחו צ'אט</button>
     </div>`;
   }).join('');
 }
@@ -1774,6 +1777,21 @@ async function loadConnectedShakes() {
 function openChatWithCouple(couple) {
   selectedCouple = couple;
   openChat();
+}
+
+async function openProfileFromConnected(couple) {
+  // טען פרופיל מלא ועדכני מה-DB לפי ה-id
+  const {data:profile} = await sb.from('profiles').select('*').eq('id',couple.id).single();
+  selectedCouple = profile || couple;
+  openFullProfile();
+}
+
+async function openProfileFromChat() {
+  if (!currentChatCouple?.id) return;
+  const {data:profile} = await sb.from('profiles').select('*').eq('id',currentChatCouple.id).single();
+  selectedCouple = profile || currentChatCouple;
+  closeChat();
+  openFullProfile();
 }
 
 function switchShakesTab(tab) {
