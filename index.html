@@ -1052,9 +1052,10 @@ async function loadMyProfile() {
   const {data} = await sb.from('profiles').select('*').eq('id',currentUser.id).single();
   myProfile = data;
   hideLoading();
-  // סימון רטרואקטיבי: משתמש קיים עם היסטוריית אירוע = השלים את המדריך
-  if (myProfile?.event_expires_at && currentUser?.id) {
-    localStorage.setItem('double_event_done_' + currentUser.id, '1');
+  // סימון רטרואקטיבי: משתמש קיים עם היסטוריית אירוע אך בלי הדגל → עדכן ב-DB
+  if (myProfile && myProfile.event_expires_at && !myProfile.onboarding_done) {
+    myProfile.onboarding_done = true;
+    sb.from('profiles').update({onboarding_done:true}).eq('id',currentUser.id).then(()=>{});
   }
   if (!myProfile || !myProfile.name) {
     showScreen('setup'); initSetupScreen();
@@ -1119,7 +1120,7 @@ async function doRegister() {
     if (partner?.id && partner.id!==currentUser.id) {
       await sb.from('profiles').update({partner_id:partner.id,partner_confirmed:true}).eq('id',currentUser.id);
       await sb.from('profiles').update({partner_id:currentUser.id,partner_confirmed:true}).eq('id',partner.id);
-      showToast('💑 חשבון זוגי חובר בהצלחה!'); renderStarterCard();
+      showToast('💑 חשבון זוגי חובר בהצלחה!');
     }
   }
   btn.disabled=false; btn.textContent='יצירת חשבון';
@@ -1151,6 +1152,7 @@ async function connectSetupPartnerCode() {
   if (partner.id===currentUser.id) {err.textContent='לא ניתן להתחבר לעצמך';return;}
   await sb.from('profiles').update({partner_id:partner.id,partner_confirmed:true}).eq('id',currentUser.id);
   await sb.from('profiles').update({partner_id:currentUser.id,partner_confirmed:true}).eq('id',partner.id);
+  myProfile={...myProfile,partner_id:partner.id,partner_confirmed:true};
   err.textContent='';
   showToast('💑 חשבון זוגי חובר בהצלחה!'); renderStarterCard();
   document.getElementById('setup-partner-code').value='';
@@ -1247,7 +1249,10 @@ async function loadCouples() {
       // סנן את הפרטנר — הוא חלק מ"הזוג שלנו", לא זוג אחר
       allCouples = allCouples.filter(c => c.id !== partner.id);
       // שמור אם הפרטנר אי פעם פרסם אירוע (לבדיקת מדריך הכניסה)
-      if (partner.event_expires_at) myProfile._partnerHasEvent = true;
+      if (partner.event_expires_at && !myProfile.onboarding_done) {
+        myProfile.onboarding_done = true;
+        sb.from('profiles').update({onboarding_done:true}).eq('id',currentUser.id).then(()=>{});
+      }
     }
   }
   renderMarkers(); updateLiveCount();
@@ -1960,7 +1965,6 @@ async function cancelActiveEvent(expired) {
     if (pe) console.warn('שגיאת ביטול פרטנר:', pe.message);
   }
   myProfile={...myProfile,...resetData};
-  if (currentUser?.id) localStorage.setItem('double_event_done_' + currentUser.id, '1');
   stopEventCountdown();
   const fab=document.getElementById('event-fab');
   if (fab) {fab.textContent='➕ אירוע';fab.style.background='linear-gradient(135deg,#1dd1a1,#00b894)';fab.onclick=openEventModal;}
@@ -2097,7 +2101,7 @@ async function saveEvent() {
   const eventExpiresAt=new Date(Date.now()+24*60*60*1000).toISOString();
   const saveBtn=document.querySelector('#event-modal .btn-primary');
   if (saveBtn){saveBtn.disabled=true;saveBtn.dataset.orig=saveBtn.textContent;saveBtn.innerHTML='<span class="btn-spinner"></span> מפרסם...';}
-  const eventData={status:'hot',status_text:statusText,lat,lng,event_expires_at:eventExpiresAt,event_vibe:eventSelectedVibe||null};
+  const eventData={status:'hot',status_text:statusText,lat,lng,event_expires_at:eventExpiresAt,event_vibe:eventSelectedVibe||null,onboarding_done:true};
   // תמיד שמור על currentUser
   const {error} = await sb.from('profiles').update(eventData).eq('id',currentUser.id);
   if (saveBtn){saveBtn.disabled=false;saveBtn.textContent=saveBtn.dataset.orig||'פרסם על המפה 🗺️';}
@@ -2120,7 +2124,6 @@ async function saveEvent() {
   if (idx>-1) allCouples[idx]=myProfile; else allCouples.push(myProfile);
   renderMarkers(); updateLiveCount();
   if (mapInstance) mapInstance.flyTo([lat,lng],13,{duration:1.5});
-  if (currentUser?.id) localStorage.setItem('double_event_done_' + currentUser.id, '1');
   renderStarterCard();
 }
 
@@ -3259,14 +3262,12 @@ function updateHeatmapIfOn() {
 // ═══════════════════════════════════
 function starterCardState() {
   if (!myProfile) return 'hidden';
-  const uid = currentUser?.id;
   const hasPartner = !!(myProfile.partner_id);
-  // "פרסם אי-פעם" = אירוע חי כרגע, או אירוע שנרשם בעבר, או דגל קבוע ב-localStorage
-  const everPublished = !!(myProfile.event_expires_at || myProfile._partnerHasEvent
-    || localStorage.getItem('double_event_done_' + uid));
-  const allDone = hasPartner && everPublished;
-  if (allDone) return window._forceShowStarter ? 'done' : 'hidden';
-  if (localStorage.getItem('double_starter_dismissed_' + uid) && !window._forceShowStarter) return 'hidden';
+  // שלב 3 הושלם = onboarding_done ב-DB (לא מתאפס לעולם)
+  const onboardingDone = !!myProfile.onboarding_done;
+  // השלים את כל השלבים?
+  if (hasPartner && onboardingDone) return window._forceShowStarter ? 'done' : 'hidden';
+  // לא השלים — הצג את השלב הנוכחי (גם אם דילג בעבר, כי עדיין חסר שלב)
   if (hasPartner) return 'step3';
   return 'step2';
 }
@@ -3358,11 +3359,9 @@ function dismissStarterCard() {
   const card = document.getElementById('starter-card');
   if (card) card.style.display = 'none';
   window._forceShowStarter = false;
-  if (currentUser?.id) localStorage.setItem('double_starter_dismissed_' + currentUser.id, '1');
 }
 
 function resetStarterCard() {
-  if (currentUser?.id) localStorage.removeItem('double_starter_dismissed_' + currentUser.id);
   window._forceShowStarter = true;
   // עבור למסך הבית ידנית בלי navTo (שמסתיר)
   showScreen('main');
