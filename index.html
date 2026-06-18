@@ -571,12 +571,14 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
   <div style="font-family:'Syne';font-size:22px;font-weight:800;margin-bottom:6px">💞 Double Shake</div>
   <div style="color:var(--text2);font-size:13px;margin-bottom:16px">שייקים שקיבלתם ושלחתם</div>
   <!-- טאבים -->
-  <div style="display:flex;gap:8px;margin-bottom:20px">
-    <button id="shakes-tab-in" onclick="switchShakesTab('in')" style="flex:1;padding:9px;border-radius:12px;background:rgba(255,75,110,0.15);border:1px solid rgba(255,75,110,0.4);color:var(--pink);font-family:'Heebo';font-size:13px;font-weight:700;cursor:pointer">📥 קיבלתי</button>
-    <button id="shakes-tab-out" onclick="switchShakesTab('out')" style="flex:1;padding:9px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid var(--border2);color:var(--text3);font-family:'Heebo';font-size:13px;font-weight:600;cursor:pointer">📤 שלחתי</button>
+  <div style="display:flex;gap:6px;margin-bottom:20px">
+    <button id="shakes-tab-in" onclick="switchShakesTab('in')" style="flex:1;padding:9px 4px;border-radius:12px;background:rgba(255,75,110,0.15);border:1px solid rgba(255,75,110,0.4);color:var(--pink);font-family:'Heebo';font-size:12px;font-weight:700;cursor:pointer">📥 קיבלתי</button>
+    <button id="shakes-tab-out" onclick="switchShakesTab('out')" style="flex:1;padding:9px 4px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid var(--border2);color:var(--text3);font-family:'Heebo';font-size:12px;font-weight:600;cursor:pointer">📤 שלחתי</button>
+    <button id="shakes-tab-connected" onclick="switchShakesTab('connected')" style="flex:1;padding:9px 4px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid var(--border2);color:var(--text3);font-family:'Heebo';font-size:12px;font-weight:600;cursor:pointer">💞 מחוברים</button>
   </div>
   <div id="shakes-list"></div>
   <div id="shakes-sent-list" style="display:none"></div>
+  <div id="shakes-connected-list" style="display:none"></div>
 </div>
 
 <!-- PROFILE -->
@@ -1726,20 +1728,81 @@ async function loadShakes() {
   }).join('');
 }
 
+async function loadConnectedShakes() {
+  const list=document.getElementById('shakes-connected-list');
+  if (!list) return;
+  list.innerHTML='<div style="color:var(--text3);font-size:13px;text-align:center;padding:20px">טוען...</div>';
+  // שייקים מאושרים שאני שלחתי
+  const {data:sent} = await sb.from('shakes')
+    .select('*, other:to_id(id,name,partner_name,photo_url,city,status_text)')
+    .eq('from_id',currentUser.id).eq('status','accepted');
+  // שייקים מאושרים שקיבלתי
+  const {data:received} = await sb.from('shakes')
+    .select('*, other:from_id(id,name,partner_name,photo_url,city,status_text)')
+    .eq('to_id',currentUser.id).eq('status','accepted');
+  // מזג ונקה כפילויות לפי id של הזוג השני
+  const all=[...(sent||[]),...(received||[])];
+  const seen=new Set();
+  const couples=[];
+  all.forEach(s=>{
+    const p=s.other;
+    if (!p || seen.has(p.id)) return;
+    seen.add(p.id);
+    couples.push({shakeId:s.id, ...p});
+  });
+  if (!couples.length) {
+    list.innerHTML='<div style="text-align:center;padding:40px 24px"><div style="font-size:48px;margin-bottom:12px">💞</div><div style="font-family:\'Syne\';font-size:17px;font-weight:800;margin-bottom:8px">עוד אין חיבורים</div><div style="font-size:13px;color:var(--text3)">כשתאשרו שייק הדדי — הזוג יופיע כאן עם צ\'אט ישיר</div></div>';
+    return;
+  }
+  list.innerHTML=couples.map(c=>{
+    const photoEl=c.photo_url
+      ?`<img src="${c.photo_url}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--green)"/>`
+      :`<div style="width:52px;height:52px;border-radius:50%;background:rgba(29,209,161,0.12);border:2px solid var(--green);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">💞</div>`;
+    return `<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(29,209,161,0.2);border-radius:16px;padding:14px;margin-bottom:10px">
+      <div style="display:flex;gap:12px;align-items:center">${photoEl}
+        <div style="flex:1;min-width:0">
+          <div style="font-family:'Syne';font-weight:800;font-size:15px">${escapeHtml(c.name||'?')} <span style="font-family:'Heebo',sans-serif;font-weight:400;opacity:0.7">&</span> ${escapeHtml(c.partner_name||'?')}</div>
+          <div style="color:var(--text3);font-size:12px;margin-top:2px">${escapeHtml(c.city||'ישראל')}</div>
+          <div style="display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;background:rgba(29,209,161,0.15);color:var(--green);border:1px solid rgba(29,209,161,0.3);margin-top:4px">✅ מחוברים</div>
+        </div>
+      </div>
+      <button onclick='openChatWithCouple(${JSON.stringify(c).replace(/"/g,"&quot;").replace(/'/g,"&#39;")})' style="width:100%;margin-top:12px;padding:10px;border:none;border-radius:11px;background:linear-gradient(135deg,var(--green),#00b894);color:#06060c;font-family:'Heebo';font-weight:800;font-size:13px;cursor:pointer">💬 פתחו צ'אט</button>
+    </div>`;
+  }).join('');
+}
+
+function openChatWithCouple(couple) {
+  selectedCouple = couple;
+  openChat();
+}
+
 function switchShakesTab(tab) {
   const tabIn=document.getElementById('shakes-tab-in');
   const tabOut=document.getElementById('shakes-tab-out');
+  const tabConn=document.getElementById('shakes-tab-connected');
   const listIn=document.getElementById('shakes-list');
   const listOut=document.getElementById('shakes-sent-list');
+  const listConn=document.getElementById('shakes-connected-list');
   const activeStyle='background:rgba(255,75,110,0.15);border:1px solid rgba(255,75,110,0.4);color:var(--pink);font-weight:700';
   const inactiveStyle='background:rgba(255,255,255,0.04);border:1px solid var(--border2);color:var(--text3);font-weight:600';
+  // איפוס כל הטאבים
+  tabIn.style.cssText+=';'+inactiveStyle;
+  tabOut.style.cssText+=';'+inactiveStyle;
+  tabConn.style.cssText+=';'+inactiveStyle;
+  listIn.style.display='none';
+  listOut.style.display='none';
+  listConn.style.display='none';
   if (tab==='in') {
-    tabIn.style.cssText+=';'+activeStyle; tabOut.style.cssText+=';'+inactiveStyle;
-    listIn.style.display=''; listOut.style.display='none';
-  } else {
-    tabOut.style.cssText+=';'+activeStyle; tabIn.style.cssText+=';'+inactiveStyle;
-    listIn.style.display='none'; listOut.style.display='';
+    tabIn.style.cssText+=';'+activeStyle;
+    listIn.style.display='';
+  } else if (tab==='out') {
+    tabOut.style.cssText+=';'+activeStyle;
+    listOut.style.display='';
     loadSentShakes();
+  } else if (tab==='connected') {
+    tabConn.style.cssText+=';'+activeStyle;
+    listConn.style.display='';
+    loadConnectedShakes();
   }
 }
 
@@ -1825,8 +1888,20 @@ async function saveFriendBothSides(profile, source) {
 // פונקציה מרכזית לביטול — מוסרת משני הכיוונים
 async function doUnmatch(coupleId) {
   if (!coupleId) return;
-  await sb.from('shakes').delete().or(`and(from_id.eq.${currentUser.id},to_id.eq.${coupleId}),and(from_id.eq.${coupleId},to_id.eq.${currentUser.id})`);
-  await sb.from('friends').delete().or(`and(couple_a.eq.${currentUser.id},couple_b.eq.${coupleId}),and(couple_a.eq.${coupleId},couple_b.eq.${currentUser.id})`);
+  const {data:delShakes, error:e1} = await sb.from('shakes').delete().or(`and(from_id.eq.${currentUser.id},to_id.eq.${coupleId}),and(from_id.eq.${coupleId},to_id.eq.${currentUser.id})`).select();
+  const {data:delFriends, error:e2} = await sb.from('friends').delete().or(`and(couple_a.eq.${currentUser.id},couple_b.eq.${coupleId}),and(couple_a.eq.${coupleId},couple_b.eq.${currentUser.id})`).select();
+  // אבחון: אם לא נמחק כלום למרות שהיה צריך — כנראה בעיית הרשאות (RLS)
+  if (e1 || e2) {
+    console.warn('Unmatch error:', e1?.message, e2?.message);
+    showToast('😕 לא הצלחנו לבטל — נסו שוב');
+    return;
+  }
+  const deletedSomething = (delShakes?.length||0) + (delFriends?.length||0) > 0;
+  if (!deletedSomething) {
+    console.warn('Unmatch: 0 rows deleted — likely RLS policy missing DELETE permission');
+    showToast('😕 הביטול לא נשמר — בדקו הרשאות');
+    return;
+  }
   showToast('💔 השייק בוטל');
   loadFriends();
 }
