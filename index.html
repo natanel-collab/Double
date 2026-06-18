@@ -714,7 +714,6 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
   </div>
 
   <button class="btn-secondary" style="margin-top:4px;color:var(--pink);border-color:rgba(255,75,110,0.3)" onclick="signOut()">🚪 יציאה מהחשבון</button>
-  <button onclick="resetStarterCard()" style="background:none;border:none;color:var(--text3);font-family:'Heebo',sans-serif;font-size:12px;cursor:pointer;margin-top:10px;width:100%;text-align:center;padding:6px 0">🚀 הצג מדריך התחלה</button>
   <div class="legal-footer" style="margin-top:8px">
     <div class="legal-footer-links">
       <a href="/privacy.html" target="_blank">פרטיות</a>
@@ -726,37 +725,6 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
 </div>
 
 <!-- Bottom Nav -->
-<!-- Starter Card -->
-<div id="starter-card" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:50;background:#13131f;border-top:1px solid rgba(255,255,255,0.1);border-radius:20px 20px 0 0;padding:14px 14px calc(env(safe-area-inset-bottom) + 72px);box-shadow:0 -8px 40px rgba(0,0,0,0.6)">
-  <div style="width:36px;height:4px;background:rgba(255,255,255,0.15);border-radius:100px;margin:0 auto 12px"></div>
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-    <div id="sc-title" style="font-family:'Syne',sans-serif;font-size:13px;font-weight:800;display:flex;align-items:center;gap:6px">🚀 <span>מתחילים</span></div>
-    <button onclick="dismissStarterCard()" style="width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,0.08);border:none;color:#666688;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
-  </div>
-  <div style="height:3px;background:rgba(255,255,255,0.08);border-radius:100px;overflow:hidden;margin-bottom:12px">
-    <div id="sc-progress" style="height:100%;border-radius:100px;background:linear-gradient(90deg,#ff4b6e,#ff9f43);transition:width 0.6s cubic-bezier(0.4,0,0.2,1);width:33%"></div>
-  </div>
-  <div style="display:flex;gap:5px;margin-bottom:11px">
-    <div style="flex:1;border-radius:10px;padding:8px 5px;text-align:center;background:rgba(29,209,161,0.08);border:1px solid rgba(29,209,161,0.25)">
-      <div style="font-size:7.5px;font-weight:800;color:#1dd1a1;margin-bottom:4px">✓ שלב 1</div>
-      <div style="font-size:15px;line-height:1;margin-bottom:3px">👤</div>
-      <div style="font-size:8px;color:rgba(29,209,161,0.8);line-height:1.3;font-weight:600">פרופיל<br/>נוצר</div>
-    </div>
-    <div id="sc-step2" style="flex:1;border-radius:10px;padding:8px 5px;text-align:center">
-      <div id="sc-step2-num" style="font-size:7.5px;font-weight:800;margin-bottom:4px">שלב 2</div>
-      <div style="font-size:15px;line-height:1;margin-bottom:3px">💑</div>
-      <div id="sc-step2-text" style="font-size:8px;line-height:1.3;font-weight:600">חיבור<br/>בן/בת זוג</div>
-    </div>
-    <div id="sc-step3" style="flex:1;border-radius:10px;padding:8px 5px;text-align:center">
-      <div id="sc-step3-num" style="font-size:7.5px;font-weight:800;margin-bottom:4px">שלב 3</div>
-      <div style="font-size:15px;line-height:1;margin-bottom:3px">🗺️</div>
-      <div id="sc-step3-text" style="font-size:8px;line-height:1.3;font-weight:600">פרסמו<br/>אירוע</div>
-    </div>
-  </div>
-  <button id="sc-cta" onclick="starterCtaClick()" style="width:100%;padding:10px;border:none;border-radius:11px;background:linear-gradient(135deg,#ff4b6e,#ff9f43);color:white;font-family:'Heebo',sans-serif;font-weight:800;font-size:12px;cursor:pointer;box-shadow:0 4px 18px rgba(255,75,110,0.32)">💑 שלחו קוד לבן/בת הזוג</button>
-  <button onclick="dismissStarterCard()" style="background:none;border:none;color:#666688;font-family:'Heebo',sans-serif;font-size:11px;cursor:pointer;width:100%;padding:7px 0 2px;text-align:center">דלג לעכשיו ›</button>
-</div>
-
 <div class="bottom-nav" id="bottom-nav" style="display:none">
   <button class="nav-item active" data-nav="main" onclick="navTo('main')">
     <div class="nav-icon">🗺️</div><div class="nav-label">בית</div>
@@ -1052,18 +1020,12 @@ async function loadMyProfile() {
   const {data} = await sb.from('profiles').select('*').eq('id',currentUser.id).single();
   myProfile = data;
   hideLoading();
-  // סימון רטרואקטיבי: משתמש קיים עם היסטוריית אירוע אך בלי הדגל → עדכן ב-DB
-  if (myProfile && myProfile.event_expires_at && !myProfile.onboarding_done) {
-    myProfile.onboarding_done = true;
-    sb.from('profiles').update({onboarding_done:true}).eq('id',currentUser.id).then(()=>{});
-  }
   if (!myProfile || !myProfile.name) {
     showScreen('setup'); initSetupScreen();
   } else {
     showScreen('main'); initNav(); updateProfileNavIcon();
     await initMap(); subscribeRealtime(); subscribeNewMessages(); subscribeShakes();
     loadShakes();
-    renderStarterCard();
   }
 }
 
@@ -1139,7 +1101,7 @@ async function connectFromProfile() {
   myProfile={...myProfile,partner_id:partner.id,partner_confirmed:true};
   errEl.textContent='';
   document.getElementById('profile-connect-code-section').style.display='none';
-  showToast('💑 חשבון זוגי חובר בהצלחה!'); renderStarterCard();
+  showToast('💑 חשבון זוגי חובר בהצלחה!');
   loadProfileScreen();
 }
 async function connectSetupPartnerCode() {
@@ -1152,9 +1114,8 @@ async function connectSetupPartnerCode() {
   if (partner.id===currentUser.id) {err.textContent='לא ניתן להתחבר לעצמך';return;}
   await sb.from('profiles').update({partner_id:partner.id,partner_confirmed:true}).eq('id',currentUser.id);
   await sb.from('profiles').update({partner_id:currentUser.id,partner_confirmed:true}).eq('id',partner.id);
-  myProfile={...myProfile,partner_id:partner.id,partner_confirmed:true};
   err.textContent='';
-  showToast('💑 חשבון זוגי חובר בהצלחה!'); renderStarterCard();
+  showToast('💑 חשבון זוגי חובר בהצלחה!');
   document.getElementById('setup-partner-code').value='';
 }
 function generateCoupleCode() {
@@ -1248,11 +1209,6 @@ async function loadCouples() {
       }
       // סנן את הפרטנר — הוא חלק מ"הזוג שלנו", לא זוג אחר
       allCouples = allCouples.filter(c => c.id !== partner.id);
-      // שמור אם הפרטנר אי פעם פרסם אירוע (לבדיקת מדריך הכניסה)
-      if (partner.event_expires_at && !myProfile.onboarding_done) {
-        myProfile.onboarding_done = true;
-        sb.from('profiles').update({onboarding_done:true}).eq('id',currentUser.id).then(()=>{});
-      }
     }
   }
   renderMarkers(); updateLiveCount();
@@ -1683,8 +1639,11 @@ function renderFeed(searchQ) {
   const list=document.getElementById('feed-list');
   if (!list) return;
   const q = (searchQ || document.getElementById('feed-search')?.value || '').trim().toLowerCase();
+  const _seenPartners = new Set();
   const couples=allCouples.filter(c=>{
     if (c.id===currentUser.id||c.id===myProfile?.partner_id) return false;
+    // מנע כפילות: אם כבר הצגנו את בן/בת הזוג של הזוג הזה, דלג
+    if (c.partner_id && _seenPartners.has(c.partner_id)) return false;
     const status=effectiveStatus(c);
     if (status==='cold') return false;
     if (feedVibeFilter==='hot'&&status!=='hot') return false;
@@ -1693,6 +1652,7 @@ function renderFeed(searchQ) {
       const name = (c.name+' '+(c.partner_name||'')+' '+(c.city||'')).toLowerCase();
       if (!name.includes(q)) return false;
     }
+    _seenPartners.add(c.id);
     return true;
   });
   couples.sort((a,b)=>({hot:0,warm:1,cold:2}[effectiveStatus(a)]||0)-({hot:0,warm:1,cold:2}[effectiveStatus(b)]||0));
@@ -1919,10 +1879,14 @@ async function saveMyStatus() {
   const eventExpiresAt = selectedStatusOption==='hot' ? new Date(Date.now()+24*60*60*1000).toISOString() : null;
   const btn=document.querySelector('#screen-status .btn-primary');
   if (btn){btn.disabled=true;btn.dataset.orig=btn.textContent;btn.innerHTML='<span class="btn-spinner"></span> מעדכן...';}
-  const {error} = await sb.from('profiles').update({status:selectedStatusOption,status_text:text,lat,lng,event_expires_at:eventExpiresAt}).eq('id',currentUser.id);
+  const statusData={status:selectedStatusOption,status_text:text,lat,lng,event_expires_at:eventExpiresAt};
+  const {error} = await sb.from('profiles').update(statusData).eq('id',currentUser.id);
   if (btn){btn.disabled=false;btn.textContent=btn.dataset.orig||'עדכון סטטוס 🚀';}
   if (error) {document.getElementById('status-err').textContent='😕 לא הצלחנו לעדכן — בדקו את החיבור ונסו שוב';return;}
-  myProfile={...myProfile,status:selectedStatusOption,status_text:text,lat,lng,event_expires_at:eventExpiresAt};
+  if (myProfile?.partner_id) {
+    await sb.from('profiles').update(statusData).eq('id',myProfile.partner_id);
+  }
+  myProfile={...myProfile,...statusData};
   showToast('סטטוס עודכן! 🚀'); navTo('main');
 }
 
@@ -2101,7 +2065,7 @@ async function saveEvent() {
   const eventExpiresAt=new Date(Date.now()+24*60*60*1000).toISOString();
   const saveBtn=document.querySelector('#event-modal .btn-primary');
   if (saveBtn){saveBtn.disabled=true;saveBtn.dataset.orig=saveBtn.textContent;saveBtn.innerHTML='<span class="btn-spinner"></span> מפרסם...';}
-  const eventData={status:'hot',status_text:statusText,lat,lng,event_expires_at:eventExpiresAt,event_vibe:eventSelectedVibe||null,onboarding_done:true};
+  const eventData={status:'hot',status_text:statusText,lat,lng,event_expires_at:eventExpiresAt,event_vibe:eventSelectedVibe||null};
   // תמיד שמור על currentUser
   const {error} = await sb.from('profiles').update(eventData).eq('id',currentUser.id);
   if (saveBtn){saveBtn.disabled=false;saveBtn.textContent=saveBtn.dataset.orig||'פרסם על המפה 🗺️';}
@@ -2124,7 +2088,6 @@ async function saveEvent() {
   if (idx>-1) allCouples[idx]=myProfile; else allCouples.push(myProfile);
   renderMarkers(); updateLiveCount();
   if (mapInstance) mapInstance.flyTo([lat,lng],13,{duration:1.5});
-  renderStarterCard();
 }
 
 // ═══════════════════════════════════
@@ -2173,7 +2136,13 @@ function filterList(vibe) {
   listVibeFilter=vibe;
   document.querySelectorAll('[data-list-vibe]').forEach(b=>b.classList.toggle('active',b.dataset.listVibe===vibe));
   const c=document.getElementById('list-couples');
-  const all=allCouples.filter(cc=>cc.id!==currentUser.id&&cc.id!==myProfile?.partner_id);
+  const _seen=new Set();
+  const all=allCouples.filter(cc=>{
+    if (cc.id===currentUser.id||cc.id===myProfile?.partner_id) return false;
+    if (cc.partner_id && _seen.has(cc.partner_id)) return false;
+    _seen.add(cc.id);
+    return true;
+  });
   const filtered=all.filter(cc=>{
     if (vibe==='all') return true;
     if (vibe==='hot') return effectiveStatus(cc)==='hot';
@@ -2298,6 +2267,10 @@ async function saveProfile() {
   const {error} = await sb.from('profiles').update({name,partner_name:partnerName,role_him:roleHim,role_her:roleHer,city,vibes:newVibesArr,age_him:ageHim,age_her:ageHer,together_since:together,bio,has_kids:hasKids,looking_for:lookingFor}).eq('id',currentUser.id);
   if (btn){btn.disabled=false;btn.textContent=btn.dataset.orig||'שמור שינויים ✅';}
   if (error) {err.textContent='😕 לא הצלחנו לשמור — בדקו את החיבור ונסו שוב';return;}
+  // סנכרן שדות משותפים לפרטנר (לא שמות/גיל — אלו אישיים)
+  if (myProfile?.partner_id) {
+    await sb.from('profiles').update({city,vibes:newVibesArr,together_since:together,bio,has_kids:hasKids,looking_for:lookingFor}).eq('id',myProfile.partner_id);
+  }
   myProfile={...myProfile,name,partner_name:partnerName,role_him:roleHim,role_her:roleHer,city,vibes:newVibesArr,age_him:ageHim,age_her:ageHer,together_since:together,bio,has_kids:hasKids,looking_for:lookingFor};
   err.textContent=''; showToast('פרופיל עודכן! ✅'); navTo('main');
 }
@@ -2443,6 +2416,9 @@ async function confirmCrop() {
     const {data:{publicUrl}} = sb.storage.from('Photos').getPublicUrl(path);
     const cacheBustedUrl = `${publicUrl}?v=${Date.now()}`;
     await sb.from('profiles').update({photo_url:cacheBustedUrl}).eq('id',currentUser.id);
+    if (myProfile?.partner_id) {
+      await sb.from('profiles').update({photo_url:cacheBustedUrl}).eq('id',myProfile.partner_id);
+    }
     myProfile={...myProfile, photo_url:cacheBustedUrl};
     const preview = document.getElementById('profile-photo-preview');
     preview.innerHTML=`<img src="${cacheBustedUrl}" style="width:100%;height:100%;object-fit:cover"/>`;
@@ -2493,8 +2469,6 @@ function showScreen(name) {
 function initNav() { document.getElementById('bottom-nav').style.display='flex'; }
 
 function navTo(name) {
-  const _sc = document.getElementById('starter-card');
-  if (name !== 'main') { window._forceShowStarter = false; if (_sc) _sc.style.display = 'none'; }
   if (name==='profile') {openProfile();return;}
   if (name==='feed') {showScreen('feed');document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav===name));loadFeed();return;}
   if (name==='chats') {showScreen('chats');document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav===name));const cb=document.getElementById('chats-badge');if(cb)cb.style.display='none';loadChats();return;}
@@ -2505,7 +2479,6 @@ function navTo(name) {
   const navIcon = document.querySelector('[data-nav="'+name+'"] .nav-icon');
   if (navIcon) { navIcon.style.transform='scale(1.35)'; setTimeout(()=>navIcon.style.transform='',220); }
   if (name==='main'&&mapInstance) setTimeout(()=>mapInstance.invalidateSize(),100);
-  if (name==='main') renderStarterCard();
 }
 
 
@@ -2893,7 +2866,6 @@ function openFullProfile() {
   closePanel();
   showScreen('full-profile');
   document.getElementById('bottom-nav').style.display = 'none';
-  { const _sc=document.getElementById('starter-card'); if(_sc)_sc.style.display='none'; }
 
   // איפוס כפתורים
   const heartBtn=document.getElementById('fp-heart-btn');
@@ -2939,7 +2911,6 @@ function closeFullProfile() {
   showScreen('main');
   document.getElementById('bottom-nav').style.display = 'flex';
   document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.nav === 'main'));
-  renderStarterCard();
 }
 
 async function toggleFriendHeart() {
@@ -3256,122 +3227,6 @@ function updateHeatmapIfOn() {
 // ═══════════════════════════════════
 // START
 // ═══════════════════════════════════
-
-// ═══════════════════════════════════
-// STARTER CARD (מדריך כניסה)
-// ═══════════════════════════════════
-function starterCardState() {
-  if (!myProfile) return 'hidden';
-  const hasPartner = !!(myProfile.partner_id);
-  // שלב 3 הושלם = onboarding_done ב-DB (לא מתאפס לעולם)
-  const onboardingDone = !!myProfile.onboarding_done;
-  // השלים את כל השלבים?
-  if (hasPartner && onboardingDone) return window._forceShowStarter ? 'done' : 'hidden';
-  // לא השלים — הצג את השלב הנוכחי (גם אם דילג בעבר, כי עדיין חסר שלב)
-  if (hasPartner) return 'step3';
-  return 'step2';
-}
-
-function renderStarterCard() {
-  const state = starterCardState();
-  const card = document.getElementById('starter-card');
-  if (!card) return;
-  if (state === 'hidden') { card.style.display = 'none'; return; }
-
-  // הצג רק אם מסך הבית פעיל
-  const mainScreen = document.getElementById('screen-main');
-  if (!mainScreen || !mainScreen.classList.contains('active')) { card.style.display = 'none'; return; }
-
-  card.style.display = 'block';
-  const progress = document.getElementById('sc-progress');
-  const cta = document.getElementById('sc-cta');
-  const s2 = document.getElementById('sc-step2');
-  const s2n = document.getElementById('sc-step2-num');
-  const s2t = document.getElementById('sc-step2-text');
-  const s3 = document.getElementById('sc-step3');
-  const s3n = document.getElementById('sc-step3-num');
-  const s3t = document.getElementById('sc-step3-text');
-
-  if (state === 'step2') {
-    progress.style.width = '33%';
-    s2.style.cssText = 'flex:1;border-radius:10px;padding:8px 5px;text-align:center;background:rgba(255,75,110,0.1);border:1px solid rgba(255,75,110,0.4);box-shadow:0 0 14px rgba(255,75,110,0.12)';
-    s2n.style.color = '#ff4b6e'; s2n.textContent = '● שלב 2';
-    s2t.style.color = 'rgba(255,255,255,0.85)'; s2t.innerHTML = 'חיבור<br/>בן/בת זוג';
-    s3.style.cssText = 'flex:1;border-radius:10px;padding:8px 5px;text-align:center;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);opacity:0.55';
-    s3n.style.color = '#666688'; s3n.textContent = 'שלב 3';
-    s3t.style.color = '#666688'; s3t.innerHTML = 'פרסמו<br/>אירוע';
-    cta.textContent = '💑 שלחו קוד לבן/בת הזוג';
-    cta.style.background = 'linear-gradient(135deg,#ff4b6e,#ff9f43)';
-    cta.style.color = 'white';
-  }
-
-  if (state === 'step3') {
-    progress.style.width = '66%';
-    s2.style.cssText = 'flex:1;border-radius:10px;padding:8px 5px;text-align:center;background:rgba(29,209,161,0.08);border:1px solid rgba(29,209,161,0.25)';
-    s2n.style.color = '#1dd1a1'; s2n.textContent = '✓ שלב 2';
-    s2t.style.color = 'rgba(29,209,161,0.8)'; s2t.innerHTML = 'זוג<br/>מחובר!';
-    s3.style.cssText = 'flex:1;border-radius:10px;padding:8px 5px;text-align:center;background:rgba(255,75,110,0.1);border:1px solid rgba(255,75,110,0.4);box-shadow:0 0 14px rgba(255,75,110,0.12);opacity:1';
-    s3n.style.color = '#ff4b6e'; s3n.textContent = '● שלב 3';
-    s3t.style.color = 'rgba(255,255,255,0.85)'; s3t.innerHTML = 'פרסמו<br/>אירוע';
-    cta.textContent = '➕ פרסמו אירוע ראשון 🗺️';
-    cta.style.background = 'linear-gradient(135deg,#1dd1a1,#00b894)';
-    cta.style.color = '#06060c';
-  }
-
-  if (state === 'done') {
-    progress.style.width = '100%';
-    progress.style.background = '#1dd1a1';
-    card.style.background = 'rgba(29,209,161,0.08)';
-    card.style.borderTop = '1px solid rgba(29,209,161,0.2)';
-    s2.style.cssText = 'flex:1;border-radius:10px;padding:8px 5px;text-align:center;background:rgba(29,209,161,0.08);border:1px solid rgba(29,209,161,0.25)';
-    s2n.style.color = '#1dd1a1'; s2n.textContent = '✓ שלב 2';
-    s2t.style.color = 'rgba(29,209,161,0.8)'; s2t.innerHTML = 'זוג<br/>מחובר';
-    s3.style.cssText = 'flex:1;border-radius:10px;padding:8px 5px;text-align:center;background:rgba(29,209,161,0.08);border:1px solid rgba(29,209,161,0.25);opacity:1';
-    s3n.style.color = '#1dd1a1'; s3n.textContent = '✓ שלב 3';
-    s3t.style.color = 'rgba(29,209,161,0.8)'; s3t.innerHTML = 'אירוע<br/>פורסם';
-    const title = document.getElementById('sc-title');
-    if (title) title.innerHTML = '🎉 <span style="color:#1dd1a1">מוכנים לפעולה!</span>';
-    cta.style.display = 'none';
-  } else {
-    // ודא שהכפתור גלוי במצבים האחרים + אפס עיצוב כרטיס
-    cta.style.display = 'block';
-    card.style.background = '#13131f';
-    card.style.borderTop = '1px solid rgba(255,255,255,0.1)';
-    const title = document.getElementById('sc-title');
-    if (title) title.innerHTML = '🚀 <span>מתחילים</span>';
-  }
-}
-
-function starterCtaClick() {
-  const state = starterCardState();
-  if (state === 'step2') {
-    navTo('profile');
-    setTimeout(() => {
-      const el = document.getElementById('profile-connect-code-section');
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 300);
-  } else if (state === 'step3') {
-    openEventModal();
-  }
-}
-
-function dismissStarterCard() {
-  const card = document.getElementById('starter-card');
-  if (card) card.style.display = 'none';
-  window._forceShowStarter = false;
-}
-
-function resetStarterCard() {
-  window._forceShowStarter = true;
-  // עבור למסך הבית ידנית בלי navTo (שמסתיר)
-  showScreen('main');
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.nav === 'main'));
-  document.getElementById('bottom-nav').style.display = 'flex';
-  if (mapInstance) setTimeout(() => mapInstance.invalidateSize(), 100);
-  setTimeout(() => renderStarterCard(), 250);
-}
-
-
 _obInitSwipe();
 init();
 </script>
