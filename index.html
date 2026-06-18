@@ -2485,7 +2485,7 @@ function initNav() { document.getElementById('bottom-nav').style.display='flex';
 
 function navTo(name) {
   const _sc = document.getElementById('starter-card');
-  if (_sc && name !== 'main') _sc.style.display = 'none';
+  if (name !== 'main') { window._forceShowStarter = false; if (_sc) _sc.style.display = 'none'; }
   if (name==='profile') {openProfile();return;}
   if (name==='feed') {showScreen('feed');document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav===name));loadFeed();return;}
   if (name==='chats') {showScreen('chats');document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav===name));const cb=document.getElementById('chats-badge');if(cb)cb.style.display='none';loadChats();return;}
@@ -3253,10 +3253,13 @@ function updateHeatmapIfOn() {
 // ═══════════════════════════════════
 function starterCardState() {
   if (!myProfile) return 'hidden';
-  if (localStorage.getItem('double_starter_dismissed_' + currentUser?.id)) return 'hidden';
   const hasPartner = !!(myProfile.partner_id);
   const hasEverPublished = !!(myProfile.event_expires_at || myProfile._partnerHasEvent);
-  if (hasPartner && hasEverPublished) return 'hidden';
+  const allDone = hasPartner && hasEverPublished;
+  // אם גמר הכל: הצג 'done' רק בלחיצה מפורשת על "הצג מדריך"
+  if (allDone) return window._forceShowStarter ? 'done' : 'hidden';
+  // אם דילג: הסתר (אלא אם לחץ "הצג מדריך")
+  if (localStorage.getItem('double_starter_dismissed_' + currentUser?.id) && !window._forceShowStarter) return 'hidden';
   if (hasPartner) return 'step3';
   return 'step2';
 }
@@ -3306,6 +3309,29 @@ function renderStarterCard() {
     cta.style.background = 'linear-gradient(135deg,#1dd1a1,#00b894)';
     cta.style.color = '#06060c';
   }
+
+  if (state === 'done') {
+    progress.style.width = '100%';
+    progress.style.background = '#1dd1a1';
+    card.style.background = 'rgba(29,209,161,0.08)';
+    card.style.borderTop = '1px solid rgba(29,209,161,0.2)';
+    s2.style.cssText = 'flex:1;border-radius:10px;padding:8px 5px;text-align:center;background:rgba(29,209,161,0.08);border:1px solid rgba(29,209,161,0.25)';
+    s2n.style.color = '#1dd1a1'; s2n.textContent = '✓ שלב 2';
+    s2t.style.color = 'rgba(29,209,161,0.8)'; s2t.innerHTML = 'זוג<br/>מחובר';
+    s3.style.cssText = 'flex:1;border-radius:10px;padding:8px 5px;text-align:center;background:rgba(29,209,161,0.08);border:1px solid rgba(29,209,161,0.25);opacity:1';
+    s3n.style.color = '#1dd1a1'; s3n.textContent = '✓ שלב 3';
+    s3t.style.color = 'rgba(29,209,161,0.8)'; s3t.innerHTML = 'אירוע<br/>פורסם';
+    const title = document.getElementById('sc-title');
+    if (title) title.innerHTML = '🎉 <span style="color:#1dd1a1">מוכנים לפעולה!</span>';
+    cta.style.display = 'none';
+  } else {
+    // ודא שהכפתור גלוי במצבים האחרים + אפס עיצוב כרטיס
+    cta.style.display = 'block';
+    card.style.background = '#13131f';
+    card.style.borderTop = '1px solid rgba(255,255,255,0.1)';
+    const title = document.getElementById('sc-title');
+    if (title) title.innerHTML = '🚀 <span>מתחילים</span>';
+  }
 }
 
 function starterCtaClick() {
@@ -3324,13 +3350,19 @@ function starterCtaClick() {
 function dismissStarterCard() {
   const card = document.getElementById('starter-card');
   if (card) card.style.display = 'none';
+  window._forceShowStarter = false;
   if (currentUser?.id) localStorage.setItem('double_starter_dismissed_' + currentUser.id, '1');
 }
 
 function resetStarterCard() {
   if (currentUser?.id) localStorage.removeItem('double_starter_dismissed_' + currentUser.id);
-  navTo('main');
-  setTimeout(() => renderStarterCard(), 200);
+  window._forceShowStarter = true;
+  // עבור למסך הבית ידנית בלי navTo (שמסתיר)
+  showScreen('main');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.nav === 'main'));
+  document.getElementById('bottom-nav').style.display = 'flex';
+  if (mapInstance) setTimeout(() => mapInstance.invalidateSize(), 100);
+  setTimeout(() => renderStarterCard(), 250);
 }
 
 
