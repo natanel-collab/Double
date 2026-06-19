@@ -1366,7 +1366,9 @@ function subscribeNewMessages() {
   sb.channel('new-msg:'+currentUser.id)
     .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages'},payload=>{
       const roomId=payload.new?.room_id||'';
-      if (roomId.includes(currentUser.id)&&payload.new?.sender_id!==currentUser.id) {
+      const inMyRoom = roomId.includes(currentUser.id) || (myProfile?.partner_id && roomId.includes(myProfile.partner_id));
+      const fromMyCouple = payload.new?.sender_id===currentUser.id || payload.new?.sender_id===myProfile?.partner_id;
+      if (inMyRoom && !fromMyCouple) {
         const badge=document.getElementById('chats-badge');
         if (badge) {badge.textContent='●';badge.style.display='flex';}
         showToast(`💬 הודעה חדשה מ-${payload.new.sender_name}`);
@@ -1529,13 +1531,20 @@ function stopOtherEventCountdown() {
 // CHAT
 // ═══════════════════════════════════
 function getRoomId(a,b) { return [a,b].sort().join(':'); }
+// כתובת אחידה לשיחת זוג-מול-זוג: שני בני הזוג מקבלים אותו מזהה חדר
+function coupleAnchor(id, partnerId){ return partnerId ? [id, partnerId].sort()[0] : id; }
+function roomFor(otherCouple){
+  const myAnchor = coupleAnchor(currentUser.id, myProfile && myProfile.partner_id);
+  const otherAnchor = coupleAnchor(otherCouple.id, otherCouple.partner_id);
+  return [myAnchor, otherAnchor].sort().join(':');
+}
 
 let currentChatCouple = null;
 async function openChat() {
   closePanel();
   const couple=selectedCouple;
   currentChatCouple=couple;
-  currentRoomId=getRoomId(currentUser.id,couple.id);
+  currentRoomId=roomFor(couple);
   document.getElementById('chat-couple-name').innerHTML=`${escapeHtml(couple.name)} & ${escapeHtml(couple.partner_name||'?')} <span style="color:var(--text3);font-size:15px">›</span>`;
   document.getElementById('chat-emoji').textContent=vibeEmoji((couple.vibes||[])[0]);
   document.getElementById('chat-messages').innerHTML='<div style="text-align:center;color:var(--text3);padding:20px;font-size:13px">טוען...</div>';
@@ -1613,7 +1622,8 @@ async function sendMsg() {
 // CHATS LIST
 // ═══════════════════════════════════
 async function loadChats() {
-  const {data:sent} = await sb.from('messages').select('room_id,text,created_at,sender_name,sender_id').like('room_id',`%${currentUser.id}%`).order('created_at',{ascending:false}).limit(500);
+  const myAnchor = coupleAnchor(currentUser.id, myProfile && myProfile.partner_id);
+  const {data:sent} = await sb.from('messages').select('room_id,text,created_at,sender_name,sender_id').like('room_id',`%${myAnchor}%`).order('created_at',{ascending:false}).limit(500);
   const list=document.getElementById('chats-list');
   if (!sent?.length) {
     list.innerHTML='<div style="text-align:center;padding:50px 24px"><div style="font-size:52px;margin-bottom:14px">💬</div><div style="font-family:\'Syne\',sans-serif;font-size:18px;font-weight:800;margin-bottom:8px">אין צ\u0027אטים עדיין</div><div style="font-size:13px;color:var(--text3);line-height:1.6;margin-bottom:20px">שלחו Double Shake לזוג, וכשהוא יקבל — תוכלו להתחיל לשוחח כאן!</div><button onclick="navTo(\'main\')" style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border:none;border-radius:100px;background:linear-gradient(135deg,var(--pink),var(--pink2));color:white;font-family:\'Heebo\';font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 20px rgba(255,75,110,0.35)">🗺️ מצאו זוגות</button></div>';
@@ -1621,10 +1631,10 @@ async function loadChats() {
   }
   const rooms={};
   sent.forEach(m=>{ if (!rooms[m.room_id]||m.created_at>rooms[m.room_id].created_at) rooms[m.room_id]=m; });
-  const entries=Object.entries(rooms).filter(([r])=>r.includes(currentUser.id));
+  const entries=Object.entries(rooms).filter(([r])=>r.includes(myAnchor));
   const profiles=await Promise.all(entries.map(async ([roomId,lastMsg])=>{
     const ids=roomId.split(':');
-    const otherId=ids.find(id=>id!==currentUser.id);
+    const otherId=ids.find(id=>id!==currentUser.id && id!==(myProfile&&myProfile.partner_id));
     if (!otherId) return null;
     const {data:profile} = await sb.from('public_couples').select('*').eq('id',otherId).single();
     return {roomId,lastMsg,profile};
