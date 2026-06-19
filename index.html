@@ -439,6 +439,19 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
     <p class="auth-err" id="reset-err"></p>
   </div>
 </div>
+<div id="screen-verify" class="screen">
+  <div class="auth-logo">דאבל 📬</div>
+  <p class="auth-tagline">כמעט סיימתם!</p>
+  <div class="auth-box" style="text-align:center">
+    <div style="font-size:46px;margin:6px 0 12px">📬</div>
+    <p style="font-size:14px;line-height:1.6;margin-bottom:6px">שלחנו מייל אישור אל</p>
+    <p style="font-weight:800;color:var(--pink);margin-bottom:14px" id="verify-email-addr" dir="ltr"></p>
+    <p style="font-size:13px;opacity:0.75;line-height:1.6;margin-bottom:18px">לחצו על הקישור שבמייל כדי להפעיל את החשבון, ואז התחברו. (בדקו גם בספאם)</p>
+    <button class="btn-primary" onclick="resendVerify()">שליחת המייל שוב</button>
+    <p class="auth-err" id="verify-msg"></p>
+    <div style="text-align:center;margin-top:10px"><span onclick="switchAuthTab('login');showScreen('auth')" style="color:var(--pink);font-size:13px;font-weight:700;cursor:pointer">חזרה לכניסה</span></div>
+  </div>
+</div>
 <div id="screen-setup" class="screen scroll-screen" style="padding:calc(var(--safe-top) + 24px) 24px 80px">
   <div style="font-family:'Syne';font-size:26px;font-weight:800;margin-bottom:6px">בואו נכיר אתכם 👋</div>
   <p style="color:var(--text2);font-size:14px;margin-bottom:28px;line-height:1.5">מלאו כמה פרטים כדי שזוגות אחרים יוכלו להכיר אתכם</p>
@@ -1122,6 +1135,17 @@ async function submitNewPassword() {
   history.replaceState(null,'',location.pathname);
   await loadMyProfile();
 }
+async function resendVerify() {
+  const email=document.getElementById('verify-email-addr').textContent.trim();
+  const msg=document.getElementById('verify-msg');
+  if (!email) return;
+  const btn=document.querySelector('#screen-verify .btn-primary');
+  btn.disabled=true; btn.textContent='שולח...';
+  const {error}=await sb.auth.resend({type:'signup',email});
+  btn.disabled=false; btn.textContent='שליחת המייל שוב';
+  if (error) {msg.style.color='var(--pink)';msg.textContent='שגיאה — נסו שוב בעוד רגע';return;}
+  msg.style.color='#1dd1a1'; msg.textContent='📧 המייל נשלח שוב';
+}
 async function doRegister() {
   const name=document.getElementById('reg-name').value.trim();
   const email=document.getElementById('reg-email').value.trim();
@@ -1143,6 +1167,13 @@ async function doRegister() {
     return;
   }
   currentUser=data.user;
+  if (!data.session) {
+    // אימות אימייל מופעל — אין גישה עד אישור. הפרופיל ייווצר בכניסה הראשונה אחרי האישור.
+    btn.disabled=false; btn.textContent='יצירת חשבון';
+    document.getElementById('verify-email-addr').textContent=email;
+    showScreen('verify');
+    return;
+  }
   const coupleCode=generateCoupleCode();
   await sb.from('profiles').upsert({id:currentUser.id,name});
   await sb.from('couple_codes').upsert({user_id:currentUser.id,code:coupleCode});
@@ -1235,6 +1266,9 @@ async function saveSetup() {
     lng:34.78+(Math.random()-0.5)*0.05,
   });
   if (error) {err.textContent=error.message;return;}
+  // ודא שיש קוד-זוג (למשתמשים שנוצרו אחרי אימות אימייל — הקוד לא נוצר בהרשמה)
+  const {data:existingCode}=await sb.from('couple_codes').select('code').eq('user_id',currentUser.id).maybeSingle();
+  if (!existingCode) await sb.from('couple_codes').upsert({user_id:currentUser.id,code:generateCoupleCode()});
   await loadMyProfile();
 }
 
