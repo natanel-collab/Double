@@ -384,6 +384,12 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
       <div class="field-group"><label class="field-label">סיסמה</label><input class="field-input" type="password" id="login-pass" placeholder="••••••••" dir="ltr"/></div>
       <button class="btn-primary" onclick="doLogin()">כניסה</button>
       <p class="auth-err" id="login-err"></p>
+      <div style="text-align:center;margin-top:6px"><span onclick="showForgotPassword()" style="color:var(--pink);font-size:13px;font-weight:700;cursor:pointer">שכחתי סיסמה</span></div>
+      <div id="login-reset-row" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.08)">
+        <div class="field-group"><label class="field-label">אימייל לאיפוס</label><input class="field-input" type="email" id="reset-email" placeholder="your@email.com" dir="ltr"/></div>
+        <button class="btn-primary" onclick="sendResetEmail()">שליחת קישור איפוס</button>
+        <p class="auth-err" id="reset-msg"></p>
+      </div>
     </div>
     <div id="auth-register" style="display:none">
       <div class="field-group"><label class="field-label">שם פרטי</label><input class="field-input" type="text" id="reg-name" placeholder="השם שלך"/></div>
@@ -423,6 +429,16 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
 </div>
 
 <!-- SETUP -->
+<div id="screen-reset" class="screen">
+  <div class="auth-logo">דאבל 🔑</div>
+  <p class="auth-tagline">בחרו סיסמה חדשה לחשבון</p>
+  <div class="auth-box">
+    <div class="field-group"><label class="field-label">סיסמה חדשה</label><input class="field-input" type="password" id="new-pass" placeholder="לפחות 6 תווים" dir="ltr"/></div>
+    <div class="field-group"><label class="field-label">אימות סיסמה</label><input class="field-input" type="password" id="new-pass2" placeholder="הקלידו שוב" dir="ltr"/></div>
+    <button class="btn-primary" onclick="submitNewPassword()">שמירת סיסמה והתחברות</button>
+    <p class="auth-err" id="reset-err"></p>
+  </div>
+</div>
 <div id="screen-setup" class="screen scroll-screen" style="padding:calc(var(--safe-top) + 24px) 24px 80px">
   <div style="font-family:'Syne';font-size:26px;font-weight:800;margin-bottom:6px">בואו נכיר אתכם 👋</div>
   <p style="color:var(--text2);font-size:14px;margin-bottom:28px;line-height:1.5">מלאו כמה פרטים כדי שזוגות אחרים יוכלו להכיר אתכם</p>
@@ -914,7 +930,11 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
 // ═══════════════════════════════════
 const SUPABASE_URL  = 'https://qctphnkpdbhsufmmdkiz.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFjdHBobmtwZGJoc3VmbW1ka2l6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5MzU5ODcsImV4cCI6MjA5NjUxMTk4N30.iNEiIeRxiwPiZ6Yx5kLDKV1bl3TFjtIiDsVgHBlISuM';
+// זיהוי חזרה מקישור איפוס סיסמה — חייב לקרות לפני שהלקוח מעבד ומנקה את ה-hash
+const __isRecoveryLink = location.hash.includes('type=recovery');
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+// גיבוי: אם Supabase מזהה חזרה מאיפוס סיסמה — הצג את מסך הסיסמה החדשה
+sb.auth.onAuthStateChange((event)=>{ if (event==='PASSWORD_RECOVERY') { hideLoading(); showScreen('reset'); } });
 
 // ═══════════════════════════════════
 // CONSTANTS
@@ -1006,6 +1026,8 @@ function hideLoading() { document.getElementById('loading').style.display='none'
 // ═══════════════════════════════════
 async function init() {
   const safetyTimer = setTimeout(()=>{hideLoading();showScreen('auth');},6000);
+  // חזרה מקישור איפוס סיסמה — הצג מסך בחירת סיסמה חדשה במקום להיכנס לאפליקציה
+  if (__isRecoveryLink) { clearTimeout(safetyTimer); hideLoading(); showScreen('reset'); return; }
   const {data:{session}} = await sb.auth.getSession();
   clearTimeout(safetyTimer);
   if (session) {
@@ -1065,6 +1087,39 @@ async function doLogin() {
   btn.disabled=false; btn.textContent='כניסה';
   if (error) {document.getElementById('login-err').textContent=friendlyAuthError(error.message);return;}
   currentUser=(await sb.auth.getUser()).data.user;
+  await loadMyProfile();
+}
+
+function showForgotPassword() {
+  const row=document.getElementById('login-reset-row');
+  row.style.display='block';
+  const e=document.getElementById('login-email').value.trim();
+  if (e) document.getElementById('reset-email').value=e;
+  document.getElementById('reset-email').focus();
+}
+async function sendResetEmail() {
+  const email=document.getElementById('reset-email').value.trim();
+  const msg=document.getElementById('reset-msg');
+  if (!email) {msg.style.color='var(--pink)';msg.textContent='נא להזין אימייל';return;}
+  const btn=document.querySelector('#login-reset-row .btn-primary');
+  btn.disabled=true; btn.textContent='שולח...';
+  const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin});
+  btn.disabled=false; btn.textContent='שליחת קישור איפוס';
+  if (error) {msg.style.color='var(--pink)';msg.textContent='שגיאה — נסו שוב';return;}
+  msg.style.color='#1dd1a1'; msg.textContent='📧 שלחנו קישור לאיפוס — בדקו את המייל';
+}
+async function submitNewPassword() {
+  const p1=document.getElementById('new-pass').value;
+  const p2=document.getElementById('new-pass2').value;
+  const msg=document.getElementById('reset-err');
+  if (p1.length<6) {msg.textContent='הסיסמה חייבת להכיל לפחות 6 תווים';return;}
+  if (p1!==p2) {msg.textContent='הסיסמאות אינן תואמות';return;}
+  const btn=document.querySelector('#screen-reset .btn-primary');
+  btn.disabled=true; btn.textContent='שומר...';
+  const {error}=await sb.auth.updateUser({password:p1});
+  if (error) {btn.disabled=false; btn.textContent='שמירת סיסמה והתחברות'; msg.textContent='שגיאה בשמירה — נסו שוב';return;}
+  currentUser=(await sb.auth.getUser()).data.user;
+  history.replaceState(null,'',location.pathname);
   await loadMyProfile();
 }
 async function doRegister() {
