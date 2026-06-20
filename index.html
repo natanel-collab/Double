@@ -1327,6 +1327,16 @@ async function loadCouples() {
       allCouples = allCouples.filter(c => c.id !== partner.id);
     }
   }
+  // הסתר זוגות חסומים (דו-כיווני) + זוגות שדיווחתי עליהם (חד-כיווני).
+  // הגנתי: אם הטבלאות עדיין לא קיימות / שגיאה — פשוט לא מסננים, המפה נטענת רגיל.
+  try {
+    const hiddenIds = new Set();
+    const {data:blocks} = await sb.from('blocks').select('blocker_id,blocked_id');
+    (blocks||[]).forEach(b => hiddenIds.add(b.blocker_id===currentUser.id ? b.blocked_id : b.blocker_id));
+    const {data:reps} = await sb.from('reports').select('reported_id').eq('reporter_id',currentUser.id);
+    (reps||[]).forEach(r => hiddenIds.add(r.reported_id));
+    if (hiddenIds.size) allCouples = allCouples.filter(c => !hiddenIds.has(c.id));
+  } catch(e) { /* טבלאות דיווח/חסימה עדיין לא קיימות — דלג על סינון */ }
   renderMarkers(); updateLiveCount();
 }
 
