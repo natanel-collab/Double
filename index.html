@@ -101,7 +101,7 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
 .panel-header{display:flex;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid var(--border)}
 .panel-close{background:none;border:none;color:var(--text3);cursor:pointer;font-size:22px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:8px;transition:all 0.15s}
 .panel-overflow{margin-inline-start:auto;background:var(--bg3);border:1px solid var(--border2);color:var(--text2);cursor:pointer;font-size:18px;font-weight:800;width:34px;height:34px;display:none;align-items:center;justify-content:center;border-radius:50%;line-height:1}
-.safety-overlay{position:fixed;inset:0;background:rgba(7,7,15,.6);z-index:120;display:none;align-items:flex-end;backdrop-filter:blur(2px)}
+.safety-overlay{position:fixed;inset:0;background:rgba(7,7,15,.6);z-index:850;display:none;align-items:flex-end;backdrop-filter:blur(2px)}
 .safety-overlay.open{display:flex}
 .safety-sheet{width:100%;background:var(--bg2);border-top:1px solid var(--border2);border-radius:20px 20px 0 0;padding:10px 14px calc(18px + var(--safe-bot));max-width:520px;margin:0 auto}
 .safety-grip{width:40px;height:4px;border-radius:100px;background:var(--border2);margin:0 auto 12px}
@@ -790,6 +790,7 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
   <div style="display:flex;align-items:center;gap:12px;padding:calc(var(--safe-top) + 14px) 18px 14px;border-bottom:1px solid var(--border);background:var(--bg2);position:sticky;top:0;z-index:10">
     <button class="icon-btn" onclick="closeFullProfile()">←</button>
     <div style="font-family:'Syne';font-weight:700;font-size:17px" id="fp-title">פרופיל הזוג</div>
+    <button class="panel-overflow" id="fp-overflow" style="display:flex" onclick="openSafetySheet()" aria-label="עוד אפשרויות">⋯</button>
   </div>
   <div style="padding:20px 18px;display:flex;flex-direction:column;gap:14px;flex:1;overflow-y:auto;padding-bottom:20px" id="fp-body"></div>
   <div style="padding:16px 18px;border-top:1px solid var(--border);background:var(--bg);position:sticky;bottom:0;display:flex;flex-direction:column;gap:8px">
@@ -3077,6 +3078,7 @@ function selectLooking(el) {
 function openFullProfile() {
   if (!selectedCouple) return;
   const c = selectedCouple;
+  _safetyCouple = c;
   const meta = STATUS_META[effectiveStatus(c)];
 
   document.getElementById('fp-title').textContent = c.name + ' & ' + (c.partner_name||'?');
@@ -3173,6 +3175,7 @@ function openFullProfile() {
 }
 
 function closeFullProfile() {
+  closeSafetySheet();
   showScreen('main');
   document.getElementById('bottom-nav').style.display = 'flex';
   document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.nav === 'main'));
