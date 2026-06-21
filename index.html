@@ -1464,8 +1464,13 @@ async function loadCouples() {
   // הגנתי: אם הטבלאות עדיין לא קיימות / שגיאה — פשוט לא מסננים, המפה נטענת רגיל.
   try {
     const hiddenIds = new Set();
+    // החסימה היא זוג-מול-זוג: שורה מסתירה את הצד השני אם אני *או בן/בת הזוג שלי* מעורבים
+    const mine = new Set([currentUser.id, myProfile?.partner_id].filter(Boolean));
     const {data:blocks} = await sb.from('blocks').select('blocker_id,blocked_id');
-    (blocks||[]).forEach(b => hiddenIds.add(b.blocker_id===currentUser.id ? b.blocked_id : b.blocker_id));
+    (blocks||[]).forEach(b => {
+      if (mine.has(b.blocker_id)) hiddenIds.add(b.blocked_id);
+      else if (mine.has(b.blocked_id)) hiddenIds.add(b.blocker_id);
+    });
     const {data:reps} = await sb.from('reports').select('reported_id').eq('reporter_id',currentUser.id);
     (reps||[]).forEach(r => hiddenIds.add(r.reported_id));
     _hiddenCoupleIds = hiddenIds; // גלובלי — בשביל סינון ב-real-time
@@ -1843,9 +1848,13 @@ function closeReportPop() {
 // --- Block flow ---
 async function getBlockedIds() {
   const s = new Set();
+  const mine = new Set([currentUser.id, myProfile?.partner_id].filter(Boolean));
   try {
     const {data} = await sb.from('blocks').select('blocker_id,blocked_id');
-    (data||[]).forEach(b => s.add(b.blocker_id===currentUser.id ? b.blocked_id : b.blocker_id));
+    (data||[]).forEach(b => {
+      if (mine.has(b.blocker_id)) s.add(b.blocked_id);
+      else if (mine.has(b.blocked_id)) s.add(b.blocker_id);
+    });
   } catch(e) {}
   return s;
 }
