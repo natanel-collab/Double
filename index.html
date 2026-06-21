@@ -656,6 +656,7 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
   <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
     <button class="icon-btn" onclick="navTo('main')" style="flex-shrink:0">←</button>
     <div style="font-family:'Syne';font-size:22px;font-weight:800">הפרופיל שלנו 👫</div>
+    <button class="icon-btn" onclick="openSettingsSheet()" aria-label="הגדרות חשבון" style="flex-shrink:0;margin-inline-start:auto">⚙️</button>
   </div>
   <div id="active-event-card" style="display:none;background:rgba(255,75,110,0.12);border:1px solid rgba(255,75,110,0.35);border-radius:16px;padding:16px;margin-bottom:16px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
@@ -785,21 +786,7 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
     <div id="reviews-received-list"></div>
   </div>
 
-  <button class="btn-secondary" style="margin-top:4px;display:flex;align-items:center;gap:10px;justify-content:flex-start" onclick="openBlockedScreen()">
-    <span>🚫</span> זוגות חסומים
-    <span id="blocked-count-pill" style="display:none;background:var(--bg3);border:1px solid var(--border2);color:var(--text2);font-size:11px;font-weight:800;padding:2px 9px;border-radius:100px"></span>
-    <span style="color:var(--text3);font-size:18px;margin-inline-start:auto">‹</span>
-  </button>
-  <button class="btn-secondary" style="margin-top:4px;color:var(--pink);border-color:rgba(255,75,110,0.3)" onclick="signOut()">🚪 יציאה מהחשבון</button>
-  <button class="btn-secondary" style="margin-top:4px;color:#e23b3b;border-color:rgba(226,59,59,0.3);display:flex;align-items:center;gap:8px;justify-content:flex-start" onclick="openDeleteSheet()">🗑️ מחיקת חשבון</button>
-  <div class="legal-footer" style="margin-top:8px">
-    <div class="legal-footer-links">
-      <a href="/privacy.html" target="_blank">פרטיות</a>
-      <a href="/terms.html" target="_blank">תנאי שימוש</a>
-      <a href="/accessibility.html" target="_blank">נגישות</a>
-    </div>
-    <div class="legal-copy">© 2025 Double — נתנאל בנטולילה</div>
-  </div>
+  <!-- ניהול חשבון עבר ל-sheet ההגדרות (⚙️ בכותרת מסך הפרופיל). -->
 </div>
 
 <!-- Bottom Nav -->
@@ -953,6 +940,51 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- ===== Settings sheet (הגדרות חשבון) ===== -->
+<style>
+  #settings-overlay .safety-sheet{padding:8px 18px calc(var(--safe-bot) + 22px);max-height:88%;overflow-y:auto}
+  .set-h3{font-family:'Syne';font-weight:800;font-size:20px;margin:2px 2px 10px;display:flex;align-items:center;gap:8px}
+  .set-cat{color:var(--text3);font-size:11px;font-weight:800;letter-spacing:.6px;margin:14px 4px 7px}
+  .set-cat:first-of-type{margin-top:2px}
+  .sline{display:flex;align-items:center;gap:11px;width:100%;padding:13px 15px;border-radius:12px;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:'Heebo';font-weight:600;font-size:14.5px;cursor:pointer;margin-bottom:7px;text-align:right;text-decoration:none;box-sizing:border-box}
+  .sline .chev{color:var(--text3);font-size:17px;margin-inline-start:auto}
+  .sline.display{cursor:default}
+  .sline.display .val{color:var(--text2);font-size:13px;font-weight:600;margin-inline-start:auto;direction:ltr;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .sline.logout{color:var(--pink)}
+  .sline.danger{color:#e23b3b;border-color:rgba(226,59,59,0.28);background:rgba(226,59,59,0.05)}
+  .set-pill{background:var(--bg);border:1px solid var(--border2);color:var(--text2);font-size:11px;font-weight:800;padding:2px 9px;border-radius:100px}
+  .set-code{direction:ltr;color:var(--pink);font-weight:800;letter-spacing:1px;margin-inline-start:auto}
+  .set-sep{height:1px;background:var(--border);margin:14px 2px}
+  .set-hint{font-size:11px;color:var(--text3);margin:-2px 4px 4px;line-height:1.5}
+</style>
+<div class="safety-overlay" id="settings-overlay" onclick="if(event.target===this)closeSettingsSheet()">
+  <div class="safety-sheet">
+    <div class="safety-grip"></div>
+    <div class="set-h3">⚙️ הגדרות חשבון</div>
+
+    <div class="set-cat">החשבון</div>
+    <div class="sline display"><span>📧</span> המייל שלך <span class="val" id="set-email">—</span></div>
+    <div id="set-code-row" style="display:none">
+      <div class="sline" style="border-style:dashed" onclick="copyProfileInvite()"><span>🔗</span> קוד הזוג שלך <span class="set-code" id="set-couple-code">—</span></div>
+      <div class="set-hint">מוצג רק עד שבן/בת הזוג מאמת/ת — אחר כך נעלם. לחצו להעתקה.</div>
+    </div>
+
+    <div class="set-cat">בטיחות</div>
+    <button class="sline" onclick="closeSettingsSheet();openBlockedScreen()"><span>🚫</span> זוגות חסומים <span class="set-pill" id="blocked-count-pill" style="display:none"></span><span class="chev">‹</span></button>
+
+    <div class="set-cat">מידע משפטי</div>
+    <a class="sline" href="/terms.html" target="_blank" rel="noopener"><span>📄</span> תנאי שימוש <span class="chev">‹</span></a>
+    <a class="sline" href="/privacy.html" target="_blank" rel="noopener"><span>🔒</span> מדיניות פרטיות <span class="chev">‹</span></a>
+    <a class="sline" href="/accessibility.html" target="_blank" rel="noopener"><span>♿</span> נגישות <span class="chev">‹</span></a>
+    <a class="sline" href="mailto:natanel0998@gmail.com?subject=Double%20%E2%80%94%20%D7%A6%D7%95%D7%A8%20%D7%A7%D7%A9%D7%A8"><span>✉️</span> צור קשר / תמיכה <span class="chev">‹</span></a>
+
+    <div class="set-sep"></div>
+    <button class="sline logout" onclick="closeSettingsSheet();signOut()"><span>🚪</span> יציאה מהחשבון</button>
+    <button class="sline danger" onclick="closeSettingsSheet();openDeleteSheet()"><span>🗑️</span> מחיקת חשבון</button>
+    <div style="text-align:center;font-size:11px;color:var(--text3);margin-top:14px">© 2025 Double — נתנאל בנטולילה</div>
   </div>
 </div>
 
@@ -1425,6 +1457,25 @@ function openDeleteSheet() {
 }
 function closeDeleteSheet() {
   document.getElementById('delete-overlay').classList.remove('open');
+}
+// ===== הגדרות חשבון (sheet) =====
+function openSettingsSheet() {
+  // מייל — נשלף מ-currentUser (auth), כי email הוסר מ-profiles
+  const email = (currentUser && currentUser.email) ? currentUser.email : '—';
+  document.getElementById('set-email').textContent = email;
+  // קוד הזוג — מוצג רק כשעדיין לא מאומת זוג
+  const codeRow = document.getElementById('set-code-row');
+  if (myProfile && !myProfile.partner_confirmed && myProfile.couple_code) {
+    document.getElementById('set-couple-code').textContent = myProfile.couple_code;
+    codeRow.style.display = '';
+  } else {
+    codeRow.style.display = 'none';
+  }
+  refreshBlockedCount();
+  document.getElementById('settings-overlay').classList.add('open');
+}
+function closeSettingsSheet() {
+  document.getElementById('settings-overlay').classList.remove('open');
 }
 function deleteToConfirm() {
   document.getElementById('delete-warn').classList.add('is-hidden');
