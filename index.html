@@ -135,6 +135,12 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
 .rep-pop-card p{font-size:13px;color:var(--text2);margin-top:8px;line-height:1.6}
 .rep-pop-pill{display:inline-block;margin-top:12px;font-size:11px;font-weight:700;color:var(--green);background:rgba(29,209,161,.1);border:1px solid rgba(29,209,161,.28);padding:5px 11px;border-radius:100px}
 .rep-pop-close{width:100%;margin-top:18px;padding:12px;border:none;border-radius:12px;background:var(--pink);color:#fff;font-family:'Heebo';font-weight:800;font-size:14px;cursor:pointer}
+.blk-warn{font-size:13px;color:var(--text2);line-height:1.6;margin:4px 0 16px}
+.blk-icon{font-size:34px;text-align:center;margin-bottom:6px}
+.blk-actions{display:flex;gap:8px}
+.blk-cancel{flex:1;padding:12px;border:1px solid var(--border2);border-radius:12px;background:transparent;color:var(--text2);font-family:'Heebo';font-weight:700;font-size:14px;cursor:pointer}
+.blk-danger{flex:1.5;padding:12px;border:none;border-radius:12px;background:#e23b3b;color:#fff;font-family:'Heebo';font-weight:800;font-size:14px;cursor:pointer}
+.blk-pop-close{width:100%;margin-top:18px;padding:12px;border:none;border-radius:12px;background:var(--bg3);color:var(--text);font-family:'Heebo';font-weight:800;font-size:14px;cursor:pointer}
 .panel-body{flex:1;overflow-y:auto;padding:20px 18px}
 .couple-hero{background:linear-gradient(135deg,rgba(255,75,110,0.12),rgba(255,159,67,0.08));border:1px solid rgba(255,75,110,0.2);border-radius:18px;padding:24px 20px;text-align:center;margin-bottom:18px}
 .couple-name{font-family:'Syne';font-size:22px;font-weight:800}
@@ -855,7 +861,7 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
     <div class="safety-pane" id="safety-main">
       <div class="safety-title" id="safety-sheet-title">אפשרויות בטיחות</div>
       <button class="safety-item report" onclick="safetyToReport()"><span>🚩</span> דווח על הזוג</button>
-      <button class="safety-item block" onclick="closeSafetySheet()"><span>🚫</span> חסום זוג</button>
+      <button class="safety-item block" onclick="safetyToBlock()"><span>🚫</span> חסום זוג</button>
       <button class="safety-cancel" onclick="closeSafetySheet()">ביטול</button>
     </div>
 
@@ -878,6 +884,20 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
       </div>
     </div>
 
+    <!-- View 3: block confirm -->
+    <div class="safety-pane is-hidden" id="safety-block">
+      <div class="rep-head">
+        <button class="rep-back" onclick="safetyToMain()" aria-label="חזרה">→</button>
+        <div class="rep-title" id="blk-title">חסימה</div>
+      </div>
+      <div class="blk-icon">🚫</div>
+      <div class="blk-warn" id="blk-warn">לא תראו זה את זה במפה, בפיד ובצ'אטים — בשני הכיוונים. צ'אטים, שייקים וחברויות קיימים יימחקו. אפשר לבטל חסימה בהגדרות.</div>
+      <div class="blk-actions">
+        <button class="blk-cancel" onclick="safetyToMain()">ביטול</button>
+        <button class="blk-danger" id="blk-confirm" onclick="confirmBlockCouple()">חסימה</button>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -890,6 +910,17 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
     <span class="rep-pop-pill">🙈 הוסתר ממך אוטומטית</span>
     <div style="font-size:11px;color:var(--text3);margin-top:10px">אפשר לבטל את ההסתרה בהגדרות ← זוגות חסומים</div>
     <button class="rep-pop-close" onclick="closeReportPop()">סגירה</button>
+  </div>
+</div>
+
+<!-- Block result popup -->
+<div class="rep-pop" id="block-pop">
+  <div class="rep-pop-card">
+    <div class="em">🚫</div>
+    <h3>הזוג נחסם</h3>
+    <p>הוסר מהמפה, מהפיד ומרשימת הצ'אטים — בשני הכיוונים. צ'אטים ושייקים קיימים נמחקו.</p>
+    <div style="font-size:11px;color:var(--text3);margin-top:10px">אפשר לבטל חסימה בהגדרות ← זוגות חסומים</div>
+    <button class="blk-pop-close" onclick="closeBlockPop()">הבנתי</button>
   </div>
 </div>
 
@@ -1708,11 +1739,19 @@ function safetyToReport() {
   syncReportSubmit();
 }
 function safetyToMain() {
-  const m = document.getElementById('safety-main'), r = document.getElementById('safety-report');
-  if (!m || !r) return;
-  r.classList.add('is-hidden');
+  const m = document.getElementById('safety-main'), r = document.getElementById('safety-report'), b = document.getElementById('safety-block');
+  if (!m) return;
+  if (r) r.classList.add('is-hidden');
+  if (b) b.classList.add('is-hidden');
   m.classList.remove('is-hidden');
   m.classList.remove('enter-report'); m.classList.add('enter-main');
+}
+function safetyToBlock() {
+  const m = document.getElementById('safety-main'), b = document.getElementById('safety-block');
+  document.getElementById('blk-title').textContent = 'חסימת ' + _coupleLabel(_safetyCouple);
+  m.classList.add('is-hidden');
+  b.classList.remove('is-hidden');
+  b.classList.remove('enter-main'); b.classList.add('enter-report');
 }
 function resetReportForm() {
   document.querySelectorAll('#safety-report .rep-reason').forEach((el,i)=>el.classList.toggle('sel', i===0));
@@ -1769,6 +1808,50 @@ async function submitReport() {
 }
 function closeReportPop() {
   document.getElementById('rep-pop').classList.remove('open');
+}
+
+// --- Block flow ---
+async function getBlockedIds() {
+  const s = new Set();
+  try {
+    const {data} = await sb.from('blocks').select('blocker_id,blocked_id');
+    (data||[]).forEach(b => s.add(b.blocker_id===currentUser.id ? b.blocked_id : b.blocker_id));
+  } catch(e) {}
+  return s;
+}
+async function confirmBlockCouple() {
+  const couple = _safetyCouple;
+  if (!couple) return;
+  const btn = document.getElementById('blk-confirm');
+  if (btn) { btn.disabled = true; btn.style.opacity='0.6'; }
+  try {
+    // 1. רשומת חסימה (upsert למניעת כפילות מול ה-PK)
+    await sb.from('blocks').upsert({blocker_id:currentUser.id, blocked_id:couple.id}, {onConflict:'blocker_id,blocked_id'});
+  } catch(e) {}
+  // 2. ניקוי שקט של קשרים קיימים (שני הכיוונים, שני בני הזוג) — בלי toasts
+  const cids = [couple.id, couple.partner_id].filter(Boolean);
+  for (const cid of cids) {
+    try {
+      await sb.from('shakes').delete().or(`and(from_id.eq.${currentUser.id},to_id.eq.${cid}),and(from_id.eq.${cid},to_id.eq.${currentUser.id})`);
+      await sb.from('friends').delete().or(`and(couple_a.eq.${currentUser.id},couple_b.eq.${cid}),and(couple_a.eq.${cid},couple_b.eq.${currentUser.id})`);
+    } catch(e) {}
+  }
+  // 3. הסתרה מיידית מקומית — ברמת הזוג
+  allCouples = allCouples.filter(c => c.id !== couple.id && c.id !== couple.partner_id && !(c.partner_id && (c.partner_id===couple.id || c.partner_id===couple.partner_id)));
+  renderMarkers(); updateLiveCount();
+  if (document.getElementById('screen-feed')?.classList.contains('active')) renderFeed();
+  // 4. נקה מסכים פתוחים על הזוג
+  closeSafetySheet();
+  if (document.getElementById('screen-full-profile')?.classList.contains('active')) closeFullProfile();
+  closePanel();
+  if (btn) { btn.disabled = false; btn.style.opacity='1'; }
+  // 5. תוצאה
+  document.getElementById('block-pop').classList.add('open');
+}
+function closeBlockPop() {
+  document.getElementById('block-pop').classList.remove('open');
+  // רענן את רשימת הצ'אטים אם פתוחה (הזוג החסום צריך להיעלם משם)
+  if (document.getElementById('screen-chats')?.classList.contains('active')) loadChats();
 }
 
 let _otherEventTimer = null;
@@ -1918,8 +2001,10 @@ async function loadChats() {
     return {roomId,lastMsg,profile};
   }));
   const valid=profiles.filter(Boolean).sort((a,b)=>b.lastMsg.created_at.localeCompare(a.lastMsg.created_at));
-  if (!valid.length) {list.innerHTML='<div style="text-align:center;padding:60px 20px;color:var(--text3)"><div style="font-size:48px">💬</div><div style="margin-top:16px;font-size:15px">אין צ\u0027אטים פעילים</div></div>';return;}
-  list.innerHTML=valid.map(({roomId,lastMsg,profile})=>{
+  const _blocked = await getBlockedIds();
+  const visible = valid.filter(v => v.profile && !(_blocked.has(v.profile.id) || (v.profile.partner_id && _blocked.has(v.profile.partner_id))));
+  if (!visible.length) {list.innerHTML='<div style="text-align:center;padding:60px 20px;color:var(--text3)"><div style="font-size:48px">💬</div><div style="margin-top:16px;font-size:15px">אין צ\u0027אטים פעילים</div></div>';return;}
+  list.innerHTML=visible.map(({roomId,lastMsg,profile})=>{
     if (!profile) return '';
     const photoEl=profile.photo_url
       ?`<img src="${escapeHtml(profile.photo_url)}" style="width:54px;height:54px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,75,110,0.4);flex-shrink:0"/>`
