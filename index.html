@@ -1599,6 +1599,11 @@ function subscribeRealtime() {
       renderMarkers(); updateLiveCount();
       if (payload.eventType==='UPDATE'&&updated.status==='hot') showToast(`${updated.name} מחפשים דאבל! 🔥`);
     }).subscribe();
+
+  // מנוי על חסימות — כדי שזוג חסום ייעלם/יופיע בזמן אמת בלי טעינה מחדש (שני הצדדים)
+  sb.channel('blocks:'+currentUser.id)
+    .on('postgres_changes',{event:'*',schema:'public',table:'blocks'},()=>{ loadCouples(); })
+    .subscribe();
 }
 
 function subscribeNewMessages() {
