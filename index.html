@@ -1141,6 +1141,7 @@ let profileSelectedVibes = [];
 let statusChannel = null;
 let _panelUnmatched = false;
 let _safetyCouple = null;
+let _hiddenCoupleIds = new Set();
 
 // ═══════════════════════════════════
 // HELPERS
@@ -1467,6 +1468,7 @@ async function loadCouples() {
     (blocks||[]).forEach(b => hiddenIds.add(b.blocker_id===currentUser.id ? b.blocked_id : b.blocker_id));
     const {data:reps} = await sb.from('reports').select('reported_id').eq('reporter_id',currentUser.id);
     (reps||[]).forEach(r => hiddenIds.add(r.reported_id));
+    _hiddenCoupleIds = hiddenIds; // גלובלי — בשביל סינון ב-real-time
     if (hiddenIds.size) allCouples = allCouples.filter(c => !hiddenIds.has(c.id) && !(c.partner_id && hiddenIds.has(c.partner_id)));
   } catch(e) { /* טבלאות דיווח/חסימה עדיין לא קיימות — דלג על סינון */ }
   renderMarkers(); updateLiveCount();
@@ -1583,6 +1585,12 @@ function subscribeRealtime() {
       const updated=payload.new;
       if (!updated||updated.id===currentUser.id) return;
       if (updated.id===myProfile?.partner_id) return;
+      // אל תוסיף/תרנדר זוג חסום או מדווח (real-time עוקף את הסינון של loadCouples)
+      if (_hiddenCoupleIds.has(updated.id) || (updated.partner_id && _hiddenCoupleIds.has(updated.partner_id))) {
+        const idx=allCouples.findIndex(c=>c.id===updated.id);
+        if (idx>-1) { allCouples.splice(idx,1); renderMarkers(); updateLiveCount(); }
+        return;
+      }
       const idx=allCouples.findIndex(c=>c.id===updated.id);
       if (payload.eventType==='DELETE'||(updated.status==='cold'||!updated.status)) {
         if(idx>-1) allCouples.splice(idx,1);
@@ -1813,6 +1821,7 @@ async function submitReport() {
     }
   } catch(e) { /* גם אם ה-insert נכשל — עדיין מסתירים מקומית ומראים אישור */ }
   // הסתרה מיידית מקומית (בלי refetch) — ברמת הזוג: שתי שורות הפרופיל
+  _hiddenCoupleIds.add(couple.id); if (couple.partner_id) _hiddenCoupleIds.add(couple.partner_id);
   allCouples = allCouples.filter(c => c.id !== couple.id && c.id !== couple.partner_id && !(c.partner_id && (c.partner_id===couple.id || c.partner_id===couple.partner_id)));
   renderMarkers(); updateLiveCount();
   if (document.getElementById('screen-feed')?.classList.contains('active')) renderFeed();
@@ -1853,6 +1862,7 @@ async function confirmBlockCouple() {
     } catch(e) {}
   }
   // 3. הסתרה מיידית מקומית — ברמת הזוג
+  _hiddenCoupleIds.add(couple.id); if (couple.partner_id) _hiddenCoupleIds.add(couple.partner_id);
   allCouples = allCouples.filter(c => c.id !== couple.id && c.id !== couple.partner_id && !(c.partner_id && (c.partner_id===couple.id || c.partner_id===couple.partner_id)));
   renderMarkers(); updateLiveCount();
   if (document.getElementById('screen-feed')?.classList.contains('active')) renderFeed();
