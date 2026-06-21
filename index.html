@@ -791,6 +791,7 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
     <span style="color:var(--text3);font-size:18px;margin-inline-start:auto">‹</span>
   </button>
   <button class="btn-secondary" style="margin-top:4px;color:var(--pink);border-color:rgba(255,75,110,0.3)" onclick="signOut()">🚪 יציאה מהחשבון</button>
+  <button class="btn-secondary" style="margin-top:4px;color:#e23b3b;border-color:rgba(226,59,59,0.3);display:flex;align-items:center;gap:8px;justify-content:flex-start" onclick="openDeleteSheet()">🗑️ מחיקת חשבון</button>
   <div class="legal-footer" style="margin-top:8px">
     <div class="legal-footer-links">
       <a href="/privacy.html" target="_blank">פרטיות</a>
@@ -911,6 +912,44 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
       <div class="blk-actions">
         <button class="blk-cancel" onclick="safetyToMain()">ביטול</button>
         <button class="blk-danger" id="blk-confirm" onclick="confirmBlockCouple()">חסימה</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Delete account sheet -->
+<div class="safety-overlay" id="delete-overlay" onclick="if(event.target===this)closeDeleteSheet()">
+  <div class="safety-sheet">
+    <div class="safety-grip"></div>
+
+    <!-- Pane 1: warning -->
+    <div class="safety-pane" id="delete-warn">
+      <div class="blk-icon">🗑️</div>
+      <div class="rep-title" style="text-align:center;font-size:18px;margin-bottom:8px">מחיקת חשבון</div>
+      <div class="blk-warn">הפעולה לצמיתות ואי אפשר לבטל אותה. יימחקו: הפרופיל והפרטים שלך, התמונות, ההודעות ששלחת, השייקים, החיבורים והחברים. החיבור לבן/בת הזוג יתנתק — החשבון שלהם יישאר.</div>
+      <div class="blk-actions">
+        <button class="blk-cancel" onclick="closeDeleteSheet()">השאר את החשבון</button>
+        <button class="blk-danger" onclick="deleteToConfirm()">המשך למחיקה</button>
+      </div>
+    </div>
+
+    <!-- Pane 2: verify -->
+    <div class="safety-pane is-hidden" id="delete-confirm">
+      <div class="rep-head">
+        <button class="rep-back" onclick="deleteToWarn()" aria-label="חזרה">→</button>
+        <div class="rep-title">אישור אחרון</div>
+      </div>
+      <div class="rep-sub">כדי לוודא שזה באמת אתה, הזן את הסיסמה שלך.</div>
+      <input id="del-pass" type="password" autocomplete="current-password" placeholder="הסיסמה שלך" oninput="syncDeleteBtn()" style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:12px;color:var(--text);font-family:'Heebo';font-size:14px;padding:13px;margin-bottom:12px;text-align:right">
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--text2);line-height:1.55;cursor:pointer;margin-bottom:6px">
+        <input type="checkbox" id="del-agree" oninput="syncDeleteBtn()" style="width:18px;height:18px;accent-color:#e23b3b;flex-shrink:0;margin-top:1px">
+        <span>אני מבין/ה שהמחיקה לצמיתות וכל המידע שלי יימחק ללא אפשרות שחזור.</span>
+      </label>
+      <div id="del-err" style="color:#e23b3b;font-size:12px;min-height:16px;margin-bottom:6px"></div>
+      <div class="blk-actions">
+        <button class="blk-cancel" onclick="closeDeleteSheet()">ביטול</button>
+        <button class="blk-danger" id="del-final" disabled style="opacity:.45" onclick="confirmDeleteAccount()">מחק לצמיתות</button>
       </div>
     </div>
 
@@ -1374,6 +1413,53 @@ async function doCodeLogin() {
   // לא בשימוש — הטאב הוסר. נשמר כ-fallback
 }
 async function signOut() { await sb.auth.signOut(); location.reload(); }
+
+// ===== מחיקת חשבון =====
+function openDeleteSheet() {
+  deleteToWarn();
+  document.getElementById('del-pass').value = '';
+  document.getElementById('del-agree').checked = false;
+  document.getElementById('del-err').textContent = '';
+  syncDeleteBtn();
+  document.getElementById('delete-overlay').classList.add('open');
+}
+function closeDeleteSheet() {
+  document.getElementById('delete-overlay').classList.remove('open');
+}
+function deleteToConfirm() {
+  document.getElementById('delete-warn').classList.add('is-hidden');
+  const c = document.getElementById('delete-confirm');
+  c.classList.remove('is-hidden');
+  c.classList.add('enter-report');
+  setTimeout(() => c.classList.remove('enter-report'), 300);
+}
+function deleteToWarn() {
+  document.getElementById('delete-confirm').classList.add('is-hidden');
+  document.getElementById('delete-warn').classList.remove('is-hidden');
+}
+function syncDeleteBtn() {
+  const ok = document.getElementById('del-pass').value.trim() && document.getElementById('del-agree').checked;
+  const b = document.getElementById('del-final');
+  b.disabled = !ok;
+  b.style.opacity = ok ? '1' : '.45';
+}
+async function confirmDeleteAccount() {
+  const pass = document.getElementById('del-pass').value;
+  const errEl = document.getElementById('del-err');
+  const btn = document.getElementById('del-final');
+  errEl.textContent = '';
+  const email = (await sb.auth.getUser()).data.user?.email;
+  if (!email) { errEl.textContent = 'שגיאה בזיהוי החשבון — נסו להתחבר מחדש'; return; }
+  btn.disabled = true; btn.textContent = 'מוחק...';
+  // אימות זהות דרך סיסמה
+  const { error: authErr } = await sb.auth.signInWithPassword({ email, password: pass });
+  if (authErr) { errEl.textContent = 'סיסמה שגויה'; btn.textContent = 'מחק לצמיתות'; syncDeleteBtn(); return; }
+  // מחיקה בפועל
+  const { error } = await sb.rpc('delete_my_account');
+  if (error) { errEl.textContent = 'לא הצלחנו למחוק — נסו שוב'; btn.textContent = 'מחק לצמיתות'; syncDeleteBtn(); return; }
+  try { await sb.auth.signOut(); } catch (e) {}
+  location.reload();
+}
 
 // ═══════════════════════════════════
 // SETUP
