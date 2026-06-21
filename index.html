@@ -1420,7 +1420,7 @@ async function loadCouples() {
     (blocks||[]).forEach(b => hiddenIds.add(b.blocker_id===currentUser.id ? b.blocked_id : b.blocker_id));
     const {data:reps} = await sb.from('reports').select('reported_id').eq('reporter_id',currentUser.id);
     (reps||[]).forEach(r => hiddenIds.add(r.reported_id));
-    if (hiddenIds.size) allCouples = allCouples.filter(c => !hiddenIds.has(c.id));
+    if (hiddenIds.size) allCouples = allCouples.filter(c => !hiddenIds.has(c.id) && !(c.partner_id && hiddenIds.has(c.partner_id)));
   } catch(e) { /* טבלאות דיווח/חסימה עדיין לא קיימות — דלג על סינון */ }
   renderMarkers(); updateLiveCount();
 }
@@ -1757,8 +1757,8 @@ async function submitReport() {
       await sb.from('reports').insert({reporter_id:currentUser.id, reported_id:couple.id, reason, details});
     }
   } catch(e) { /* גם אם ה-insert נכשל — עדיין מסתירים מקומית ומראים אישור */ }
-  // הסתרה מיידית מקומית (בלי refetch)
-  allCouples = allCouples.filter(c => c.id !== couple.id);
+  // הסתרה מיידית מקומית (בלי refetch) — ברמת הזוג: שתי שורות הפרופיל
+  allCouples = allCouples.filter(c => c.id !== couple.id && c.id !== couple.partner_id && !(c.partner_id && (c.partner_id===couple.id || c.partner_id===couple.partner_id)));
   renderMarkers(); updateLiveCount();
   if (document.getElementById('screen-feed')?.classList.contains('active')) renderFeed();
   // נקה מסכים פתוחים על הזוג שדווח
