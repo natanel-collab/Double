@@ -2041,12 +2041,18 @@ async function loadBlocked() {
   let blockedRows = [], reportedRows = [];
   try { const {data} = await sb.from('blocks').select('blocked_id').eq('blocker_id',currentUser.id); blockedRows = data||[]; } catch(e) {}
   try { const {data} = await sb.from('reports').select('reported_id,reason').eq('reporter_id',currentUser.id).eq('status','open'); reportedRows = data||[]; } catch(e) {}
-  const blockedProfiles = (await Promise.all(blockedRows.map(async r => {
-    const {data} = await sb.from('public_couples').select('*').eq('id',r.blocked_id).single(); return data;
-  }))).filter(Boolean);
-  const reportedProfiles = (await Promise.all(reportedRows.map(async r => {
-    const {data} = await sb.from('public_couples').select('*').eq('id',r.reported_id).single(); return data ? {...data,_reason:r.reason} : null;
-  }))).filter(Boolean);
+  const blockedIds=[...new Set(blockedRows.map(r=>r.blocked_id))];
+  const reportedIds=[...new Set(reportedRows.map(r=>r.reported_id))];
+  const allBlkIds=[...new Set([...blockedIds,...reportedIds])];
+  const blkProfById=new Map();
+  if (allBlkIds.length) {
+    const {data:blkProfs}=await sb.from('public_couples').select('*').in('id',allBlkIds);
+    (blkProfs||[]).forEach(p=>blkProfById.set(p.id,p));
+  }
+  const blockedProfiles=blockedRows.map(r=>blkProfById.get(r.blocked_id)).filter(Boolean);
+  const reportedProfiles=reportedRows.map(r=>{
+    const p=blkProfById.get(r.reported_id); return p ? {...p,_reason:r.reason} : null;
+  }).filter(Boolean);
 
   const item = (p, kind) => {
     const emoji = vibeEmoji((p.vibes||[])[0]);
@@ -2242,13 +2248,18 @@ async function loadChats() {
   const rooms={};
   sent.forEach(m=>{ if (!rooms[m.room_id]||m.created_at>rooms[m.room_id].created_at) rooms[m.room_id]=m; });
   const entries=Object.entries(rooms).filter(([r])=>r.includes(myAnchor));
-  const profiles=await Promise.all(entries.map(async ([roomId,lastMsg])=>{
+  const pairs = entries.map(([roomId,lastMsg])=>{
     const ids=roomId.split(':');
     const otherId=ids.find(id=>id!==currentUser.id && id!==(myProfile&&myProfile.partner_id));
-    if (!otherId) return null;
-    const {data:profile} = await sb.from('public_couples').select('*').eq('id',otherId).single();
-    return {roomId,lastMsg,profile};
-  }));
+    return {roomId,lastMsg,otherId};
+  }).filter(p=>p.otherId);
+  const chatOtherIds=[...new Set(pairs.map(p=>p.otherId))];
+  const chatProfById=new Map();
+  if (chatOtherIds.length) {
+    const {data:chatProfs}=await sb.from('public_couples').select('*').in('id',chatOtherIds);
+    (chatProfs||[]).forEach(p=>chatProfById.set(p.id,p));
+  }
+  const profiles=pairs.map(({roomId,lastMsg,otherId})=>({roomId,lastMsg,profile:chatProfById.get(otherId)}));
   const valid=profiles.filter(Boolean).sort((a,b)=>b.lastMsg.created_at.localeCompare(a.lastMsg.created_at));
   const _blocked = await getBlockedIds();
   const visible = valid.filter(v => v.profile && !(_blocked.has(v.profile.id) || (v.profile.partner_id && _blocked.has(v.profile.partner_id))));
