@@ -14,6 +14,7 @@
   <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
+  .amp{color:var(--pink);font-size:.78em;vertical-align:.04em;opacity:.95;font-style:normal}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --bg:#0d0d18;--bg2:#13131f;--bg3:#1a1a2e;
@@ -1777,7 +1778,7 @@ function openCouplePanel(couple) {
   document.getElementById('panel-body').innerHTML=`
     <div class="couple-hero">
       ${photoHtml}
-      <div class="couple-name">${escapeHtml(couple.name)} <span style="font-family:'Heebo',sans-serif;font-weight:400;opacity:0.7">&</span> ${escapeHtml(couple.partner_name||'?')}</div>
+      <div class="couple-name">${escapeHtml(couple.name)} <span class="amp">♥</span> ${escapeHtml(couple.partner_name||'?')}</div>
       <div class="couple-city">${escapeHtml(couple.city||'ישראל')}</div>
       <div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:10px">
         ${isSelfPanel?`<div style="display:inline-flex;align-items:center;gap:4px;background:rgba(108,92,231,0.18);border:1px solid rgba(108,92,231,0.45);color:#b8aaff;padding:4px 12px;border-radius:100px;font-size:11px;font-weight:800">⭐ זה אתם</div>`:''}
@@ -2064,7 +2065,7 @@ async function loadBlocked() {
       : `<button onclick="unhideReported('${p.id}')" style="margin-inline-start:auto;padding:8px 13px;border:1px solid var(--border2);border-radius:100px;background:transparent;color:var(--blue);font-family:'Heebo';font-weight:700;font-size:12px;cursor:pointer;flex-shrink:0">בטל הסתרה</button>`;
     return `<div style="display:flex;align-items:center;gap:11px;padding:11px;border:1px solid var(--border);border-radius:14px;background:var(--bg2);margin-bottom:9px">
       <div style="width:42px;height:42px;border-radius:50%;background:rgba(255,75,110,.13);display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0">${emoji}</div>
-      <div style="min-width:0"><div style="font-size:14px;font-weight:700">${escapeHtml(p.name)} <span style="opacity:.6;font-weight:400">&</span> ${escapeHtml(p.partner_name||'?')}</div><div style="font-size:11px;color:var(--text3)">${escapeHtml(p.city||'')}</div>${reasonTag}</div>
+      <div style="min-width:0"><div style="font-size:14px;font-weight:700">${escapeHtml(p.name)} <span class="amp">♥</span> ${escapeHtml(p.partner_name||'?')}</div><div style="font-size:11px;color:var(--text3)">${escapeHtml(p.city||'')}</div>${reasonTag}</div>
       ${btn}
     </div>`;
   };
@@ -2272,7 +2273,7 @@ async function loadChats() {
     const time=new Date(lastMsg.created_at).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
     const isMine=lastMsg.sender_id===currentUser.id;
     return `<div style="width:100%;display:flex;gap:8px;align-items:center;padding:14px 16px;background:var(--bg2);border:1px solid rgba(255,255,255,0.08);border-radius:16px;margin-bottom:10px;box-sizing:border-box">
-      <div onclick="openChatById('${profile.id}')" style="flex:1;min-width:0;display:flex;gap:12px;align-items:center;cursor:pointer">${photoEl}<div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><span style="font-family:'Syne';font-weight:700;font-size:15px">${escapeHtml(profile.name)} <span style="font-family:'Heebo',sans-serif;font-weight:400;opacity:0.7">&</span> ${escapeHtml(profile.partner_name||'?')}</span><span style="font-size:11px;color:var(--text3)">${time}</span></div><div style="font-size:13px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${isMine?'אתם: ':''}${escapeHtml(lastMsg.text)}</div></div><div style="font-size:18px;flex-shrink:0">›</div></div>
+      <div onclick="openChatById('${profile.id}')" style="flex:1;min-width:0;display:flex;gap:12px;align-items:center;cursor:pointer">${photoEl}<div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><span style="font-family:'Syne';font-weight:700;font-size:15px">${escapeHtml(profile.name)} <span class="amp">♥</span> ${escapeHtml(profile.partner_name||'?')}</span><span style="font-size:11px;color:var(--text3)">${time}</span></div><div style="font-size:13px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${isMine?'אתם: ':''}${escapeHtml(lastMsg.text)}</div></div><div style="font-size:18px;flex-shrink:0">›</div></div>
       <button onclick="event.stopPropagation();deleteChat('${profile.id}','${roomId}')" style="background:rgba(255,75,110,0.12);border:1px solid rgba(255,75,110,0.3);color:var(--pink);border-radius:10px;width:38px;height:38px;flex-shrink:0;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center">🗑️</button>
     </div>`;
   }).join('');
@@ -2345,7 +2346,7 @@ function renderFeed(searchQ) {
       ?`<img src="${escapeHtml(c.photo_url)}" style="width:54px;height:54px;border-radius:50%;object-fit:cover;border:2px solid ${meta.color}55;flex-shrink:0"/>`
       :`<div style="width:54px;height:54px;border-radius:50%;background:${meta.color}18;border:2px solid ${meta.color}44;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">${emoji}</div>`;
     const tags=(c.vibes||[]).slice(0,3).map(v=>`<span class="tag">${escapeHtml(v)}</span>`).join('');
-    return `<div onclick="openCouplePanel(${JSON.stringify(c).replace(/"/g,'&quot;')})" style="background:rgba(255,255,255,0.04);border:1px solid ${meta.color}22;border-radius:18px;padding:16px;margin-bottom:12px;cursor:pointer" onmouseenter="this.style.background='${meta.color}12'" onmouseleave="this.style.background='rgba(255,255,255,0.04)'"><div style="display:flex;gap:12px;align-items:center;margin-bottom:${c.status_text||tags?'12px':'0'}">${photoEl}<div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span style="font-family:'Syne';font-weight:800;font-size:16px">${escapeHtml(c.name)} <span style="font-family:'Heebo',sans-serif;font-weight:400;opacity:0.7">&</span> ${escapeHtml(c.partner_name||'?')}</span><div style="background:${meta.color}22;color:${meta.color};padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;white-space:nowrap">${meta.label}</div></div><div style="color:var(--text3);font-size:12px;margin-top:2px">${escapeHtml(c.city||'ישראל')}</div></div></div>${c.status_text?`<div style="color:var(--text2);font-size:14px;line-height:1.5;margin-bottom:10px;padding:10px 14px;background:rgba(255,255,255,0.04);border-radius:10px">"${escapeHtml(c.status_text)}"</div>`:''}${tags?`<div class="tags-row">${tags}</div>`:''}`;
+    return `<div onclick="openCouplePanel(${JSON.stringify(c).replace(/"/g,'&quot;')})" style="background:rgba(255,255,255,0.04);border:1px solid ${meta.color}22;border-radius:18px;padding:16px;margin-bottom:12px;cursor:pointer" onmouseenter="this.style.background='${meta.color}12'" onmouseleave="this.style.background='rgba(255,255,255,0.04)'"><div style="display:flex;gap:12px;align-items:center;margin-bottom:${c.status_text||tags?'12px':'0'}">${photoEl}<div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span style="font-family:'Syne';font-weight:800;font-size:16px">${escapeHtml(c.name)} <span class="amp">♥</span> ${escapeHtml(c.partner_name||'?')}</span><div style="background:${meta.color}22;color:${meta.color};padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;white-space:nowrap">${meta.label}</div></div><div style="color:var(--text3);font-size:12px;margin-top:2px">${escapeHtml(c.city||'ישראל')}</div></div></div>${c.status_text?`<div style="color:var(--text2);font-size:14px;line-height:1.5;margin-bottom:10px;padding:10px 14px;background:rgba(255,255,255,0.04);border-radius:10px">"${escapeHtml(c.status_text)}"</div>`:''}${tags?`<div class="tags-row">${tags}</div>`:''}`;
   }).join('');
 }
 
@@ -2384,7 +2385,7 @@ async function loadShakes() {
     const photoEl=p?.photo_url
       ?`<img src="${escapeHtml(p.photo_url)}" style="width:56px;height:56px;border-radius:14px;object-fit:cover;flex-shrink:0;border:2px solid var(--pink)"/>`
       :`<div style="width:56px;height:56px;border-radius:14px;background:rgba(255,75,110,0.15);border:2px solid rgba(255,75,110,0.3);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">💞</div>`;
-    return `<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,75,110,0.2);border-radius:18px;padding:16px;margin-bottom:12px"><div style="display:flex;gap:12px;align-items:center;margin-bottom:14px">${photoEl}<div style="flex:1"><div style="font-family:'Syne';font-weight:800;font-size:16px">${escapeHtml(p?.name||'?')} <span style="font-family:'Heebo',sans-serif;font-weight:400;opacity:0.7">&</span> ${escapeHtml(p?.partner_name||'?')}</div><div style="color:var(--text3);font-size:12px;margin-top:2px">${escapeHtml(p?.city||'ישראל')}</div>${p?.status_text?`<div style="color:var(--text2);font-size:13px;margin-top:4px">"${escapeHtml(p.status_text)}"</div>`:''}</div></div><div style="display:flex;gap:8px"><button onclick="respondShake(${s.id},'accepted',${JSON.stringify(p?.name||'').replace(/"/g,'&quot;')})" style="flex:1;padding:12px;background:linear-gradient(135deg,var(--pink),var(--pink2));border:none;color:white;border-radius:12px;font-family:'Heebo';font-weight:700;font-size:14px;cursor:pointer">💞 קבלו!</button><button onclick="respondShake(${s.id},'declined','')" style="flex:1;padding:12px;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text2);border-radius:12px;font-family:'Heebo';font-weight:600;font-size:14px;cursor:pointer">לא תודה</button></div></div>`;
+    return `<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,75,110,0.2);border-radius:18px;padding:16px;margin-bottom:12px"><div style="display:flex;gap:12px;align-items:center;margin-bottom:14px">${photoEl}<div style="flex:1"><div style="font-family:'Syne';font-weight:800;font-size:16px">${escapeHtml(p?.name||'?')} <span class="amp">♥</span> ${escapeHtml(p?.partner_name||'?')}</div><div style="color:var(--text3);font-size:12px;margin-top:2px">${escapeHtml(p?.city||'ישראל')}</div>${p?.status_text?`<div style="color:var(--text2);font-size:13px;margin-top:4px">"${escapeHtml(p.status_text)}"</div>`:''}</div></div><div style="display:flex;gap:8px"><button onclick="respondShake(${s.id},'accepted',${JSON.stringify(p?.name||'').replace(/"/g,'&quot;')})" style="flex:1;padding:12px;background:linear-gradient(135deg,var(--pink),var(--pink2));border:none;color:white;border-radius:12px;font-family:'Heebo';font-weight:700;font-size:14px;cursor:pointer">💞 קבלו!</button><button onclick="respondShake(${s.id},'declined','')" style="flex:1;padding:12px;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text2);border-radius:12px;font-family:'Heebo';font-weight:600;font-size:14px;cursor:pointer">לא תודה</button></div></div>`;
   }).join('');
 }
 
@@ -2422,7 +2423,7 @@ async function loadConnectedShakes() {
     return `<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(29,209,161,0.2);border-radius:16px;padding:14px;margin-bottom:10px">
       <div onclick='openProfileFromConnected(${cJson})' style="display:flex;gap:12px;align-items:center;cursor:pointer;border-radius:12px;padding:6px;margin:-6px">${photoEl}
         <div style="flex:1;min-width:0">
-          <div style="font-family:'Syne';font-weight:800;font-size:15px;display:flex;align-items:center;gap:6px">${escapeHtml(c.name||'?')} <span style="font-family:'Heebo',sans-serif;font-weight:400;opacity:0.7">&</span> ${escapeHtml(c.partner_name||'?')} <span style="color:var(--text3);font-size:16px">›</span></div>
+          <div style="font-family:'Syne';font-weight:800;font-size:15px;display:flex;align-items:center;gap:6px">${escapeHtml(c.name||'?')} <span class="amp">♥</span> ${escapeHtml(c.partner_name||'?')} <span style="color:var(--text3);font-size:16px">›</span></div>
           <div style="color:var(--text3);font-size:12px;margin-top:2px">${escapeHtml(c.city||'ישראל')}</div>
           <div style="display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;background:rgba(29,209,161,0.15);color:var(--green);border:1px solid rgba(29,209,161,0.3);margin-top:4px">✅ מחוברים</div>
         </div>
@@ -2859,7 +2860,7 @@ function spinRoulette() {
     const emoji=vibeEmoji((p.vibes||[])[0]);
     document.getElementById('roulette-content').innerHTML=`
       <div style="font-size:48px">${emoji}</div>
-      <div style="font-family:'Syne';font-size:22px;font-weight:800;margin-top:10px">${escapeHtml(p.name)} <span style="font-family:'Heebo',sans-serif;font-weight:400;opacity:0.7">&</span> ${escapeHtml(p.partner_name||'?')}</div>
+      <div style="font-family:'Syne';font-size:22px;font-weight:800;margin-top:10px">${escapeHtml(p.name)} <span class="amp">♥</span> ${escapeHtml(p.partner_name||'?')}</div>
       <div style="color:var(--text2);font-size:14px;margin-top:4px">${escapeHtml(p.city||'ישראל')}</div>
       ${p.status_text?`<div style="background:rgba(255,75,110,0.12);border:1px solid rgba(255,75,110,0.25);border-radius:12px;padding:12px;margin:14px 0;font-size:14px;color:#ffb3c1">"${escapeHtml(p.status_text)}"</div>`:''}
       <button class="fab-btn" style="width:100%;margin-top:10px" onclick="closeRoulette();openRouletteCouple()">💞 Double Shake!</button>
@@ -2908,7 +2909,7 @@ function filterList(vibe) {
     const photoEl=cc.photo_url
       ?`<img src="${escapeHtml(cc.photo_url)}" style="width:58px;height:58px;border-radius:14px;object-fit:cover;border:2px solid ${meta.color}55;flex-shrink:0"/>`
       :`<div style="width:58px;height:58px;border-radius:14px;background:${meta.color}18;border:2px solid ${meta.color}44;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0">${emoji}</div>`;
-    return `<div onclick="closeListView();openCouplePanel(${JSON.stringify(cc).replace(/"/g,'&quot;')})" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:18px;padding:16px;margin-bottom:10px;cursor:pointer;display:flex;gap:14px;align-items:flex-start" onmouseenter="this.style.background='rgba(255,75,110,0.08)'" onmouseleave="this.style.background='rgba(255,255,255,0.04)'">${photoEl}<div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:4px"><span style="font-family:'Syne';font-weight:800;font-size:16px">${escapeHtml(cc.name)} <span style="font-family:'Heebo',sans-serif;font-weight:400;opacity:0.7">&</span> ${escapeHtml(cc.partner_name||'?')}</span><div style="background:${meta.color}22;color:${meta.color};padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;white-space:nowrap">${meta.label}</div></div><div style="color:var(--text3);font-size:12px;margin-bottom:6px">${escapeHtml(cc.city||'ישראל')}</div>${cc.status_text?`<div style="color:var(--text2);font-size:13px;line-height:1.4;margin-bottom:8px">"${escapeHtml(cc.status_text)}"</div>`:''}<div style="display:flex;flex-wrap:wrap;gap:5px">${(cc.vibes||[]).map(v=>`<span class="tag">${escapeHtml(v)}</span>`).join('')}</div></div></div>`;
+    return `<div onclick="closeListView();openCouplePanel(${JSON.stringify(cc).replace(/"/g,'&quot;')})" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:18px;padding:16px;margin-bottom:10px;cursor:pointer;display:flex;gap:14px;align-items:flex-start" onmouseenter="this.style.background='rgba(255,75,110,0.08)'" onmouseleave="this.style.background='rgba(255,255,255,0.04)'">${photoEl}<div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:4px"><span style="font-family:'Syne';font-weight:800;font-size:16px">${escapeHtml(cc.name)} <span class="amp">♥</span> ${escapeHtml(cc.partner_name||'?')}</span><div style="background:${meta.color}22;color:${meta.color};padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;white-space:nowrap">${meta.label}</div></div><div style="color:var(--text3);font-size:12px;margin-bottom:6px">${escapeHtml(cc.city||'ישראל')}</div>${cc.status_text?`<div style="color:var(--text2);font-size:13px;line-height:1.4;margin-bottom:8px">"${escapeHtml(cc.status_text)}"</div>`:''}<div style="display:flex;flex-wrap:wrap;gap:5px">${(cc.vibes||[]).map(v=>`<span class="tag">${escapeHtml(v)}</span>`).join('')}</div></div></div>`;
   }).join('');
 }
 
@@ -3398,7 +3399,7 @@ async function loadReviewsReceived() {
     return `<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,215,0,0.2);border-radius:14px;padding:14px;margin-bottom:10px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
         <div style="font-size:20px">⭐</div>
-        <span style="font-weight:700;font-size:14px;flex:1">${escapeHtml(p?.name || '?')} <span style="font-family:'Heebo',sans-serif;font-weight:400;opacity:0.7">&</span> ${escapeHtml(p?.partner_name || '?')}</span>
+        <span style="font-weight:700;font-size:14px;flex:1">${escapeHtml(p?.name || '?')} <span class="amp">♥</span> ${escapeHtml(p?.partner_name || '?')}</span>
         <button onclick="deleteReview(${r.id})" style="background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;padding:4px">🗑️</button>
       </div>
       <div style="font-size:14px;color:var(--text2);line-height:1.5">"${escapeHtml(r.text)}"</div>
@@ -3585,7 +3586,7 @@ function openFullProfile() {
   document.getElementById('fp-body').innerHTML = `
     <div style="background:linear-gradient(135deg,rgba(255,75,110,0.15),rgba(255,159,67,0.08));border:1px solid rgba(255,75,110,0.2);border-radius:20px;padding:28px 20px;text-align:center">
       ${photoEl}
-      <div style="font-family:'Syne';font-size:22px;font-weight:800;margin-bottom:4px">${escapeHtml(c.name)} <span style="font-family:'Heebo';font-weight:400;opacity:0.6">&</span> ${escapeHtml(c.partner_name||'?')}</div>
+      <div style="font-family:'Syne';font-size:22px;font-weight:800;margin-bottom:4px">${escapeHtml(c.name)} <span class="amp">♥</span> ${escapeHtml(c.partner_name||'?')}</div>
       <div style="color:var(--text2);font-size:13px;margin-bottom:10px">${escapeHtml(c.city||'ישראל')}</div>
       ${effectiveStatus(c)==='hot' ? `<div style="display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:100px;font-size:12px;font-weight:700;background:${meta.color}22;color:${meta.color}"><div style="width:7px;height:7px;border-radius:50%;background:${meta.color}"></div>${meta.label}</div>` : ''}
     </div>
