@@ -1066,6 +1066,27 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
   </div>
 </div>
 
+<!-- Scheduled Event Modal -->
+<div class="modal-overlay" id="sched-modal" onclick="closeScheduledModal()">
+  <div class="modal-box" onclick="event.stopPropagation()" style="text-align:right">
+    <div style="font-family:'Syne';font-size:20px;font-weight:800;margin-bottom:4px">📅 לתזמן דייט</div>
+    <div style="font-size:12.5px;color:var(--text3);margin-bottom:16px">קבעו מתי, ותנו לזוגות לשלוח לכם שייק</div>
+    <div style="display:flex;gap:10px;margin-bottom:6px">
+      <div style="flex:1"><label class="field-label">תאריך</label><input class="field-input" type="date" id="sched-date"/></div>
+      <div style="flex:1"><label class="field-label">שעה</label><input class="field-input" type="time" id="sched-time" value="21:00"/></div>
+    </div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:14px">📌 אפשר לבחור רק בשבוע הקרוב</div>
+    <div style="margin-bottom:12px"><label class="field-label">עיר / אזור</label><input class="field-input" id="sched-city" placeholder="איפה ייפגשו?"/></div>
+    <div style="margin-bottom:12px"><label class="field-label">מיקום מדויק <span style="color:var(--text3);font-weight:400">· אופציונלי</span></label><input class="field-input" id="sched-location" placeholder="שם המקום / כתובת"/></div>
+    <div style="margin-bottom:18px"><label class="field-label">סוג דייט <span style="color:var(--text3);font-weight:400">· אופציונלי</span></label><input class="field-input" id="sched-datetype" placeholder="דרינקים · אוכל · פעילות…"/></div>
+    <div style="display:flex;gap:8px;align-items:flex-start;background:rgba(91,141,239,0.08);border:1px solid rgba(91,141,239,0.25);border-radius:12px;padding:11px 13px;margin-bottom:16px;font-size:12px;color:var(--text2);line-height:1.5">
+      <span>⏱️</span><span>הדייט יופיע כ<b style="color:#5b8def">מתוכנן</b> עד השעה שבחרתם, יהפוך ל<b style="color:#ff8a5c">פעיל</b> כשמגיע הזמן, ויירד מהמפה 5 שעות אחרי.</span>
+    </div>
+    <button class="btn-primary" onclick="saveScheduledEvent()">פרסמו את הדייט 📅</button>
+    <button class="btn-secondary" style="margin-top:8px" onclick="closeScheduledModal()">ביטול</button>
+  </div>
+</div>
+
 <!-- Roulette Modal -->
 <div class="modal-overlay" id="roulette-modal" onclick="closeRoulette()">
   <div class="modal-box" onclick="event.stopPropagation()">
@@ -2741,7 +2762,48 @@ function openEventChooser() {
   document.body.appendChild(ov);
 }
 function chooseSpontaneous(){ document.getElementById('event-chooser-overlay')?.remove(); openEventModal(); }
-function chooseScheduled(){ document.getElementById('event-chooser-overlay')?.remove(); showToast('🔜 תזמון דייט — בקרוב!'); }
+function chooseScheduled(){ document.getElementById('event-chooser-overlay')?.remove(); openScheduledModal(); }
+
+function openScheduledModal(){
+  const m=document.getElementById('sched-modal'); m.classList.add('open');
+  const d=document.getElementById('sched-date');
+  const fmt=(x)=>`${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`;
+  const today=new Date(); const max=new Date(Date.now()+7*24*60*60*1000);
+  d.min=fmt(today); d.max=fmt(max);
+  if(!d.value || d.value<d.min || d.value>d.max) d.value=fmt(today);
+  document.getElementById('sched-city').value='';
+  document.getElementById('sched-location').value='';
+  document.getElementById('sched-datetype').value='';
+}
+function closeScheduledModal(){ document.getElementById('sched-modal').classList.remove('open'); }
+async function saveScheduledEvent(){
+  const date=document.getElementById('sched-date').value;
+  const time=document.getElementById('sched-time').value;
+  const city=document.getElementById('sched-city').value.trim();
+  const location=document.getElementById('sched-location').value.trim();
+  const dateType=document.getElementById('sched-datetype').value.trim();
+  if(!date||!time){ showToast('בחרו תאריך ושעה'); return; }
+  if(!city){ showToast('הזינו עיר / אזור'); return; }
+  const start=new Date(`${date}T${time}`);
+  if(isNaN(start.getTime())){ showToast('תאריך או שעה לא תקינים'); return; }
+  if(start.getTime()<Date.now()-60000){ showToast('בחרו זמן עתידי'); return; }
+  const end=new Date(start.getTime()+5*60*60*1000);
+  const btn=document.querySelector('#sched-modal .btn-primary');
+  if(btn){ btn.disabled=true; btn.dataset.orig=btn.textContent; btn.innerHTML='<span class="btn-spinner"></span> מפרסם...'; }
+  const {error}=await sb.from('events').insert({
+    couple_id: currentUser.id, type:'scheduled',
+    starts_at: start.toISOString(), ends_at: end.toISOString(),
+    city, location: location||null, date_type: dateType||null
+  });
+  if(btn){ btn.disabled=false; btn.textContent=btn.dataset.orig||'פרסמו את הדייט 📅'; }
+  if(error){
+    if((error.message||'').includes('COUPLE_HAS_OPEN_EVENT')) showToast('כבר יש לכם דייט מתוזמן פעיל — אפשר אחד בכל פעם');
+    else showToast('😕 לא הצלחנו לפרסם את הדייט. נסו שוב');
+    return;
+  }
+  closeScheduledModal();
+  showToast('📅 הדייט פורסם! זוגות יוכלו לשלוח לכם שייק');
+}
 
 function openEventModal(editMode=false) {
   document.getElementById('event-modal').classList.add('open');
