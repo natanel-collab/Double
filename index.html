@@ -1856,14 +1856,17 @@ function openCouplePanel(couple) {
   _panelUnmatched = false;
   startOtherEventCountdown(couple);
   // Check shake status (only for other couples)
-  if (!isOwn) sb.from('shakes').select('id,status').eq('from_id',currentUser.id).eq('to_id',couple.id).single().then(({data})=>{
+  if (!isOwn) sb.from('shakes').select('id,status,from_id,to_id').or(`and(from_id.eq.${currentUser.id},to_id.eq.${couple.id}),and(from_id.eq.${couple.id},to_id.eq.${currentUser.id})`).then(({data:rows})=>{
     if (_panelUnmatched) return;
+    const list=rows||[];
+    const accepted=list.find(r=>r.status==='accepted');
+    const mySent=list.find(r=>r.from_id===currentUser.id);
+    const theirSent=list.find(r=>r.to_id===currentUser.id);
     const btn=document.getElementById('shake-btn');
     const chatBtn=document.getElementById('panel-chat-btn');
-    if (chatBtn) chatBtn.style.display = data?.status==='accepted' ? '' : 'none';
+    if (chatBtn) chatBtn.style.display = accepted ? '' : 'none';
     if (!btn) return;
-    if (data?.status==='pending') {btn.textContent='⏳ Shake נשלח';btn.disabled=true;btn.style.opacity='0.7';}
-    else if (data?.status==='accepted') {
+    if (accepted) {
       btn.textContent='✅ מחוברים! פתחו צ\'אט';btn.disabled=false;btn.style.opacity='1';
       btn.onclick=()=>{closePanel();openChat();};
       const footer=document.getElementById('couple-panel-footer');
@@ -1872,12 +1875,14 @@ function openCouplePanel(couple) {
         ub.id='unmatch-btn';
         ub.textContent='💔 ביטול שייק';
         ub.style.cssText='width:100%;padding:10px;border:1px solid rgba(255,75,110,0.3);border-radius:12px;background:transparent;color:rgba(255,75,110,0.7);font-family:\'Heebo\';font-weight:600;font-size:13px;cursor:pointer;margin-top:6px';
-        ub.onclick=()=>unmatch(data.id,couple);
+        ub.onclick=()=>unmatch(accepted.id,couple);
         footer.appendChild(ub);
       }
     }
-    else if (data?.status==='declined') {btn.textContent='💞 שלחו Shake שוב';btn.disabled=false;btn.style.opacity='1';}
-    else {btn.textContent='💞 Double Shake!';btn.disabled=false;btn.style.opacity='1';}
+    else if (mySent?.status==='pending') {btn.textContent='⏳ Shake נשלח';btn.disabled=true;btn.style.opacity='0.7';}
+    else if (theirSent?.status==='pending') {btn.textContent='💞 ענו ל-Shake שלהם';btn.disabled=false;btn.style.opacity='1';btn.onclick=()=>{closePanel();navTo('shakes');};}
+    else if (mySent?.status==='declined') {btn.textContent='💞 שלחו Shake שוב';btn.disabled=false;btn.style.opacity='1';btn.onclick=()=>sendShake();}
+    else {btn.textContent='💞 Double Shake!';btn.disabled=false;btn.style.opacity='1';btn.onclick=()=>sendShake();}
   });
 }
 
@@ -3632,19 +3637,23 @@ function openFullProfile() {
   if (unmatchBtn) unmatchBtn.style.display='none';
 
   // בדיקת סטטוס שייק
-  sb.from('shakes').select('id,status').eq('from_id',currentUser.id).eq('to_id',c.id).single().then(({data:shakeData})=>{
+  sb.from('shakes').select('id,status,from_id,to_id').or(`and(from_id.eq.${currentUser.id},to_id.eq.${c.id}),and(from_id.eq.${c.id},to_id.eq.${currentUser.id})`).then(({data:rows})=>{
+    const list=rows||[];
+    const accepted=list.find(r=>r.status==='accepted');
+    const mySent=list.find(r=>r.from_id===currentUser.id);
+    const theirSent=list.find(r=>r.to_id===currentUser.id);
     const btn=document.getElementById('fp-shake-btn');
     const chatBtn=document.getElementById('fp-chat-btn');
-    const isAccepted=shakeData?.status==='accepted';
-    if (chatBtn) chatBtn.style.display=isAccepted ? '' : 'none';
+    if (chatBtn) chatBtn.style.display=accepted ? '' : 'none';
     if (!btn) return;
-    if (shakeData?.status==='pending') {btn.textContent='⏳ Shake נשלח';btn.disabled=true;btn.style.opacity='0.7';}
-    else if (isAccepted) {
+    if (accepted) {
       btn.textContent='✅ מחוברים! פתחו צ\'אט';btn.disabled=false;btn.style.opacity='1';btn.onclick=()=>{openChat();};
       if (unmatchBtn) unmatchBtn.style.display='';
     }
-    else if (shakeData?.status==='declined') {btn.textContent='💞 שלחו Shake שוב';btn.disabled=false;btn.style.opacity='1';}
-    else {btn.textContent='💞 Double Shake!';btn.disabled=false;btn.style.opacity='1';}
+    else if (mySent?.status==='pending') {btn.textContent='⏳ Shake נשלח';btn.disabled=true;btn.style.opacity='0.7';}
+    else if (theirSent?.status==='pending') {btn.textContent='💞 ענו ל-Shake שלהם';btn.disabled=false;btn.style.opacity='1';btn.onclick=()=>{closeFullProfile();navTo('shakes');};}
+    else if (mySent?.status==='declined') {btn.textContent='💞 שלחו Shake שוב';btn.disabled=false;btn.style.opacity='1';btn.onclick=()=>sendShake();}
+    else {btn.textContent='💞 Double Shake!';btn.disabled=false;btn.style.opacity='1';btn.onclick=()=>sendShake();}
   });
 
   // בדיקת סטטוס חבר (לב)
