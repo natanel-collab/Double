@@ -1856,7 +1856,7 @@ function openCouplePanel(couple) {
   _panelUnmatched = false;
   startOtherEventCountdown(couple);
   // Check shake status (only for other couples)
-  if (!isOwn) sb.from('shakes').select('id,status,from_id,to_id').or(`and(from_id.eq.${currentUser.id},to_id.eq.${couple.id}),and(from_id.eq.${couple.id},to_id.eq.${currentUser.id})`).then(({data:rows})=>{
+  if (!isOwn) sb.from('shakes').select('*').or(`and(from_id.eq.${currentUser.id},to_id.eq.${couple.id}),and(from_id.eq.${couple.id},to_id.eq.${currentUser.id})`).then(({data:rows})=>{
     if (_panelUnmatched) return;
     const list=rows||[];
     const accepted=list.find(r=>r.status==='accepted');
@@ -1881,7 +1881,11 @@ function openCouplePanel(couple) {
     }
     else if (mySent?.status==='pending') {btn.textContent='⏳ Shake נשלח';btn.disabled=true;btn.style.opacity='0.7';}
     else if (theirSent?.status==='pending') {btn.textContent='💞 ענו ל-Shake שלהם';btn.disabled=false;btn.style.opacity='1';btn.onclick=()=>{closePanel();navTo('shakes');};}
-    else if (mySent?.status==='declined') {btn.textContent='💞 שלחו Shake שוב';btn.disabled=false;btn.style.opacity='1';btn.onclick=()=>sendShake();}
+    else if (mySent?.status==='declined') {
+      const lockedThisEvent = mySent.declined_event_exp && couple.event_expires_at && new Date(mySent.declined_event_exp).getTime()===new Date(couple.event_expires_at).getTime();
+      if (lockedThisEvent) {btn.textContent='⏳ נסו שוב באירוע הבא שלהם';btn.disabled=true;btn.style.opacity='0.55';}
+      else {btn.textContent='💞 שלחו Shake שוב';btn.disabled=false;btn.style.opacity='1';btn.onclick=()=>sendShake();}
+    }
     else {btn.textContent='💞 Double Shake!';btn.disabled=false;btn.style.opacity='1';btn.onclick=()=>sendShake();}
   });
 }
@@ -2368,10 +2372,10 @@ async function sendShake() {
   if (!selectedCouple) return;
   const btns=[document.getElementById('shake-btn'),document.getElementById('fp-shake-btn')].filter(Boolean);
   btns.forEach(b=>{b.disabled=true;b.dataset.orig=b.textContent;b.innerHTML='<span class="btn-spinner"></span> שולח...';b.style.opacity='0.7';});
-  const {error} = await sb.from('shakes').upsert({from_id:currentUser.id,to_id:selectedCouple.id,status:'pending'},{onConflict:'from_id,to_id'});
+  const {error} = await sb.from('shakes').upsert({from_id:currentUser.id,to_id:selectedCouple.id,status:'pending',declined_event_exp:null},{onConflict:'from_id,to_id'});
   if (error) {
     btns.forEach(b=>{b.disabled=false;b.textContent=b.dataset.orig||'💞 Double Shake!';b.style.opacity='1';});
-    showToast('שגיאה: '+(error.message||error.code||'לא ידוע'));
+    showToast('😕 לא הצלחנו לשלוח את ה-Shake. נסו שוב בעוד רגע');
     return;
   }
   showToast('💞 Double Shake נשלח!'); closePanel();
@@ -2537,7 +2541,10 @@ async function cancelSentShake(shakeId, couple) {
 }
 
 async function respondShake(shakeId,status,fromName) {
-  const {error} = await sb.from('shakes').update({status}).eq('id',shakeId);
+  const updateFields = status==='declined'
+    ? {status, declined_event_exp: myProfile?.event_expires_at || null}
+    : {status};
+  const {error} = await sb.from('shakes').update(updateFields).eq('id',shakeId);
   if (error) {showToast('שגיאה: '+error.message); return;}
   if (status==='accepted') {
     const {data} = await sb.from('shakes').select('from_id').eq('id',shakeId).single();
@@ -3637,7 +3644,7 @@ function openFullProfile() {
   if (unmatchBtn) unmatchBtn.style.display='none';
 
   // בדיקת סטטוס שייק
-  sb.from('shakes').select('id,status,from_id,to_id').or(`and(from_id.eq.${currentUser.id},to_id.eq.${c.id}),and(from_id.eq.${c.id},to_id.eq.${currentUser.id})`).then(({data:rows})=>{
+  sb.from('shakes').select('*').or(`and(from_id.eq.${currentUser.id},to_id.eq.${c.id}),and(from_id.eq.${c.id},to_id.eq.${currentUser.id})`).then(({data:rows})=>{
     const list=rows||[];
     const accepted=list.find(r=>r.status==='accepted');
     const mySent=list.find(r=>r.from_id===currentUser.id);
@@ -3652,7 +3659,11 @@ function openFullProfile() {
     }
     else if (mySent?.status==='pending') {btn.textContent='⏳ Shake נשלח';btn.disabled=true;btn.style.opacity='0.7';}
     else if (theirSent?.status==='pending') {btn.textContent='💞 ענו ל-Shake שלהם';btn.disabled=false;btn.style.opacity='1';btn.onclick=()=>{closeFullProfile();navTo('shakes');};}
-    else if (mySent?.status==='declined') {btn.textContent='💞 שלחו Shake שוב';btn.disabled=false;btn.style.opacity='1';btn.onclick=()=>sendShake();}
+    else if (mySent?.status==='declined') {
+      const lockedThisEvent = mySent.declined_event_exp && c.event_expires_at && new Date(mySent.declined_event_exp).getTime()===new Date(c.event_expires_at).getTime();
+      if (lockedThisEvent) {btn.textContent='⏳ נסו שוב באירוע הבא שלהם';btn.disabled=true;btn.style.opacity='0.55';}
+      else {btn.textContent='💞 שלחו Shake שוב';btn.disabled=false;btn.style.opacity='1';btn.onclick=()=>sendShake();}
+    }
     else {btn.textContent='💞 Double Shake!';btn.disabled=false;btn.style.opacity='1';btn.onclick=()=>sendShake();}
   });
 
