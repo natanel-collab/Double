@@ -2366,7 +2366,7 @@ async function sendShake() {
   const {error} = await sb.from('shakes').upsert({from_id:currentUser.id,to_id:selectedCouple.id,status:'pending'},{onConflict:'from_id,to_id'});
   if (error) {
     btns.forEach(b=>{b.disabled=false;b.textContent=b.dataset.orig||'💞 Double Shake!';b.style.opacity='1';});
-    showToast('😕 לא הצלחנו לשלוח — בדקו את החיבור לאינטרנט ונסו שוב');
+    showToast('שגיאה: '+(error.message||error.code||'לא ידוע'));
     return;
   }
   showToast('💞 Double Shake נשלח!'); closePanel();
