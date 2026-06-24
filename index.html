@@ -1076,25 +1076,25 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
       <div style="flex:1;min-width:0"><label class="field-label">תאריך</label><input class="field-input" type="date" id="sched-date" style="width:100%;min-width:0;text-align:center"/></div>
       <div style="flex:1;min-width:0"><label class="field-label">שעה</label><input class="field-input" type="time" id="sched-time" value="21:00" style="width:100%;min-width:0;text-align:center"/></div>
     </div>
-    <div style="font-size:11px;color:var(--text3);margin-bottom:14px">📌 אפשר לבחור רק בשבוע הקרוב</div>
-    <div style="margin-bottom:16px">
-      <label class="field-label" style="display:block;margin-bottom:8px">ויב הדייט (יופיע על המפה 🗺️)</label>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:10px">📌 אפשר לבחור רק בשבוע הקרוב</div>
+    <div style="margin-bottom:12px">
+      <label class="field-label" style="display:block;margin-bottom:6px">ויב הדייט (יופיע על המפה 🗺️)</label>
       <div style="display:flex;flex-wrap:wrap;gap:6px" id="sched-vibes"></div>
     </div>
-    <div style="margin-bottom:16px">
-      <label class="field-label" style="display:block;margin-bottom:8px">מיקום</label>
+    <div style="margin-bottom:12px">
+      <label class="field-label" style="display:block;margin-bottom:6px">מיקום</label>
       <div style="display:flex;gap:8px;margin-bottom:8px">
         <button class="vibe-chip selected" id="sched-loc-auto-btn" onclick="schedSelectAuto()" style="flex:1;text-align:center;background:rgba(91,141,239,0.2);border-color:rgba(91,141,239,0.5);color:#9db8ff">📍 מיקום נוכחי</button>
         <button class="vibe-chip" id="sched-loc-manual-btn" onclick="schedSelectManual()" style="flex:1;text-align:center">🔍 חיפוש עיר</button>
       </div>
       <input class="field-input" id="sched-city-search" placeholder="חפשו עיר, שכונה..." style="display:none" oninput="schedSearchCity(this.value)"/>
       <div id="sched-city-results" style="margin-top:6px"></div>
-      <div id="sched-selected-location" style="background:rgba(91,141,239,0.1);border:1px solid rgba(91,141,239,0.3);border-radius:10px;padding:10px 14px;font-size:13px;color:#9db8ff;display:flex;align-items:center;gap:6px">
+      <div id="sched-selected-location" style="background:rgba(91,141,239,0.1);border:1px solid rgba(91,141,239,0.3);border-radius:10px;padding:9px 14px;font-size:13px;color:#9db8ff;display:flex;align-items:center;gap:6px">
         ✅ <span id="sched-selected-location-text">מיקום נוכחי</span>
       </div>
     </div>
-    <div style="margin-bottom:18px"><label class="field-label">סוג דייט <span style="color:var(--text3);font-weight:400">· אופציונלי</span></label><input class="field-input" id="sched-datetype" placeholder="דרינקים · אוכל · פעילות…"/></div>
-    <div style="display:flex;gap:8px;align-items:flex-start;background:rgba(91,141,239,0.08);border:1px solid rgba(91,141,239,0.25);border-radius:12px;padding:11px 13px;margin-bottom:16px;font-size:12px;color:var(--text2);line-height:1.5">
+    <div style="margin-bottom:14px"><label class="field-label">סוג דייט <span style="color:var(--text3);font-weight:400">· אופציונלי</span></label><input class="field-input" id="sched-datetype" placeholder="דרינקים · אוכל · פעילות…"/></div>
+    <div style="display:flex;gap:8px;align-items:flex-start;background:rgba(91,141,239,0.08);border:1px solid rgba(91,141,239,0.25);border-radius:12px;padding:10px 12px;margin-bottom:12px;font-size:11.5px;color:var(--text2);line-height:1.45">
       <span>⏱️</span><span>הדייט יופיע כ<b style="color:#5b8def">מתוכנן</b> עד השעה שבחרתם, יהפוך ל<b style="color:#ff8a5c">פעיל</b> כשמגיע הזמן, ויירד מהמפה 5 שעות אחרי.</span>
     </div>
     <button class="btn-primary" onclick="saveScheduledEvent()">פרסמו את הדייט 📅</button>
@@ -1684,7 +1684,7 @@ function renderMarkers() {
   const fab=document.getElementById('event-fab');
   if (fab&&effectiveStatus(myProfile)==='hot') {
     fab.textContent='🔴 אירוע פעיל'; fab.style.background='linear-gradient(135deg,#ff4b6e,#ff6b9d)';
-    fab.onclick=()=>{ if(confirm('לבטל את האירוע הפעיל?')) cancelActiveEvent(); };
+    fab.onclick=openEventChooser;
   } else if (fab) {
     fab.textContent='➕ אירוע'; fab.style.background='linear-gradient(135deg,#1dd1a1,#00b894)';
     fab.onclick=openEventChooser;
@@ -2777,7 +2777,14 @@ function openEventChooser() {
     </div>`;
   document.body.appendChild(ov);
 }
-function chooseSpontaneous(){ document.getElementById('event-chooser-overlay')?.remove(); openEventModal(); }
+function chooseSpontaneous(){
+  document.getElementById('event-chooser-overlay')?.remove();
+  if(myProfile && effectiveStatus(myProfile)==='hot'){
+    if(confirm('כבר יש לכם אירוע ספונטני פעיל. לבטל אותו?')) cancelActiveEvent();
+    return;
+  }
+  openEventModal();
+}
 function chooseScheduled(){ document.getElementById('event-chooser-overlay')?.remove(); openScheduledModal(); }
 
 function openScheduledModal(){
@@ -2804,6 +2811,7 @@ function openScheduledModal(){
   VIBES_LIST.forEach(v=>{
     const chip=document.createElement('div');
     chip.className='vibe-chip';
+    chip.style.cssText='padding:8px 10px;font-size:13px';
     chip.textContent=v.label;
     chip.onclick=()=>{
       schedVibe = (schedVibe===v.id) ? '' : v.id;
