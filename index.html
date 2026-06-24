@@ -1073,13 +1073,14 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
     <div style="font-family:'Syne';font-size:20px;font-weight:800;margin-bottom:4px">📅 לתזמן דייט</div>
     <div style="font-size:12.5px;color:var(--text3);margin-bottom:16px">קבעו מתי, ותנו לזוגות לשלוח לכם שייק</div>
     <div style="display:flex;gap:12px;margin-bottom:6px">
-      <div style="flex:1;min-width:0"><label class="field-label">תאריך</label><input class="field-input" type="date" id="sched-date" style="width:100%;min-width:0;text-align:center"/></div>
-      <div style="flex:1;min-width:0"><label class="field-label">שעה</label><input class="field-input" type="time" id="sched-time" value="21:00" style="width:100%;min-width:0;text-align:center"/></div>
+      <div style="flex:1;min-width:0"><label class="field-label">תאריך</label><input class="field-input" type="date" id="sched-date" style="width:100%;min-width:0;text-align:center;padding:10px 10px"/></div>
+      <div style="flex:1;min-width:0"><label class="field-label">שעה</label><input class="field-input" type="time" id="sched-time" value="21:00" style="width:100%;min-width:0;text-align:center;padding:10px 10px"/></div>
     </div>
-    <div style="font-size:11px;color:var(--text3);margin-bottom:10px">📌 אפשר לבחור רק בשבוע הקרוב</div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:12px">📌 אפשר לבחור רק בשבוע הקרוב</div>
+    <div style="margin-bottom:12px"><label class="field-label">סוג דייט <span style="color:var(--text3);font-weight:400">· אופציונלי</span></label><input class="field-input" id="sched-datetype" placeholder="דרינקים · אוכל · פעילות…"/></div>
     <div style="margin-bottom:12px">
-      <label class="field-label" style="display:block;margin-bottom:6px">ויב הדייט (יופיע על המפה 🗺️)</label>
-      <div style="display:flex;flex-wrap:wrap;gap:6px" id="sched-vibes"></div>
+      <label class="field-label" style="display:block;margin-bottom:6px">ויב הדייט <span style="color:var(--text3);font-weight:400">· אופציונלי</span></label>
+      <div style="display:flex;flex-wrap:wrap;gap:5px" id="sched-vibes"></div>
     </div>
     <div style="margin-bottom:12px">
       <label class="field-label" style="display:block;margin-bottom:6px">מיקום</label>
@@ -1093,7 +1094,6 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
         ✅ <span id="sched-selected-location-text">מיקום נוכחי</span>
       </div>
     </div>
-    <div style="margin-bottom:14px"><label class="field-label">סוג דייט <span style="color:var(--text3);font-weight:400">· אופציונלי</span></label><input class="field-input" id="sched-datetype" placeholder="דרינקים · אוכל · פעילות…"/></div>
     <div style="display:flex;gap:8px;align-items:flex-start;background:rgba(91,141,239,0.08);border:1px solid rgba(91,141,239,0.25);border-radius:12px;padding:10px 12px;margin-bottom:12px;font-size:11.5px;color:var(--text2);line-height:1.45">
       <span>⏱️</span><span>הדייט יופיע כ<b style="color:#5b8def">מתוכנן</b> עד השעה שבחרתם, יהפוך ל<b style="color:#ff8a5c">פעיל</b> כשמגיע הזמן, ויירד מהמפה 5 שעות אחרי.</span>
     </div>
@@ -1196,12 +1196,12 @@ sb.auth.onAuthStateChange((event)=>{ if (event==='PASSWORD_RECOVERY') { hideLoad
 // CONSTANTS
 // ═══════════════════════════════════
 const VIBES_LIST = [
-  {id:'פאב',label:'🍺 פאב & בר'},
+  {id:'פאב',label:'🍺 פאב'},
   {id:'מסעדה',label:'🍷 מסעדה'},
-  {id:'טבע',label:'🥾 טבע & הרפתקה'},
-  {id:'בית',label:'🎲 ערב ביתי'},
-  {id:'ים',label:'🌊 ים & חוף'},
-  {id:'תרבות',label:'🎭 תרבות & אמנות'},
+  {id:'טבע',label:'🥾 טבע'},
+  {id:'בית',label:'🎲 ביתי'},
+  {id:'ים',label:'🌊 ים'},
+  {id:'תרבות',label:'🎭 תרבות'},
 ];
 const STATUS_META = {
   hot:  {color:'#ff4b6e',label:'חמים עכשיו'},
@@ -2811,7 +2811,7 @@ function openScheduledModal(){
   VIBES_LIST.forEach(v=>{
     const chip=document.createElement('div');
     chip.className='vibe-chip';
-    chip.style.cssText='padding:8px 10px;font-size:13px';
+    chip.style.cssText='padding:7px 11px;font-size:12.5px';
     chip.textContent=v.label;
     chip.onclick=()=>{
       schedVibe = (schedVibe===v.id) ? '' : v.id;
