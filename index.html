@@ -689,6 +689,7 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
     </div>
   </div>
   <button id="add-event-profile-btn" onclick="openEventChooser()" style="width:100%;padding:13px;border:2px dashed rgba(29,209,161,0.4);border-radius:14px;background:rgba(29,209,161,0.06);color:#1dd1a1;font-family:'Heebo';font-weight:700;font-size:15px;cursor:pointer;margin-bottom:20px">➕ הוסף אירוע חדש למפה</button>
+  <div id="sched-banner" style="display:none"></div>
   <div style="background:linear-gradient(135deg,rgba(255,75,110,0.12),rgba(255,159,67,0.08));border:1px solid rgba(255,75,110,0.2);border-radius:20px;padding:24px 20px;text-align:center;margin-bottom:20px">
     <div style="position:relative;display:inline-block;margin-bottom:14px">
       <div id="profile-photo-preview" style="width:90px;height:90px;border-radius:50%;background:rgba(255,75,110,0.2);border:2px solid rgba(255,75,110,0.4);display:flex;align-items:center;justify-content:center;font-size:36px;overflow:hidden;margin:0 auto">💞</div>
@@ -2776,6 +2777,33 @@ function openScheduledModal(){
   document.getElementById('sched-datetype').value='';
 }
 function closeScheduledModal(){ document.getElementById('sched-modal').classList.remove('open'); }
+
+async function renderScheduledBanner(){
+  const el=document.getElementById('sched-banner');
+  if(!el||!currentUser) return;
+  el.style.display='none'; el.innerHTML='';
+  const {data:rows}=await sb.from('events').select('id,starts_at,city').eq('couple_id',currentUser.id).eq('type','scheduled').gt('ends_at',new Date().toISOString()).order('starts_at',{ascending:true}).limit(1);
+  const ev=(rows||[])[0];
+  if(!ev) return;
+  const d=new Date(ev.starts_at);
+  const when=d.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric'})+' · '+d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+  el.innerHTML=`<div style="background:linear-gradient(135deg,rgba(91,141,239,0.14),rgba(168,107,255,0.08));border:1px solid rgba(91,141,239,0.3);border-radius:16px;padding:14px 16px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
+    <div style="font-size:22px">📅</div>
+    <div style="flex:1;text-align:right">
+      <div style="font-weight:700;font-size:14px;color:#9db8ff">דייט מתוזמן</div>
+      <div style="font-size:12.5px;color:var(--text2);margin-top:2px">${when}${ev.city?' · '+ev.city:''}</div>
+    </div>
+    <button onclick="cancelScheduledEvent('${ev.id}')" style="background:rgba(255,75,110,0.15);border:1px solid rgba(255,75,110,0.4);color:var(--pink);padding:7px 14px;border-radius:100px;font-family:'Heebo';font-weight:700;font-size:12.5px;cursor:pointer">ביטול</button>
+  </div>`;
+  el.style.display='block';
+}
+async function cancelScheduledEvent(id){
+  if(!confirm('לבטל את הדייט המתוזמן?')) return;
+  const {error}=await sb.from('events').delete().eq('id',id);
+  if(error){ showToast('😕 לא הצלחנו לבטל. נסו שוב'); return; }
+  showToast('הדייט בוטל');
+  renderScheduledBanner();
+}
 async function saveScheduledEvent(){
   const date=document.getElementById('sched-date').value;
   const time=document.getElementById('sched-time').value;
@@ -2787,6 +2815,7 @@ async function saveScheduledEvent(){
   const start=new Date(`${date}T${time}`);
   if(isNaN(start.getTime())){ showToast('תאריך או שעה לא תקינים'); return; }
   if(start.getTime()<Date.now()-60000){ showToast('בחרו זמן עתידי'); return; }
+  if(start.getTime()>Date.now()+7*24*60*60*1000){ showToast('אפשר לתזמן עד שבוע קדימה בלבד'); return; }
   const end=new Date(start.getTime()+5*60*60*1000);
   const btn=document.querySelector('#sched-modal .btn-primary');
   if(btn){ btn.disabled=true; btn.dataset.orig=btn.textContent; btn.innerHTML='<span class="btn-spinner"></span> מפרסם...'; }
@@ -2803,6 +2832,7 @@ async function saveScheduledEvent(){
   }
   closeScheduledModal();
   showToast('📅 הדייט פורסם! זוגות יוכלו לשלוח לכם שייק');
+  renderScheduledBanner();
 }
 
 function openEventModal(editMode=false) {
@@ -3027,6 +3057,7 @@ async function openProfile() {
   showScreen('profile');
   document.getElementById('bottom-nav').style.display='flex';
   refreshBlockedCount();
+  renderScheduledBanner();
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav==='profile'));
   profileSelectedVibes=[...(myProfile?.vibes||[])];
   document.getElementById('profile-name').value=myProfile?.name||'';
