@@ -1848,13 +1848,42 @@ function updateDistanceFilter(val) {
 // ═══════════════════════════════════
 // REALTIME
 // ═══════════════════════════════════
+// מרענן את התצוגה האישית (כרטיס אירוע / כפתור הוספה / קאונטדאון / סיכה עצמית) לפי המצב הנוכחי ב-myProfile.
+// נקרא מהמאזין החי כשבן/בת הזוג מפרסם/מבטל אירוע — כך זה מופיע/נעלם מיד ולא רק אחרי רענון.
+function syncSelfEventUI() {
+  if (!myProfile) return;
+  const hot = effectiveStatus(myProfile)==='hot';
+  const card=document.getElementById('active-event-card');
+  const txt=document.getElementById('active-event-text');
+  const addBtn=document.getElementById('add-event-profile-btn');
+  if (card) card.style.display = hot ? 'block' : 'none';
+  if (hot && txt && myProfile.status_text) txt.textContent = '"'+myProfile.status_text+'"';
+  if (addBtn) addBtn.style.display = hot ? 'none' : 'block';
+  if (hot) startEventCountdown(); else stopEventCountdown();
+  renderMarkers(); updateLiveCount();
+}
+
 function subscribeRealtime() {
   if (statusChannel) statusChannel.unsubscribe();
   statusChannel = sb.channel('public:profiles')
     .on('postgres_changes',{event:'*',schema:'public',table:'profiles'},payload=>{
       const updated=payload.new;
-      if (!updated||updated.id===currentUser.id) return;
-      if (updated.id===myProfile?.partner_id) return;
+      if (!updated) return;
+      // עדכון של הזוג שלי (עצמי או בן/בת הזוג): סנכרן את הפרופיל האישי + כרטיס האירוע מיד,
+      // אבל אל תצייר כסיכה נפרדת (כדי לא ליצור כפילות במפה). זה מה שמביא אירוע ספונטני לבן/בת הזוג בזמן אמת.
+      if (updated.id===currentUser.id || (myProfile?.partner_id && updated.id===myProfile.partner_id)) {
+        myProfile = {...myProfile,
+          status: updated.status,
+          status_text: updated.status_text,
+          lat: updated.lat,
+          lng: updated.lng,
+          event_expires_at: updated.event_expires_at,
+          event_vibe: updated.event_vibe,
+          event_photo_url: updated.event_photo_url
+        };
+        syncSelfEventUI();
+        return;
+      }
       // אל תוסיף/תרנדר זוג חסום או מדווח (real-time עוקף את הסינון של loadCouples)
       if (_hiddenCoupleIds.has(updated.id) || (updated.partner_id && _hiddenCoupleIds.has(updated.partner_id))) {
         const idx=allCouples.findIndex(c=>c.id===updated.id);
