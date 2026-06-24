@@ -2506,8 +2506,27 @@ async function sendShake(eventId=null) {
   showToast(eventId ? '💞 שלחתם Shake לדייט! נודיע לכם כשיאשרו' : '💞 Double Shake נשלח!'); closePanel();
 }
 
+function schedShakeChip(ev){
+  if(!ev||!ev.starts_at) return '';
+  const d=new Date(ev.starts_at), now=new Date();
+  const startOf=(x)=>new Date(x.getFullYear(),x.getMonth(),x.getDate());
+  const days=Math.round((startOf(d)-startOf(now))/86400000);
+  let near;
+  if(days<=0) near='הערב 🔥';
+  else if(days===1) near='מחר';
+  else near='יום '+['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'][d.getDay()];
+  const dateStr=d.toLocaleDateString('he-IL',{day:'numeric',month:'numeric'});
+  const timeStr=d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+  const vibeLabel=(VIBES_LIST.find(v=>v.id===ev.vibe)||{}).label||'';
+  const exact=`${dateStr} · ${timeStr}${vibeLabel?' · '+vibeLabel:''}`;
+  return `<div style="display:flex;align-items:center;gap:9px;background:linear-gradient(135deg,rgba(91,141,239,0.16),rgba(168,107,255,0.10));border:1px solid rgba(91,141,239,0.35);border-radius:12px;padding:9px 12px;margin-top:10px">
+    <span style="font-size:18px">📅</span>
+    <div style="flex:1"><div style="font-weight:800;font-size:14px;color:#bcd0ff">Shake לדייט ${near}</div><div style="font-size:11.5px;color:var(--text3);margin-top:1px">${escapeHtml(exact)}</div></div>
+  </div>`;
+}
+
 async function loadShakes() {
-  const {data} = await sb.from('shakes').select('*, from_profile:from_id(name,partner_name,photo_url,city,vibes,status_text)').eq('to_id',currentUser.id).eq('status','pending').order('created_at',{ascending:false});
+  const {data} = await sb.from('shakes').select('*, from_profile:from_id(name,partner_name,photo_url,city,vibes,status_text), event:event_id(starts_at,vibe,city)').eq('to_id',currentUser.id).eq('status','pending').order('created_at',{ascending:false});
   const list=document.getElementById('shakes-list');
   const badge=document.getElementById('shake-badge');
   if (badge) {
@@ -2523,7 +2542,7 @@ async function loadShakes() {
     const photoEl=p?.photo_url
       ?`<img src="${escapeHtml(p.photo_url)}" style="width:56px;height:56px;border-radius:14px;object-fit:cover;flex-shrink:0;border:2px solid var(--pink)"/>`
       :`<div style="width:56px;height:56px;border-radius:14px;background:rgba(255,75,110,0.15);border:2px solid rgba(255,75,110,0.3);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">💞</div>`;
-    return `<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,75,110,0.2);border-radius:18px;padding:16px;margin-bottom:12px"><div style="display:flex;gap:12px;align-items:center;margin-bottom:14px">${photoEl}<div style="flex:1"><div style="font-family:'Syne';font-weight:800;font-size:16px">${escapeHtml(p?.name||'?')} <span class="amp">♥</span> ${escapeHtml(p?.partner_name||'?')}</div><div style="color:var(--text3);font-size:12px;margin-top:2px">${escapeHtml(p?.city||'ישראל')}</div>${p?.status_text?`<div style="color:var(--text2);font-size:13px;margin-top:4px">"${escapeHtml(p.status_text)}"</div>`:''}</div></div><div style="display:flex;gap:8px"><button onclick="respondShake(${s.id},'accepted',${JSON.stringify(p?.name||'').replace(/"/g,'&quot;')})" style="flex:1;padding:12px;background:linear-gradient(135deg,var(--pink),var(--pink2));border:none;color:white;border-radius:12px;font-family:'Heebo';font-weight:700;font-size:14px;cursor:pointer">💞 קבלו!</button><button onclick="respondShake(${s.id},'declined','')" style="flex:1;padding:12px;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text2);border-radius:12px;font-family:'Heebo';font-weight:600;font-size:14px;cursor:pointer">לא תודה</button></div></div>`;
+    return `<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,75,110,0.2);border-radius:18px;padding:16px;margin-bottom:12px"><div style="display:flex;gap:12px;align-items:center">${photoEl}<div style="flex:1"><div style="font-family:'Syne';font-weight:800;font-size:16px">${escapeHtml(p?.name||'?')} <span class="amp">♥</span> ${escapeHtml(p?.partner_name||'?')}</div><div style="color:var(--text3);font-size:12px;margin-top:2px">${escapeHtml(p?.city||'ישראל')}</div>${p?.status_text?`<div style="color:var(--text2);font-size:13px;margin-top:4px">"${escapeHtml(p.status_text)}"</div>`:''}</div></div>${schedShakeChip(s.event)}<div style="display:flex;gap:8px;margin-top:14px"><button onclick="respondShake(${s.id},'accepted',${JSON.stringify(p?.name||'').replace(/"/g,'&quot;')})" style="flex:1;padding:12px;background:linear-gradient(135deg,var(--pink),var(--pink2));border:none;color:white;border-radius:12px;font-family:'Heebo';font-weight:700;font-size:14px;cursor:pointer">💞 קבלו!</button><button onclick="respondShake(${s.id},'declined','')" style="flex:1;padding:12px;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text2);border-radius:12px;font-family:'Heebo';font-weight:600;font-size:14px;cursor:pointer">לא תודה</button></div></div>`;
   }).join('');
 }
 
