@@ -2526,7 +2526,7 @@ function schedShakeChip(ev){
 }
 
 async function loadShakes() {
-  const {data} = await sb.from('shakes').select('*, from_profile:from_id(name,partner_name,photo_url,city,vibes,status_text), event:event_id(starts_at,vibe,city)').eq('to_id',currentUser.id).eq('status','pending').order('created_at',{ascending:false});
+  const {data} = await sb.from('shakes').select('*, from_profile:from_id(name,partner_name,photo_url,city,vibes,status_text)').eq('to_id',currentUser.id).eq('status','pending').order('created_at',{ascending:false});
   const list=document.getElementById('shakes-list');
   const badge=document.getElementById('shake-badge');
   if (badge) {
@@ -2536,6 +2536,15 @@ async function loadShakes() {
   if (!data?.length) {
     list.innerHTML='<div style="text-align:center;padding:50px 24px"><div style="font-size:52px;margin-bottom:14px">💞</div><div style="font-family:\'Syne\',sans-serif;font-size:18px;font-weight:800;margin-bottom:8px">עוד אין Shakes</div><div style="font-size:13px;color:var(--text3);line-height:1.6;margin-bottom:20px">כשתמצאו זוג מעניין על המפה, שלחו לו Double Shake — וכאן תראו מי ענה!</div><button onclick="navTo(\'main\')" style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border:none;border-radius:100px;background:linear-gradient(135deg,var(--pink),var(--pink2));color:white;font-family:\'Heebo\';font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 20px rgba(255,75,110,0.35)">🗺️ למפה</button></div>';
     return;
+  }
+  // attach event details (separate fetch — FK join not reliably recognized by client)
+  const evIds=[...new Set(data.map(s=>s.event_id).filter(Boolean))];
+  if(evIds.length){
+    try{
+      const {data:evs}=await sb.from('events').select('id,starts_at,vibe,city').in('id',evIds);
+      const byId={}; (evs||[]).forEach(e=>byId[e.id]=e);
+      data.forEach(s=>{ s.event = s.event_id ? byId[s.event_id] : null; });
+    }catch(e){}
   }
   list.innerHTML=data.map(s=>{
     const p=s.from_profile;
