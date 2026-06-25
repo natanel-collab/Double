@@ -1744,6 +1744,15 @@ function schedCardCancel(){
   cancelScheduledEvent(id).then(()=>{ if(typeof loadCouples==='function') loadCouples(); });
 }
 
+// מזהה זוגי קנוני: ה-UUID הקטן מבין שני בני הזוג — זהה לשניהם, דטרמיניסטי.
+// משמש לתיוג אירועים מתוזמנים כך ששני בני הזוג רואים/עורכים/מבטלים, והמגבלה סופרת אותם כזוג אחד.
+function coupleId(){
+  const a=currentUser?.id, b=myProfile?.partner_id;
+  if(!a) return null;
+  if(!b) return a;
+  return [a,b].sort()[0];
+}
+
 function effectiveStatus(c) {
   if (c.status==='hot'&&c.event_expires_at&&new Date(c.event_expires_at)<=new Date()) return 'cold';
   return c.status||'cold';
@@ -3005,7 +3014,7 @@ async function renderScheduledBanner(){
   const el=document.getElementById('sched-banner');
   if(!el||!currentUser) return;
   el.style.display='none'; el.innerHTML='';
-  const {data:rows}=await sb.from('events').select('id,starts_at,city').eq('couple_id',currentUser.id).eq('type','scheduled').gt('ends_at',new Date().toISOString()).order('starts_at',{ascending:true}).limit(1);
+  const {data:rows}=await sb.from('events').select('id,starts_at,city').eq('couple_id',coupleId()).eq('type','scheduled').gt('ends_at',new Date().toISOString()).order('starts_at',{ascending:true}).limit(1);
   const ev=(rows||[])[0];
   if(!ev) return;
   const d=new Date(ev.starts_at);
@@ -3053,7 +3062,7 @@ async function saveScheduledEvent(){
   const btn=document.querySelector('#sched-modal .btn-primary');
   if(btn){ btn.disabled=true; btn.dataset.orig=btn.textContent; btn.innerHTML='<span class="btn-spinner"></span> מפרסם...'; }
   const {error}=await sb.from('events').insert({
-    couple_id: currentUser.id, type:'scheduled',
+    couple_id: coupleId(), type:'scheduled',
     starts_at: start.toISOString(), ends_at: end.toISOString(),
     city, lat, lng, vibe: schedVibe||null, date_type: dateType||null
   });
