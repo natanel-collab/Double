@@ -1253,6 +1253,7 @@ let schedLat = null, schedLng = null, schedCityName = '', schedVibe = '';
 let feedVibeFilter = 'all', listVibeFilter = 'all';
 let profileSelectedVibes = [];
 let statusChannel = null;
+let eventsChannel = null, _evtDebounce = null;
 let _panelUnmatched = false;
 let _safetyCouple = null;
 let _hiddenCoupleIds = new Set();
@@ -1662,16 +1663,19 @@ async function loadCouples() {
 
 async function loadScheduledEvents(){
   if(!mapInstance) return;
-  Object.values(eventMarkers).forEach(m=>m.remove()); eventMarkers={};
   let evs=[];
   try{
     const {data}=await sb.from('events').select('*').eq('type','scheduled').gt('ends_at',new Date().toISOString()).not('lat','is',null);
     evs=data||[];
   }catch(e){ return; }
-  if(!evs.length) return;
   const mine=new Set([currentUser.id, myProfile?.partner_id].filter(Boolean));
   const hidden=_hiddenCoupleIds||new Set();
   const list=evs.filter(e=> mine.has(e.couple_id) || !hidden.has(e.couple_id));
+  // ציור מצטבר: הסר רק סיכות שכבר לא רלוונטיות, השאר את הקיימות במקומן (בלי הבהוב/קפיצה)
+  const desired=new Set(list.map(e=>String(e.id)));
+  Object.keys(eventMarkers).forEach(id=>{
+    if(!desired.has(String(id))){ eventMarkers[id].remove(); delete eventMarkers[id]; }
+  });
   if(!list.length) return;
   const ids=[...new Set(list.map(e=>e.couple_id))];
   let profById={};
@@ -1682,17 +1686,27 @@ async function loadScheduledEvents(){
   list.forEach(ev=>{
     const prof=profById[ev.couple_id];
     const isSelf=mine.has(ev.couple_id);
-    if(!isSelf && prof && prof.partner_id && hidden.has(prof.partner_id)) return;
+    if(!isSelf && prof && prof.partner_id && hidden.has(prof.partner_id)){
+      if(eventMarkers[ev.id]){ eventMarkers[ev.id].remove(); delete eventMarkers[ev.id]; }
+      return;
+    }
+    const sig=`${ev.lat},${ev.lng},${ev.vibe||''},${isSelf?1:0}`;
+    const existing=eventMarkers[ev.id];
+    if(existing){
+      if(existing._sig===sig) return;                 // ללא שינוי — השאר במקום
+      existing.remove(); delete eventMarkers[ev.id];   // נערך — בנה מחדש
+    }
     const emoji=vibeEmoji(ev.vibe);
     const grad=isSelf ? '#6c5ce7,#a86bff' : '#5b8def,#a86bff';
     const selfGlow=isSelf ? 'box-shadow:0 0 0 3px rgba(108,92,231,0.45),0 0 18px rgba(108,92,231,0.6);' : '';
     const selfTag=isSelf ? `<div style="position:absolute;top:-22px;right:50%;transform:translateX(50%);background:#6c5ce7;color:white;font-size:9px;font-weight:800;padding:2px 8px;border-radius:100px;white-space:nowrap;font-family:'Heebo'">⭐ זה אתם</div>` : '';
     const markerEl=L.divIcon({
       className:'',
-      html:`<div class="double-marker" style="font-size:18px;position:relative;background:linear-gradient(135deg,${grad});border-color:#fff;${selfGlow}">${selfTag}<span>📅</span><span style="position:absolute;bottom:-3px;right:-3px;font-size:12px;background:#0e0b15;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center">${emoji}</span></div>`,
+      html:`<div style="position:relative;width:46px;height:46px;display:flex;align-items:center;justify-content:center"><div class="double-marker" style="font-size:18px;position:relative;background:linear-gradient(135deg,${grad});border-color:#fff;${selfGlow}">${selfTag}<span>📅</span><span style="position:absolute;bottom:-3px;right:-3px;font-size:12px;background:#0e0b15;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center">${emoji}</span></div></div>`,
       iconSize:[46,46],iconAnchor:[23,23],
     });
     const m=L.marker([ev.lat,ev.lng],{icon:markerEl}).addTo(mapInstance).on('click',()=>openScheduledCard(ev,prof,isSelf));
+    m._sig=sig;
     eventMarkers[ev.id]=m;
   });
 }
@@ -1912,6 +1926,20 @@ function subscribeRealtime() {
   sb.channel('blocks:'+currentUser.id)
     .on('postgres_changes',{event:'*',schema:'public',table:'blocks'},()=>{ loadCouples(); })
     .subscribe();
+
+  // מנוי על אירועים — מביא דייט מתוזמן (פרסום/עריכה/ביטול) לבן/בת הזוג ולמפה בזמן אמת.
+  // debounced כדי לא להפעיל רינדור על כל שינוי בנפרד.
+  if (eventsChannel) eventsChannel.unsubscribe();
+  eventsChannel = sb.channel('public:events')
+    .on('postgres_changes',{event:'*',schema:'public',table:'events'},payload=>{
+      // מחיקה: הסר את הסיכה מיד מה-payload, בלי להמתין לטעינה מחדש (תחושת מיידיות)
+      if(payload.eventType==='DELETE' && payload.old?.id && eventMarkers[payload.old.id]){
+        eventMarkers[payload.old.id].remove();
+        delete eventMarkers[payload.old.id];
+      }
+      clearTimeout(_evtDebounce);
+      _evtDebounce=setTimeout(()=>{ loadScheduledEvents(); renderScheduledBanner(); }, 120);
+    }).subscribe();
 }
 
 function subscribeNewMessages() {
