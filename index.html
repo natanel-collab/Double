@@ -2592,7 +2592,8 @@ function schedShakeChip(ev){
 }
 
 async function loadShakes() {
-  const {data} = await sb.from('shakes').select('*, from_profile:from_id(name,partner_name,photo_url,city,vibes,status_text)').eq('to_id',currentUser.id).eq('status','pending').order('created_at',{ascending:false});
+  const myIds=[currentUser.id, myProfile?.partner_id].filter(Boolean);
+  const {data} = await sb.from('shakes').select('*, from_profile:from_id(name,partner_name,photo_url,city,vibes,status_text)').in('to_id',myIds).eq('status','pending').order('created_at',{ascending:false});
   const list=document.getElementById('shakes-list');
   const badge=document.getElementById('shake-badge');
   if (badge) {
@@ -2625,21 +2626,22 @@ async function loadConnectedShakes() {
   const list=document.getElementById('shakes-connected-list');
   if (!list) return;
   list.innerHTML='<div style="color:var(--text3);font-size:13px;text-align:center;padding:20px">טוען...</div>';
-  // שייקים מאושרים שאני שלחתי
+  const myIds=[currentUser.id, myProfile?.partner_id].filter(Boolean);
+  // שייקים מאושרים שהזוג שלי שלח (אני או בן/בת הזוג)
   const {data:sent} = await sb.from('shakes')
     .select('*, other:to_id(id,name,partner_name,photo_url,city,status_text)')
-    .eq('from_id',currentUser.id).eq('status','accepted');
-  // שייקים מאושרים שקיבלתי
+    .in('from_id',myIds).eq('status','accepted');
+  // שייקים מאושרים שהזוג שלי קיבל (אני או בן/בת הזוג)
   const {data:received} = await sb.from('shakes')
     .select('*, other:from_id(id,name,partner_name,photo_url,city,status_text)')
-    .eq('to_id',currentUser.id).eq('status','accepted');
+    .in('to_id',myIds).eq('status','accepted');
   // מזג ונקה כפילויות לפי id של הזוג השני
   const all=[...(sent||[]),...(received||[])];
   const seen=new Set();
   const couples=[];
   all.forEach(s=>{
     const p=s.other;
-    if (!p || seen.has(p.id)) return;
+    if (!p || seen.has(p.id) || myIds.includes(p.id)) return;
     seen.add(p.id);
     couples.push({shakeId:s.id, ...p});
   });
@@ -2831,8 +2833,10 @@ async function unmatch(shakeId, couple) {
 }
 
 function subscribeShakes() {
+  const myIds=[currentUser.id, myProfile?.partner_id].filter(Boolean);
+  const filter = myIds.length>1 ? `to_id=in.(${myIds.join(',')})` : `to_id=eq.${currentUser.id}`;
   sb.channel('shakes:'+currentUser.id)
-    .on('postgres_changes',{event:'INSERT',schema:'public',table:'shakes',filter:`to_id=eq.${currentUser.id}`},()=>{
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'shakes',filter},()=>{
       showToast('💞 קיבלתם Double Shake חדש!');
       loadShakes();
     }).subscribe();
