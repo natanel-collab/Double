@@ -2593,7 +2593,16 @@ function schedShakeChip(ev){
 
 async function loadShakes() {
   const myIds=[currentUser.id, myProfile?.partner_id].filter(Boolean);
-  const {data} = await sb.from('shakes').select('*, from_profile:from_id(name,partner_name,photo_url,city,vibes,status_text)').in('to_id',myIds).eq('status','pending').order('created_at',{ascending:false});
+  const {data} = await sb.from('shakes').select('*').in('to_id',myIds).eq('status','pending').order('created_at',{ascending:false});
+  // שמות הזוג השולח דרך public_couples (טבלת profiles נעולה לקריאת זוגות אחרים)
+  if(data?.length){
+    const fromIds=[...new Set(data.map(s=>s.from_id).filter(Boolean))];
+    try{
+      const {data:profs}=await sb.from('public_couples').select('id,name,partner_name,photo_url,city,status_text').in('id',fromIds);
+      const byId={}; (profs||[]).forEach(p=>byId[p.id]=p);
+      data.forEach(s=>{ s.from_profile = byId[s.from_id] || null; });
+    }catch(e){}
+  }
   const list=document.getElementById('shakes-list');
   const badge=document.getElementById('shake-badge');
   if (badge) {
@@ -2627,20 +2636,22 @@ async function loadConnectedShakes() {
   if (!list) return;
   list.innerHTML='<div style="color:var(--text3);font-size:13px;text-align:center;padding:20px">טוען...</div>';
   const myIds=[currentUser.id, myProfile?.partner_id].filter(Boolean);
-  // שייקים מאושרים שהזוג שלי שלח (אני או בן/בת הזוג)
-  const {data:sent} = await sb.from('shakes')
-    .select('*, other:to_id(id,name,partner_name,photo_url,city,status_text)')
-    .in('from_id',myIds).eq('status','accepted');
-  // שייקים מאושרים שהזוג שלי קיבל (אני או בן/בת הזוג)
-  const {data:received} = await sb.from('shakes')
-    .select('*, other:from_id(id,name,partner_name,photo_url,city,status_text)')
-    .in('to_id',myIds).eq('status','accepted');
-  // מזג ונקה כפילויות לפי id של הזוג השני
-  const all=[...(sent||[]),...(received||[])];
+  // שייקים מאושרים שהזוג שלי שלח / קיבל (אני או בן/בת הזוג)
+  const {data:sent} = await sb.from('shakes').select('*').in('from_id',myIds).eq('status','accepted');
+  const {data:received} = await sb.from('shakes').select('*').in('to_id',myIds).eq('status','accepted');
+  // קבע את מזהה הזוג השני לכל שייק, ושלוף את שמותיו מ-public_couples (profiles נעולה)
+  const sentM=(sent||[]).map(s=>({...s,_otherId:s.to_id}));
+  const recM=(received||[]).map(s=>({...s,_otherId:s.from_id}));
+  const all=[...sentM,...recM];
+  const otherIds=[...new Set(all.map(s=>s._otherId).filter(id=>id && !myIds.includes(id)))];
+  let profById={};
+  if(otherIds.length){
+    try{ const {data:profs}=await sb.from('public_couples').select('id,name,partner_name,photo_url,city,status_text').in('id',otherIds); (profs||[]).forEach(p=>profById[p.id]=p); }catch(e){}
+  }
   const seen=new Set();
   const couples=[];
   all.forEach(s=>{
-    const p=s.other;
+    const p=profById[s._otherId];
     if (!p || seen.has(p.id) || myIds.includes(p.id)) return;
     seen.add(p.id);
     couples.push({shakeId:s.id, ...p});
@@ -3796,9 +3807,13 @@ async function submitReview() {
 
 async function loadReviewsReceived() {
   const { data } = await sb.from('reviews')
-    .select('*, from_profile:from_id(name,partner_name,photo_url)')
+    .select('*')
     .eq('to_id', currentUser.id)
     .order('created_at', { ascending: false });
+  if(data?.length){
+    const ids=[...new Set(data.map(r=>r.from_id).filter(Boolean))];
+    try{ const {data:ps}=await sb.from('public_couples').select('id,name,partner_name,photo_url').in('id',ids); const m={}; (ps||[]).forEach(p=>m[p.id]=p); data.forEach(r=>{ r.from_profile=m[r.from_id]||null; }); }catch(e){}
+  }
 
   const list = document.getElementById('reviews-received-list');
   if (!list) return;
@@ -3942,12 +3957,14 @@ async function deleteDateHistory(id) {
 // ═══════════════════════════════════
 async function loadCoupleReviews(coupleId) {
   const { data } = await sb.from('reviews')
-    .select('*, from_profile:from_id(name,partner_name)')
+    .select('*')
     .eq('to_id', coupleId)
     .order('created_at', { ascending: false })
     .limit(3);
 
   if (!data?.length) return '';
+  const _rids=[...new Set(data.map(r=>r.from_id).filter(Boolean))];
+  try{ const {data:ps}=await sb.from('public_couples').select('id,name,partner_name').in('id',_rids); const m={}; (ps||[]).forEach(p=>m[p.id]=p); data.forEach(r=>{ r.from_profile=m[r.from_id]||null; }); }catch(e){}
   return `<div class="info-card">
     <div class="info-card-label">⭐ המלצות</div>
     ${data.map(r => `<div style="font-size:13px;color:var(--text2);padding:8px 0;border-bottom:1px solid var(--border)">"${escapeHtml(r.text)}" — ${escapeHtml(r.from_profile?.name || '?')}</div>`).join('')}
