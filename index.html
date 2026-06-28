@@ -1295,6 +1295,7 @@ let feedVibeFilter = 'all', listVibeFilter = 'all';
 let profileSelectedVibes = [];
 let statusChannel = null;
 let eventsChannel = null, _evtDebounce = null;
+let blocksChannel = null, newMsgChannel = null, shakesChannel = null;
 let _panelUnmatched = false;
 let _safetyCouple = null;
 let _hiddenCoupleIds = new Set();
@@ -1823,7 +1824,13 @@ function renderMarkers() {
   Object.values(markers).forEach(m=>m.remove()); markers={};
   const selfActive=myProfile?.lat&&(effectiveStatus(myProfile)==='hot'||effectiveStatus(myProfile)==='warm');
   const all = selfActive ? [...allCouples.filter(c=>c.id!==currentUser.id),myProfile] : allCouples.filter(c=>c.id!==currentUser.id);
+  const _seenCouple = new Set();
   const filtered = all.filter(c=>{
+    // זוג = 2 פרופילים → סיכה אחת בלבד לכל זוג (dedup לפי פרטנר, כמו בפיד)
+    if (c.id!==currentUser.id) {
+      if (c.partner_id && _seenCouple.has(c.partner_id)) return false;
+      _seenCouple.add(c.id);
+    }
     const status=effectiveStatus(c);
     if (!status||status==='cold') return false;
     if (selectedVibeFilter==='hot'&&status!=='hot') return false;
@@ -1970,7 +1977,8 @@ function subscribeRealtime() {
     }).subscribe();
 
   // מנוי על חסימות — כדי שזוג חסום ייעלם/יופיע בזמן אמת בלי טעינה מחדש (שני הצדדים)
-  sb.channel('blocks:'+currentUser.id)
+  if (blocksChannel) blocksChannel.unsubscribe();
+  blocksChannel = sb.channel('blocks:'+currentUser.id)
     .on('postgres_changes',{event:'*',schema:'public',table:'blocks'},()=>{ loadCouples(); })
     .subscribe();
 
@@ -1990,7 +1998,8 @@ function subscribeRealtime() {
 }
 
 function subscribeNewMessages() {
-  sb.channel('new-msg:'+currentUser.id)
+  if (newMsgChannel) newMsgChannel.unsubscribe();
+  newMsgChannel = sb.channel('new-msg:'+currentUser.id)
     .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages'},payload=>{
       const roomId=payload.new?.room_id||'';
       const inMyRoom = roomId.includes(currentUser.id) || (myProfile?.partner_id && roomId.includes(myProfile.partner_id));
@@ -2893,7 +2902,8 @@ async function unmatch(shakeId, couple) {
 function subscribeShakes() {
   const myIds=[currentUser.id, myProfile?.partner_id].filter(Boolean);
   const filter = myIds.length>1 ? `to_id=in.(${myIds.join(',')})` : `to_id=eq.${currentUser.id}`;
-  sb.channel('shakes:'+currentUser.id)
+  if (shakesChannel) shakesChannel.unsubscribe();
+  shakesChannel = sb.channel('shakes:'+currentUser.id)
     .on('postgres_changes',{event:'INSERT',schema:'public',table:'shakes',filter},()=>{
       showToast('💞 קיבלתם Double Shake חדש!');
       loadShakes();
