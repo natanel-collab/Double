@@ -1836,9 +1836,10 @@ function renderMarkers() {
     if (selectedVibeFilter==='hot'&&status!=='hot') return false;
     if (selectedVibeFilter!=='all'&&selectedVibeFilter!=='hot'&&!(c.vibes||[]).includes(selectedVibeFilter)) return false;
     if (maxDistanceKm<99999&&c.lat) {
-      const refLat = userLat || myProfile?.lat;
-      const refLng = userLng || myProfile?.lng;
-      if (refLat && getDistanceKm(refLat,refLng,c.lat,c.lng)>maxDistanceKm) return false;
+      const ctr = mapInstance ? mapInstance.getCenter() : null;
+      const refLat = userLat || myProfile?.lat || ctr?.lat;
+      const refLng = userLng || myProfile?.lng || ctr?.lng;
+      if (refLat!=null && refLng!=null && getDistanceKm(refLat,refLng,c.lat,c.lng)>maxDistanceKm) return false;
     }
     return true;
   });
@@ -1890,7 +1891,14 @@ function renderMarkers() {
 
 function updateLiveCount() {
   const now=new Date();
-  document.getElementById('live-count').textContent = allCouples.filter(c=>c.status==='hot'&&!(c.event_expires_at&&new Date(c.event_expires_at)<=now)).length;
+  const seen=new Set();
+  let n=0;
+  allCouples.forEach(c=>{
+    if (c.partner_id && seen.has(c.partner_id)) return; // בן הזוג כבר נספר — זוג אחד
+    seen.add(c.id);
+    if (c.status==='hot' && !(c.event_expires_at && new Date(c.event_expires_at)<=now)) n++;
+  });
+  document.getElementById('live-count').textContent = n;
 }
 
 let userLat = null, userLng = null;
@@ -3512,10 +3520,22 @@ function copyProfileInvite() {
   navigator.clipboard.writeText(document.getElementById('profile-invite-link').value).then(()=>showToast('קוד הועתק! 📋'));
 }
 async function createCoupleCode() {
-  const newCode=generateCoupleCode();
-  await sb.from('couple_codes').upsert({user_id:currentUser.id,code:newCode});
-  myProfile={...myProfile,couple_code:newCode};
-  document.getElementById('profile-invite-link').value=newCode;
+  let saved=null, lastErr=null;
+  // ניסיון עד 5 פעמים — אם הקוד כבר תפוס (התנגשות UNIQUE), מגרילים מחדש
+  for (let i=0;i<5;i++){
+    const code=generateCoupleCode();
+    const {error}=await sb.from('couple_codes').upsert({user_id:currentUser.id,code});
+    if (!error){ saved=code; break; }
+    lastErr=error;
+    if (!String(error.message||'').toLowerCase().includes('duplicate')) break; // שגיאה אחרת — לא להמשיך לנסות
+  }
+  if (!saved){
+    showToast('❌ יצירת הקוד נכשלה, נסו שוב');
+    console.error('createCoupleCode failed', lastErr);
+    return;
+  }
+  myProfile={...myProfile,couple_code:saved};
+  document.getElementById('profile-invite-link').value=saved;
   document.getElementById('profile-invite-setup').style.display='none';
   showToast('✅ קוד שיתוף נוצר!');
 }
