@@ -1725,38 +1725,53 @@ async function loadCouples() {
     if (hiddenIds.size) allCouples = allCouples.filter(c => !hiddenIds.has(c.id) && !(c.partner_id && hiddenIds.has(c.partner_id)));
   } catch(e) { /* טבלאות דיווח/חסימה עדיין לא קיימות — דלג על סינון */ }
   renderMarkers(); updateLiveCount();
-  loadScheduledEvents();
+  await loadScheduledEvents();
 }
 
-async function loadScheduledEvents(){
-  if(!mapInstance) return;
+// אירועים מתוזמנים נשמרים במשתני מודול כדי שגם הפיד וגם המפה ישתמשו באותו מידע (בלי תלות במפה)
+let _schedEvents=[], _schedProfById={};
+
+// שליפת המידע בלבד — תמיד רצה, גם בלי מפה (הפיד צריך אותה)
+async function fetchScheduledEvents(){
   let evs=[];
   try{
-    const {data}=await sb.from('events').select('*').eq('type','scheduled').gt('ends_at',new Date().toISOString()).not('lat','is',null);
+    const {data}=await sb.from('events').select('*').eq('type','scheduled').gt('ends_at',new Date().toISOString());
     evs=data||[];
-  }catch(e){ return; }
+  }catch(e){ _schedEvents=[]; _schedProfById={}; return; }
   const mine=new Set([currentUser.id, myProfile?.partner_id].filter(Boolean));
   const hidden=_hiddenCoupleIds||new Set();
-  const list=evs.filter(e=> mine.has(e.couple_id) || !hidden.has(e.couple_id));
+  let list=evs.filter(e=> mine.has(e.couple_id) || !hidden.has(e.couple_id));
+  const ids=[...new Set(list.map(e=>e.couple_id))];
+  let profById={};
+  if(ids.length){
+    try{
+      const {data:profs}=await sb.from('public_couples').select('*').in('id',ids);
+      (profs||[]).forEach(p=>profById[p.id]=p);
+    }catch(e){}
+  }
+  // סינון ברמת הזוג: אם בן/בת הזוג של זוג אחר חסום — הסתר את האירוע
+  list=list.filter(ev=>{
+    if(mine.has(ev.couple_id)) return true;
+    const prof=profById[ev.couple_id];
+    if(prof && prof.partner_id && hidden.has(prof.partner_id)) return false;
+    return true;
+  });
+  _schedEvents=list; _schedProfById=profById;
+}
+
+// ציור הסיכות על המפה — משתמש במידע שכבר נשלף, מדלג על אירועים בלי מיקום
+function renderScheduledMarkers(){
+  if(!mapInstance) return;
+  const mine=new Set([currentUser.id, myProfile?.partner_id].filter(Boolean));
+  const list=(_schedEvents||[]).filter(e=> e.lat!=null && e.lng!=null);
   // ציור מצטבר: הסר רק סיכות שכבר לא רלוונטיות, השאר את הקיימות במקומן (בלי הבהוב/קפיצה)
   const desired=new Set(list.map(e=>String(e.id)));
   Object.keys(eventMarkers).forEach(id=>{
     if(!desired.has(String(id))){ eventMarkers[id].remove(); delete eventMarkers[id]; }
   });
-  if(!list.length) return;
-  const ids=[...new Set(list.map(e=>e.couple_id))];
-  let profById={};
-  try{
-    const {data:profs}=await sb.from('public_couples').select('*').in('id',ids);
-    (profs||[]).forEach(p=>profById[p.id]=p);
-  }catch(e){}
   list.forEach(ev=>{
-    const prof=profById[ev.couple_id];
+    const prof=_schedProfById[ev.couple_id];
     const isSelf=mine.has(ev.couple_id);
-    if(!isSelf && prof && prof.partner_id && hidden.has(prof.partner_id)){
-      if(eventMarkers[ev.id]){ eventMarkers[ev.id].remove(); delete eventMarkers[ev.id]; }
-      return;
-    }
     const sig=`${ev.lat},${ev.lng},${ev.vibe||''},${isSelf?1:0}`;
     const existing=eventMarkers[ev.id];
     if(existing){
@@ -1776,6 +1791,12 @@ async function loadScheduledEvents(){
     m._sig=sig;
     eventMarkers[ev.id]=m;
   });
+}
+
+// תזמורת: שולף ואז מצייר. נשאר תואם לכל הקוראים הקיימים.
+async function loadScheduledEvents(){
+  await fetchScheduledEvents();
+  renderScheduledMarkers();
 }
 
 function openScheduledCard(ev, prof, isSelf){
@@ -2020,7 +2041,7 @@ function subscribeRealtime() {
         delete eventMarkers[payload.old.id];
       }
       clearTimeout(_evtDebounce);
-      _evtDebounce=setTimeout(()=>{ loadScheduledEvents(); renderScheduledBanner(); }, 120);
+      _evtDebounce=setTimeout(async()=>{ await loadScheduledEvents(); renderScheduledBanner(); if(document.getElementById('screen-feed')?.classList.contains('active')) renderFeed(); }, 120);
     }).subscribe();
 }
 
@@ -2604,7 +2625,24 @@ function renderFeed(searchQ) {
     return true;
   });
   couples.sort((a,b)=>({hot:0,warm:1,cold:2}[effectiveStatus(a)]||0)-({hot:0,warm:1,cold:2}[effectiveStatus(b)]||0));
-  if (!couples.length) {
+
+  // ===== קטע 2: דייטים מתוכננים (מתוזמן) =====
+  const mineFeed=new Set([currentUser.id, myProfile?.partner_id].filter(Boolean));
+  let sched=(_schedEvents||[]).filter(ev=>{
+    if (mineFeed.has(ev.couple_id)) return false;            // הדייט שלכם לא מופיע בפיד הגילוי
+    const prof=_schedProfById[ev.couple_id];
+    if (!prof) return false;
+    if (feedVibeFilter==='hot') return false;                // 'hot' = ספונטני בלבד
+    if (feedVibeFilter!=='all'&&ev.vibe!==feedVibeFilter) return false;
+    if (q) {
+      const nm=((prof.name||'')+' '+(prof.partner_name||'')+' '+(prof.city||ev.city||'')).toLowerCase();
+      if (!nm.includes(q)) return false;
+    }
+    return true;
+  });
+  sched.sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at));
+
+  if (!couples.length && !sched.length) {
     const filterMsg = feedVibeFilter!=='all'
       ? `<div style="font-size:13px;color:var(--text2);margin-top:8px">💡 נסו לסנן ב"הכל" — ייתכן שזוגות פעילים לא הגדירו את תחום העניין הזה</div>`
       : '';
@@ -2624,18 +2662,77 @@ function renderFeed(searchQ) {
 </div>`;
     return;
   }
-  list.innerHTML=couples.map(c=>{
-    const meta=STATUS_META[effectiveStatus(c)];
-    const emoji=vibeEmoji((c.vibes||[])[0]);
-    const photoEl=c.photo_url
-      ?`<img src="${escapeHtml(c.photo_url)}" style="width:54px;height:54px;border-radius:50%;object-fit:cover;border:2px solid ${meta.color}55;flex-shrink:0"/>`
-      :`<div style="width:54px;height:54px;border-radius:50%;background:${meta.color}18;border:2px solid ${meta.color}44;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">${emoji}</div>`;
-    const tags=(c.vibes||[]).slice(0,3).map(v=>`<span class="tag">${escapeHtml(v)}</span>`).join('');
-    return `<div onclick="openCouplePanel(${JSON.stringify(c).replace(/"/g,'&quot;')})" style="background:rgba(255,255,255,0.04);border:1px solid ${meta.color}22;border-radius:18px;padding:16px;margin-bottom:12px;cursor:pointer" onmouseenter="this.style.background='${meta.color}12'" onmouseleave="this.style.background='rgba(255,255,255,0.04)'"><div style="display:flex;gap:12px;align-items:center;margin-bottom:${c.status_text||tags?'12px':'0'}">${photoEl}<div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span style="font-family:'Syne';font-weight:800;font-size:16px">${escapeHtml(c.name)} <span class="amp">♥</span> ${escapeHtml(c.partner_name||'?')}</span><div style="background:${meta.color}22;color:${meta.color};padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;white-space:nowrap">${meta.label}</div></div><div style="color:var(--text3);font-size:12px;margin-top:2px">${escapeHtml(c.city||'ישראל')}</div></div></div>${c.status_text?`<div style="color:var(--text2);font-size:14px;line-height:1.5;margin-bottom:10px;padding:10px 14px;background:rgba(255,255,255,0.04);border-radius:10px">"${escapeHtml(c.status_text)}"</div>`:''}${tags?`<div class="tags-row">${tags}</div>`:''}`;
-  }).join('');
+  let html='';
+
+  // --- קטע: פעילים עכשיו ---
+  if (couples.length) {
+    html += `<div style="display:flex;align-items:center;gap:9px;margin:2px 2px 12px;font-family:'Syne';font-weight:800;font-size:15px;color:#ff8ba1">🔥 פעילים עכשיו <span style="font-family:'Heebo';font-size:11px;font-weight:700;color:var(--text3);background:rgba(255,255,255,0.06);padding:2px 9px;border-radius:100px">${couples.length}</span></div>`;
+    html += couples.map(c=>{
+      const meta=STATUS_META[effectiveStatus(c)];
+      const emoji=vibeEmoji((c.vibes||[])[0]);
+      const photoEl=c.photo_url
+        ?`<img src="${escapeHtml(c.photo_url)}" style="width:54px;height:54px;border-radius:50%;object-fit:cover;border:2px solid ${meta.color}55;flex-shrink:0"/>`
+        :`<div style="width:54px;height:54px;border-radius:50%;background:${meta.color}18;border:2px solid ${meta.color}44;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">${emoji}</div>`;
+      const tags=(c.vibes||[]).slice(0,3).map(v=>`<span class="tag">${escapeHtml(v)}</span>`).join('');
+      return `<div onclick="openCouplePanel(${JSON.stringify(c).replace(/"/g,'&quot;')})" style="background:rgba(255,255,255,0.04);border:1px solid ${meta.color}22;border-radius:18px;padding:16px;margin-bottom:12px;cursor:pointer" onmouseenter="this.style.background='${meta.color}12'" onmouseleave="this.style.background='rgba(255,255,255,0.04)'"><div style="display:flex;gap:12px;align-items:center;margin-bottom:${c.status_text||tags?'12px':'0'}">${photoEl}<div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span style="font-family:'Syne';font-weight:800;font-size:16px">${escapeHtml(c.name)} <span class="amp">♥</span> ${escapeHtml(c.partner_name||'?')}</span><div style="background:${meta.color}22;color:${meta.color};padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;white-space:nowrap">${meta.label}</div></div><div style="color:var(--text3);font-size:12px;margin-top:2px">${escapeHtml(c.city||'ישראל')}</div></div></div>${c.status_text?`<div style="color:var(--text2);font-size:14px;line-height:1.5;margin-bottom:10px;padding:10px 14px;background:rgba(255,255,255,0.04);border-radius:10px">"${escapeHtml(c.status_text)}"</div>`:''}${tags?`<div class="tags-row">${tags}</div>`:''}`;
+    }).join('');
+  }
+
+  // --- קטע: דייטים מתוכננים ---
+  if (sched.length) {
+    html += `<div style="display:flex;align-items:center;gap:9px;margin:${couples.length?'20px':'2px'} 2px 12px;font-family:'Syne';font-weight:800;font-size:15px;color:#9db8ff">📅 דייטים מתוכננים <span style="font-family:'Heebo';font-size:11px;font-weight:700;color:var(--text3);background:rgba(255,255,255,0.06);padding:2px 9px;border-radius:100px">${sched.length}</span></div>`;
+    html += sched.map(ev=>{
+      const prof=_schedProfById[ev.couple_id];
+      const emoji=vibeEmoji(ev.vibe);
+      const vibeLabel=(VIBES_LIST.find(v=>v.id===ev.vibe)||{}).label||'';
+      const when=schedFeedWhen(ev);
+      const city=prof.city||ev.city||'ישראל';
+      const photoEl=prof.photo_url
+        ?`<img src="${escapeHtml(prof.photo_url)}" style="width:54px;height:54px;border-radius:50%;object-fit:cover;border:2px solid rgba(91,141,239,0.4);flex-shrink:0"/>`
+        :`<div style="width:54px;height:54px;border-radius:50%;background:rgba(91,141,239,0.14);border:2px solid rgba(91,141,239,0.4);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;position:relative">${emoji}<span style="position:absolute;bottom:-3px;right:-3px;font-size:13px;background:#0e0b15;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center">📅</span></div>`;
+      const metaLine=[vibeLabel, ev.date_type?escapeHtml(ev.date_type):''].filter(Boolean).join(' · ');
+      return `<div onclick="openSchedFromFeed('${ev.id}')" style="background:linear-gradient(180deg,rgba(91,141,239,0.07),rgba(168,107,255,0.04));border:1px solid rgba(91,141,239,0.28);border-radius:18px;padding:16px;margin-bottom:12px;cursor:pointer"><div style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:800;color:#9db8ff;background:rgba(91,141,239,0.16);border:1px solid rgba(91,141,239,0.4);padding:3px 11px;border-radius:100px;margin-bottom:11px">📅 דייט מתוכנן</div><div style="display:flex;gap:12px;align-items:center">${photoEl}<div style="flex:1;min-width:0"><div style="font-family:'Syne';font-weight:800;font-size:16px">${escapeHtml(prof.name||'')} <span class="amp">♥</span> ${escapeHtml(prof.partner_name||'?')}</div><div style="color:var(--text3);font-size:12px;margin-top:2px">${escapeHtml(city)}</div></div></div><div style="display:flex;align-items:center;gap:7px;margin-top:11px;font-size:13.5px;color:#9db8ff;font-weight:700">🗓️ ${escapeHtml(when)}</div>${metaLine?`<div style="font-size:12.5px;color:var(--text2);margin-top:5px">${metaLine}</div>`:''}<button onclick="event.stopPropagation();schedShakeFromFeed('${ev.id}')" style="width:100%;margin-top:14px;padding:12px;border:none;border-radius:13px;background:linear-gradient(135deg,#ff4b6e,#a86bff);color:#fff;font-weight:800;font-size:14px;font-family:'Heebo'">💞 שלחו Shake לדייט</button></div>`;
+    }).join('');
+  }
+
+  list.innerHTML=html;
 }
 
 async function loadFeed() { await loadCouples(); renderFeed(); }
+
+// טקסט "מתי" קצר לכרטיס דייט מתוזמן בפיד (היום/מחר/יום בשבוע · שעה)
+function schedFeedWhen(ev){
+  const d=new Date(ev.starts_at), now=new Date();
+  const startOf=x=>new Date(x.getFullYear(),x.getMonth(),x.getDate());
+  const days=Math.round((startOf(d)-startOf(now))/86400000);
+  let near;
+  if(days<=0) near='היום';
+  else if(days===1) near='מחר';
+  else near=['יום ראשון','יום שני','יום שלישי','יום רביעי','יום חמישי','יום שישי','שבת'][d.getDay()];
+  const t=d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+  return `${near} · ${t}`;
+}
+// פתיחת כרטיס הדייט המתוזמן מהפיד (אותו overlay כמו במפה)
+function openSchedFromFeed(eventId){
+  const ev=(_schedEvents||[]).find(e=>String(e.id)===String(eventId));
+  if(!ev) return;
+  const prof=_schedProfById[ev.couple_id];
+  const mine=new Set([currentUser.id, myProfile?.partner_id].filter(Boolean));
+  openScheduledCard(ev, prof, mine.has(ev.couple_id));
+}
+// שייק מהיר ישירות מכרטיס הפיד (מדלג על פתיחת ה-overlay)
+async function schedShakeFromFeed(eventId){
+  const ev=(_schedEvents||[]).find(e=>String(e.id)===String(eventId));
+  if(!ev) return;
+  const prof=_schedProfById[ev.couple_id];
+  if(!prof) return;
+  selectedCouple=prof;
+  try{
+    const {data:rows}=await sb.from('shakes').select('id,status,from_id,to_id').or(`and(from_id.eq.${currentUser.id},to_id.eq.${prof.id}),and(from_id.eq.${prof.id},to_id.eq.${currentUser.id})`);
+    if((rows||[]).some(r=>r.status==='accepted')){ openCouplePanel(prof); return; }
+  }catch(e){}
+  sendShake(ev.id);
+}
 
 // ═══════════════════════════════════
 // SHAKES
