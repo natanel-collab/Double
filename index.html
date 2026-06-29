@@ -1447,7 +1447,7 @@ async function doRegister() {
   if (!document.getElementById('reg-terms-confirm')?.checked) {errEl.textContent='יש לאשר את תנאי השימוש ומדיניות הפרטיות';return;}
   const btn=document.querySelector('#auth-register .btn-primary');
   btn.disabled=true; btn.textContent='יוצר חשבון...';
-  const {data,error} = await sb.auth.signUp({email,password:pass,options:{data:{name}}});
+  const {data,error} = await sb.auth.signUp({email,password:pass,options:{data:{name,pending_code:partnerCodeRaw||null}}});
   if (error) {btn.disabled=false; btn.textContent='יצירת חשבון'; document.getElementById('reg-err').textContent=friendlyAuthError(error.message);return;}
   // זיהוי "אימייל כבר רשום" — Supabase לא מחזיר שגיאה במקרה הזה (הגנה מפני זליגת מידע), אלא משתמש עם identities ריק
   if (data.user && Array.isArray(data.user.identities) && data.user.identities.length===0) {
@@ -1459,6 +1459,8 @@ async function doRegister() {
   currentUser=data.user;
   if (!data.session) {
     // אימות אימייל מופעל — אין גישה עד אישור. הפרופיל ייווצר בכניסה הראשונה אחרי האישור.
+    // שומרים קוד-זוג שהוזן עכשיו כדי לחבר אחרי האימות (אחרת הוא נזרק)
+    if (partnerCodeRaw) { try { localStorage.setItem('double_pending_code', partnerCodeRaw); } catch(e){} }
     btn.disabled=false; btn.textContent='יצירת חשבון';
     document.getElementById('verify-email-addr').textContent=email;
     showScreen('verify');
@@ -1631,6 +1633,23 @@ async function saveSetup() {
   // ודא שיש קוד-זוג (למשתמשים שנוצרו אחרי אימות אימייל — הקוד לא נוצר בהרשמה)
   const {data:existingCode}=await sb.from('couple_codes').select('code').eq('user_id',currentUser.id).maybeSingle();
   if (!existingCode) await sb.from('couple_codes').upsert({user_id:currentUser.id,code:generateCoupleCode()});
+  // קוד-זוג שהוזן בהרשמה לפני אימות אימייל — מחברים עכשיו, כשהפרופיל כבר קיים.
+  // מקור ראשי: מטא-דאטה של החשבון (שורד את מעבר האימות בנייד). גיבוי: localStorage.
+  let pendingCode=(currentUser?.user_metadata?.pending_code||'').trim();
+  if (!pendingCode) { try { pendingCode=(localStorage.getItem('double_pending_code')||'').trim(); } catch(e){} }
+  if (pendingCode) {
+    const {error:linkErr}=await sb.rpc('link_partner',{p_code:pendingCode});
+    try { localStorage.removeItem('double_pending_code'); } catch(e){}
+    try { await sb.auth.updateUser({data:{pending_code:null}}); } catch(e){}
+    if (linkErr) {
+      const m=linkErr.message||'';
+      if (m.includes('already_linked')) showToast('הקוד שייך לזוג שכבר מחובר');
+      else if (m.includes('invalid_code')) showToast('קוד הזוג לא נמצא — אפשר לחבר מהפרופיל');
+      else showToast('לא הצלחנו לחבר את הקוד — אפשר לנסות שוב מהפרופיל');
+    } else {
+      showToast('💑 חשבון זוגי חובר בהצלחה!');
+    }
+  }
   await loadMyProfile();
 }
 
