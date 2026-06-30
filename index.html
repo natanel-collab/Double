@@ -1683,6 +1683,7 @@ function applyVibeFilter(vibe) {
   selectedVibeFilter=vibe;
   document.querySelectorAll('[data-vibe]').forEach(c=>c.classList.toggle('active',c.dataset.vibe===vibe));
   renderMarkers();
+  renderScheduledMarkers();
 }
 
 async function loadCouples() {
@@ -1763,7 +1764,13 @@ async function fetchScheduledEvents(){
 function renderScheduledMarkers(){
   if(!mapInstance) return;
   const mine=new Set([currentUser.id, myProfile?.partner_id].filter(Boolean));
-  const list=(_schedEvents||[]).filter(e=> e.lat!=null && e.lng!=null);
+  const list=(_schedEvents||[]).filter(e=>{
+    if(e.lat==null || e.lng==null) return false;
+    // פילטר הוייב חל גם על הסיכות המתוזמנות:
+    if(selectedVibeFilter==='hot') return false;                                    // 'hot' = ספונטני בלבד
+    if(selectedVibeFilter && selectedVibeFilter!=='all' && e.vibe!==selectedVibeFilter) return false; // וייב מסוים
+    return true;
+  });
   // ציור מצטבר: הסר רק סיכות שכבר לא רלוונטיות, השאר את הקיימות במקומן (בלי הבהוב/קפיצה)
   const desired=new Set(list.map(e=>String(e.id)));
   Object.keys(eventMarkers).forEach(id=>{
