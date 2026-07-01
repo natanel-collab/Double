@@ -1762,7 +1762,12 @@ async function fetchScheduledEvents(){
 
 // בועת תמונה חיה קטנה בצד הסיכה (הוכחה חברתית) — מוצגת רק כשיש תמונה
 function liveBubble(url){
-  return url?`<div style="position:absolute;top:-16px;left:-18px;width:42px;height:42px;border-radius:50%;overflow:hidden;border:2.5px solid #ff3b5c;box-shadow:0 0 0 2px rgba(255,59,92,0.35),0 2px 8px rgba(0,0,0,0.5);z-index:3"><img src="${escapeHtml(url)}" style="width:100%;height:100%;object-fit:cover"/></div>`:'';
+  if(!url) return '';
+  return `<div style="position:absolute;bottom:calc(100% + 9px);right:-14px;z-index:3;filter:drop-shadow(0 4px 10px rgba(0,0,0,0.35))">
+    <div style="width:56px;height:56px;border-radius:16px;overflow:hidden;border:2.5px solid #ff3b5c;background:#fff"><img src="${escapeHtml(url)}" style="width:100%;height:100%;object-fit:cover;display:block"/></div>
+    <div style="position:absolute;bottom:-8px;right:16px;width:14px;height:14px;background:#ff3b5c;clip-path:polygon(0 0,100% 0,62% 100%)"></div>
+    <span style="position:absolute;top:-7px;left:-7px;background:#ff3b5c;color:#fff;font-size:8.5px;font-weight:800;padding:2px 7px;border-radius:100px;font-family:'Heebo'">🔴 חי</span>
+  </div>`;
 }
 
 // ציור הסיכות על המפה — משתמש במידע שכבר נשלף, מדלג על אירועים בלי מיקום
