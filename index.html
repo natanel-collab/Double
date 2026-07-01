@@ -1290,7 +1290,7 @@ let maxDistanceKm = 99999;
 let currentRoomId = null, chatChannel = null, currentChatMsgs = [];
 let selectedStatusOption = 'cold';
 let eventSelectedVibe = '', eventLat = null, eventLng = null;
-let schedLat = null, schedLng = null, schedCityName = '', schedVibe = '';
+let schedLat = null, schedLng = null, schedCityName = '', schedVibe = '', schedEditId = null;
 let feedVibeFilter = 'all', listVibeFilter = 'all';
 let profileSelectedVibes = [];
 let statusChannel = null;
@@ -1762,7 +1762,7 @@ async function fetchScheduledEvents(){
 
 // בועת תמונה חיה קטנה בצד הסיכה (הוכחה חברתית) — מוצגת רק כשיש תמונה
 function liveBubble(url){
-  return url?`<div style="position:absolute;top:-9px;left:-11px;width:26px;height:26px;border-radius:50%;overflow:hidden;border:2px solid #ff3b5c;box-shadow:0 0 0 2px rgba(255,59,92,0.35),0 2px 8px rgba(0,0,0,0.5);z-index:3"><img src="${escapeHtml(url)}" style="width:100%;height:100%;object-fit:cover"/></div>`:'';
+  return url?`<div style="position:absolute;top:-16px;left:-18px;width:42px;height:42px;border-radius:50%;overflow:hidden;border:2.5px solid #ff3b5c;box-shadow:0 0 0 2px rgba(255,59,92,0.35),0 2px 8px rgba(0,0,0,0.5);z-index:3"><img src="${escapeHtml(url)}" style="width:100%;height:100%;object-fit:cover"/></div>`:'';
 }
 
 // ציור הסיכות על המפה — משתמש במידע שכבר נשלף, מדלג על אירועים בלי מיקום
@@ -3180,25 +3180,42 @@ function chooseSpontaneous(){
 }
 function chooseScheduled(){ document.getElementById('event-chooser-overlay')?.remove(); openScheduledModal(); }
 
-function openScheduledModal(){
+function openScheduledModal(ev){
+  schedEditId = ev?.id || null;
   const m=document.getElementById('sched-modal'); m.classList.add('open');
+  const titleEl=m.querySelector('.modal-box > div:first-child');
+  const saveBtn=m.querySelector('.btn-primary');
+  if(titleEl) titleEl.textContent = schedEditId ? '✏️ עריכת הדייט' : '📅 לתזמן דייט';
+  if(saveBtn) saveBtn.textContent = schedEditId ? 'שמרו את השינויים ✏️' : 'פרסמו את הדייט 📅';
   const d=document.getElementById('sched-date');
+  const t=document.getElementById('sched-time');
   const fmt=(x)=>`${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`;
   const today=new Date(); const max=new Date(Date.now()+7*24*60*60*1000);
   d.min=fmt(today); d.max=fmt(max);
-  if(!d.value || d.value<d.min || d.value>d.max) d.value=fmt(today);
-  document.getElementById('sched-datetype').value='';
-  // reset location to "current location"
-  schedLat=null; schedLng=null; schedCityName='';
-  document.getElementById('sched-loc-auto-btn').classList.add('selected');
-  document.getElementById('sched-loc-manual-btn').classList.remove('selected');
+  if(schedEditId){
+    const sd=new Date(ev.starts_at);
+    d.value=fmt(sd);
+    t.value=`${String(sd.getHours()).padStart(2,'0')}:${String(sd.getMinutes()).padStart(2,'0')}`;
+  } else if(!d.value || d.value<d.min || d.value>d.max) d.value=fmt(today);
+  document.getElementById('sched-datetype').value = schedEditId ? (ev.date_type||'') : '';
+  // location: edit keeps existing place; create resets to "current location"
+  if(schedEditId){
+    schedLat=ev.lat||null; schedLng=ev.lng||null; schedCityName=ev.city||'';
+    document.getElementById('sched-loc-auto-btn').classList.remove('selected');
+    document.getElementById('sched-loc-manual-btn').classList.add('selected');
+    document.getElementById('sched-selected-location-text').textContent=ev.city||'המיקום שנבחר';
+  } else {
+    schedLat=null; schedLng=null; schedCityName='';
+    document.getElementById('sched-loc-auto-btn').classList.add('selected');
+    document.getElementById('sched-loc-manual-btn').classList.remove('selected');
+    document.getElementById('sched-selected-location-text').textContent='מיקום נוכחי';
+  }
   document.getElementById('sched-city-search').style.display='none';
   document.getElementById('sched-city-search').value='';
   document.getElementById('sched-city-results').innerHTML='';
   document.getElementById('sched-selected-location').style.display='flex';
-  document.getElementById('sched-selected-location-text').textContent='מיקום נוכחי';
   // build vibe chips
-  schedVibe='';
+  schedVibe = schedEditId ? (ev.vibe||'') : '';
   const grid=document.getElementById('sched-vibes');
   grid.innerHTML='';
   VIBES_LIST.forEach(v=>{
@@ -3206,6 +3223,7 @@ function openScheduledModal(){
     chip.className='vibe-chip';
     chip.style.cssText='padding:7px 11px;font-size:12.5px';
     chip.textContent=v.label;
+    if(schedVibe===v.id) chip.classList.add('selected');
     chip.onclick=()=>{
       schedVibe = (schedVibe===v.id) ? '' : v.id;
       grid.querySelectorAll('.vibe-chip').forEach(c=>c.classList.remove('selected'));
@@ -3253,7 +3271,7 @@ async function renderScheduledBanner(){
   const el=document.getElementById('sched-banner');
   if(!el||!currentUser) return;
   el.style.display='none'; el.innerHTML='';
-  const {data:rows}=await sb.from('events').select('id,starts_at,ends_at,city,photo_url').eq('couple_id',coupleId()).eq('type','scheduled').gt('ends_at',new Date().toISOString()).order('starts_at',{ascending:true}).limit(1);
+  const {data:rows}=await sb.from('events').select('id,starts_at,ends_at,city,photo_url,lat,lng,vibe,date_type').eq('couple_id',coupleId()).eq('type','scheduled').gt('ends_at',new Date().toISOString()).order('starts_at',{ascending:true}).limit(1);
   const ev=(rows||[])[0];
   if(!ev) return;
   const d=new Date(ev.starts_at);
@@ -3263,9 +3281,9 @@ async function renderScheduledBanner(){
     const photoBlock = ev.photo_url
       ? `<div style="margin-top:12px;border-radius:12px;overflow:hidden;position:relative"><img src="${escapeHtml(ev.photo_url)}" style="width:100%;max-height:150px;object-fit:cover;display:block"/><span style="position:absolute;top:8px;right:10px;font-size:10px;font-weight:800;color:#fff;background:#ff3b5c;padding:2px 9px;border-radius:100px">חי עכשיו</span></div><label style="display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;font-size:12.5px;color:#9db8ff;font-weight:700;margin-top:8px"><input type="file" accept="image/*" style="display:none" onchange="uploadSchedLivePhoto(this,'${ev.id}')"/>📷 החלף תמונה</label>`
       : `<label style="display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;width:100%;margin-top:12px;padding:12px;border:2px dashed rgba(255,59,92,0.5);border-radius:13px;background:rgba(255,59,92,0.07);color:#ff9bae;font-weight:800;font-size:14px"><input type="file" accept="image/*" style="display:none" onchange="uploadSchedLivePhoto(this,'${ev.id}')"/>📸 העלו תמונה מהדייט</label>`;
-    el.innerHTML=`<div style="background:linear-gradient(135deg,rgba(255,59,92,0.12),rgba(168,107,255,0.08));border:1px solid rgba(255,59,92,0.45);border-radius:16px;padding:14px 16px;margin-bottom:20px"><div style="display:flex;align-items:center;gap:12px"><div style="font-size:22px">🔥</div><div style="flex:1;text-align:right"><span style="display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:800;color:#fff;background:#ff3b5c;padding:2px 9px;border-radius:100px;margin-bottom:4px">🔴 חי עכשיו</span><div style="font-weight:700;font-size:14px;color:#ff9bae">אתם בדייט!</div><div style="font-size:12px;color:var(--text2);margin-top:2px">שתפו רגע — זוגות יראו שאתם בחוץ</div></div><button onclick="cancelScheduledEvent('${ev.id}')" style="background:rgba(255,75,110,0.15);border:1px solid rgba(255,75,110,0.4);color:var(--pink);padding:6px 12px;border-radius:100px;font-family:'Heebo';font-weight:700;font-size:12px;cursor:pointer">סיום</button></div>${photoBlock}</div>`;
+    el.innerHTML=`<div style="background:linear-gradient(135deg,rgba(255,59,92,0.12),rgba(168,107,255,0.08));border:1px solid rgba(255,59,92,0.45);border-radius:16px;padding:14px 16px;margin-bottom:20px"><div style="display:flex;align-items:center;gap:12px"><div style="font-size:22px">🔥</div><div style="flex:1;text-align:right"><span style="display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:800;color:#fff;background:#ff3b5c;padding:2px 9px;border-radius:100px;margin-bottom:4px">🔴 חי עכשיו</span><div style="font-weight:700;font-size:14px;color:#ff9bae">אתם בדייט!</div><div style="font-size:12px;color:var(--text2);margin-top:2px">שתפו רגע — זוגות יראו שאתם בחוץ</div></div><button onclick="endScheduledEvent('${ev.id}')" style="background:rgba(255,75,110,0.15);border:1px solid rgba(255,75,110,0.4);color:var(--pink);padding:6px 12px;border-radius:100px;font-family:'Heebo';font-weight:700;font-size:12px;cursor:pointer">סיום</button></div>${photoBlock}</div>`;
   } else {
-    el.innerHTML=`<div style="background:linear-gradient(135deg,rgba(91,141,239,0.14),rgba(168,107,255,0.08));border:1px solid rgba(91,141,239,0.3);border-radius:16px;padding:14px 16px;margin-bottom:20px;display:flex;align-items:center;gap:12px"><div style="font-size:22px">📅</div><div style="flex:1;text-align:right"><div style="font-weight:700;font-size:14px;color:#9db8ff">דייט מתוזמן</div><div style="font-size:12.5px;color:var(--text2);margin-top:2px">${when}${ev.city?' · '+ev.city:''}</div></div><button onclick="cancelScheduledEvent('${ev.id}')" style="background:rgba(255,75,110,0.15);border:1px solid rgba(255,75,110,0.4);color:var(--pink);padding:7px 14px;border-radius:100px;font-family:'Heebo';font-weight:700;font-size:12.5px;cursor:pointer">ביטול</button></div>`;
+    el.innerHTML=`<div style="background:linear-gradient(135deg,rgba(91,141,239,0.14),rgba(168,107,255,0.08));border:1px solid rgba(91,141,239,0.3);border-radius:16px;padding:14px 16px;margin-bottom:20px;display:flex;align-items:center;gap:12px"><div style="font-size:22px">📅</div><div style="flex:1;text-align:right"><div style="font-weight:700;font-size:14px;color:#9db8ff">דייט מתוזמן</div><div style="font-size:12.5px;color:var(--text2);margin-top:2px">${when}${ev.city?' · '+ev.city:''}</div></div><div style="display:flex;flex-direction:column;gap:7px"><button onclick='openScheduledModal(${JSON.stringify(ev).replace(/'/g,"&#39;")})' style="background:rgba(91,141,239,0.15);border:1px solid rgba(91,141,239,0.5);color:#9db8ff;padding:7px 14px;border-radius:100px;font-family:'Heebo';font-weight:700;font-size:12.5px;cursor:pointer;white-space:nowrap">✏️ ערוך</button><button onclick="cancelScheduledEvent('${ev.id}')" style="background:rgba(255,75,110,0.15);border:1px solid rgba(255,75,110,0.4);color:var(--pink);padding:7px 14px;border-radius:100px;font-family:'Heebo';font-weight:700;font-size:12.5px;cursor:pointer;white-space:nowrap">ביטול</button></div></div>`;
   }
   el.style.display='block';
 }
@@ -3274,6 +3292,13 @@ async function cancelScheduledEvent(id){
   const {error}=await sb.from('events').delete().eq('id',id);
   if(error){ showToast('😕 לא הצלחנו לבטל. נסו שוב'); return; }
   showToast('הדייט בוטל');
+  renderScheduledBanner();
+}
+async function endScheduledEvent(id){
+  if(!confirm('לסיים את הדייט?')) return;
+  const {error}=await sb.from('events').delete().eq('id',id);
+  if(error){ showToast('😕 לא הצלחנו לסיים. נסו שוב'); return; }
+  showToast('🌙 הדייט הסתיים — מקווים שהיה מושלם');
   renderScheduledBanner();
 }
 async function uploadSchedLivePhoto(input,eventId){
@@ -3315,11 +3340,13 @@ async function saveScheduledEvent(){
   }
   const btn=document.querySelector('#sched-modal .btn-primary');
   if(btn){ btn.disabled=true; btn.dataset.orig=btn.textContent; btn.innerHTML='<span class="btn-spinner"></span> מפרסם...'; }
-  const {error}=await sb.from('events').insert({
-    couple_id: coupleId(), type:'scheduled',
+  const payload={
     starts_at: start.toISOString(), ends_at: end.toISOString(),
     city, lat, lng, vibe: schedVibe||null, date_type: dateType||null
-  });
+  };
+  const {error}= schedEditId
+    ? await sb.from('events').update(payload).eq('id',schedEditId)
+    : await sb.from('events').insert({couple_id: coupleId(), type:'scheduled', ...payload});
   if(btn){ btn.disabled=false; btn.textContent=btn.dataset.orig||'פרסמו את הדייט 📅'; }
   if(error){
     if((error.message||'').includes('COUPLE_HAS_OPEN_EVENT')) showToast('כבר יש לכם דייט מתוזמן פעיל — אפשר אחד בכל פעם');
@@ -3327,8 +3354,10 @@ async function saveScheduledEvent(){
     return;
   }
   closeScheduledModal();
-  showToast('📅 הדייט פורסם! זוגות יוכלו לשלוח לכם שייק');
+  showToast(schedEditId ? '✏️ הדייט עודכן!' : '📅 הדייט פורסם! זוגות יוכלו לשלוח לכם שייק');
+  schedEditId=null;
   renderScheduledBanner();
+  loadScheduledEvents();
 }
 
 function openEventModal(editMode=false) {
