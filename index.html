@@ -1760,6 +1760,11 @@ async function fetchScheduledEvents(){
   _schedEvents=list; _schedProfById=profById;
 }
 
+// בועת תמונה חיה קטנה בצד הסיכה (הוכחה חברתית) — מוצגת רק כשיש תמונה
+function liveBubble(url){
+  return url?`<div style="position:absolute;top:-9px;left:-11px;width:26px;height:26px;border-radius:50%;overflow:hidden;border:2px solid #ff3b5c;box-shadow:0 0 0 2px rgba(255,59,92,0.35),0 2px 8px rgba(0,0,0,0.5);z-index:3"><img src="${escapeHtml(url)}" style="width:100%;height:100%;object-fit:cover"/></div>`:'';
+}
+
 // ציור הסיכות על המפה — משתמש במידע שכבר נשלף, מדלג על אירועים בלי מיקום
 function renderScheduledMarkers(){
   if(!mapInstance) return;
@@ -1779,7 +1784,9 @@ function renderScheduledMarkers(){
   list.forEach(ev=>{
     const prof=_schedProfById[ev.couple_id];
     const isSelf=mine.has(ev.couple_id);
-    const sig=`${ev.lat},${ev.lng},${ev.vibe||''},${isSelf?1:0}`;
+    const evLive=new Date(ev.starts_at)<=new Date();
+    const evPhoto=(evLive && !isSelf && ev.photo_url)?ev.photo_url:'';
+    const sig=`${ev.lat},${ev.lng},${ev.vibe||''},${isSelf?1:0},${evPhoto}`;
     const existing=eventMarkers[ev.id];
     if(existing){
       if(existing._sig===sig) return;                 // ללא שינוי — השאר במקום
@@ -1791,7 +1798,7 @@ function renderScheduledMarkers(){
     const selfTag=isSelf ? `<div style="position:absolute;top:-22px;right:50%;transform:translateX(50%);background:#6c5ce7;color:white;font-size:9px;font-weight:800;padding:2px 8px;border-radius:100px;white-space:nowrap;font-family:'Heebo'">⭐ זה אתם</div>` : '';
     const markerEl=L.divIcon({
       className:'',
-      html:`<div style="position:relative;width:46px;height:46px;display:flex;align-items:center;justify-content:center"><div class="double-marker" style="font-size:18px;position:relative;background:linear-gradient(135deg,${grad});border-color:#fff;${selfGlow}">${selfTag}<span>📅</span><span style="position:absolute;bottom:-3px;right:-3px;font-size:12px;background:#0e0b15;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center">${emoji}</span></div></div>`,
+      html:`<div style="position:relative;width:46px;height:46px;display:flex;align-items:center;justify-content:center"><div class="double-marker" style="font-size:18px;position:relative;background:linear-gradient(135deg,${grad});border-color:#fff;${selfGlow}">${selfTag}${liveBubble(evPhoto)}<span>📅</span><span style="position:absolute;bottom:-3px;right:-3px;font-size:12px;background:#0e0b15;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center">${emoji}</span></div></div>`,
       iconSize:[46,46],iconAnchor:[23,23],
     });
     const m=L.marker([ev.lat,ev.lng],{icon:markerEl}).addTo(mapInstance).on('click',()=>openScheduledCard(ev,prof,isSelf));
@@ -1907,6 +1914,7 @@ function renderMarkers() {
     const meta=STATUS_META[status]||STATUS_META.cold;
     const emoji=vibeEmoji(couple.event_vibe||(couple.vibes||[])[0]);
     const isSelf=couple.id===currentUser.id;
+    const liveP=(!isSelf && status==='hot' && couple.event_photo_url)?couple.event_photo_url:'';
     // fix: use data attribute for emoji
     const verifiedDot = couple.partner_confirmed ? '<div style="position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;border-radius:50%;background:#1dd1a1;border:2px solid white;display:flex;align-items:center;justify-content:center;font-size:8px;color:white">✓</div>' : '';
     let markerEl;
@@ -1923,7 +1931,7 @@ function renderMarkers() {
     } else {
       markerEl = L.divIcon({
         className:'',
-        html:`<div class="double-marker ${status}" style="font-size:20px;position:relative">${status==='hot'?'<div class="pulse-ring"></div>':''}<span>${emoji}</span>${verifiedDot}</div>`,
+        html:`<div class="double-marker ${status}" style="font-size:20px;position:relative">${status==='hot'?'<div class="pulse-ring"></div>':''}<span>${emoji}</span>${verifiedDot}${liveBubble(liveP)}</div>`,
         iconSize:[46,46],iconAnchor:[23,23],
       });
     }
@@ -3245,19 +3253,20 @@ async function renderScheduledBanner(){
   const el=document.getElementById('sched-banner');
   if(!el||!currentUser) return;
   el.style.display='none'; el.innerHTML='';
-  const {data:rows}=await sb.from('events').select('id,starts_at,city').eq('couple_id',coupleId()).eq('type','scheduled').gt('ends_at',new Date().toISOString()).order('starts_at',{ascending:true}).limit(1);
+  const {data:rows}=await sb.from('events').select('id,starts_at,ends_at,city,photo_url').eq('couple_id',coupleId()).eq('type','scheduled').gt('ends_at',new Date().toISOString()).order('starts_at',{ascending:true}).limit(1);
   const ev=(rows||[])[0];
   if(!ev) return;
   const d=new Date(ev.starts_at);
   const when=d.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric'})+' · '+d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
-  el.innerHTML=`<div style="background:linear-gradient(135deg,rgba(91,141,239,0.14),rgba(168,107,255,0.08));border:1px solid rgba(91,141,239,0.3);border-radius:16px;padding:14px 16px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
-    <div style="font-size:22px">📅</div>
-    <div style="flex:1;text-align:right">
-      <div style="font-weight:700;font-size:14px;color:#9db8ff">דייט מתוזמן</div>
-      <div style="font-size:12.5px;color:var(--text2);margin-top:2px">${when}${ev.city?' · '+ev.city:''}</div>
-    </div>
-    <button onclick="cancelScheduledEvent('${ev.id}')" style="background:rgba(255,75,110,0.15);border:1px solid rgba(255,75,110,0.4);color:var(--pink);padding:7px 14px;border-radius:100px;font-family:'Heebo';font-weight:700;font-size:12.5px;cursor:pointer">ביטול</button>
-  </div>`;
+  const live=new Date(ev.starts_at)<=new Date();
+  if(live){
+    const photoBlock = ev.photo_url
+      ? `<div style="margin-top:12px;border-radius:12px;overflow:hidden;position:relative"><img src="${escapeHtml(ev.photo_url)}" style="width:100%;max-height:150px;object-fit:cover;display:block"/><span style="position:absolute;top:8px;right:10px;font-size:10px;font-weight:800;color:#fff;background:#ff3b5c;padding:2px 9px;border-radius:100px">חי עכשיו</span></div><label style="display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;font-size:12.5px;color:#9db8ff;font-weight:700;margin-top:8px"><input type="file" accept="image/*" style="display:none" onchange="uploadSchedLivePhoto(this,'${ev.id}')"/>📷 החלף תמונה</label>`
+      : `<label style="display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;width:100%;margin-top:12px;padding:12px;border:2px dashed rgba(255,59,92,0.5);border-radius:13px;background:rgba(255,59,92,0.07);color:#ff9bae;font-weight:800;font-size:14px"><input type="file" accept="image/*" style="display:none" onchange="uploadSchedLivePhoto(this,'${ev.id}')"/>📸 העלו תמונה מהדייט</label>`;
+    el.innerHTML=`<div style="background:linear-gradient(135deg,rgba(255,59,92,0.12),rgba(168,107,255,0.08));border:1px solid rgba(255,59,92,0.45);border-radius:16px;padding:14px 16px;margin-bottom:20px"><div style="display:flex;align-items:center;gap:12px"><div style="font-size:22px">🔥</div><div style="flex:1;text-align:right"><span style="display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:800;color:#fff;background:#ff3b5c;padding:2px 9px;border-radius:100px;margin-bottom:4px">🔴 חי עכשיו</span><div style="font-weight:700;font-size:14px;color:#ff9bae">אתם בדייט!</div><div style="font-size:12px;color:var(--text2);margin-top:2px">שתפו רגע — זוגות יראו שאתם בחוץ</div></div><button onclick="cancelScheduledEvent('${ev.id}')" style="background:rgba(255,75,110,0.15);border:1px solid rgba(255,75,110,0.4);color:var(--pink);padding:6px 12px;border-radius:100px;font-family:'Heebo';font-weight:700;font-size:12px;cursor:pointer">סיום</button></div>${photoBlock}</div>`;
+  } else {
+    el.innerHTML=`<div style="background:linear-gradient(135deg,rgba(91,141,239,0.14),rgba(168,107,255,0.08));border:1px solid rgba(91,141,239,0.3);border-radius:16px;padding:14px 16px;margin-bottom:20px;display:flex;align-items:center;gap:12px"><div style="font-size:22px">📅</div><div style="flex:1;text-align:right"><div style="font-weight:700;font-size:14px;color:#9db8ff">דייט מתוזמן</div><div style="font-size:12.5px;color:var(--text2);margin-top:2px">${when}${ev.city?' · '+ev.city:''}</div></div><button onclick="cancelScheduledEvent('${ev.id}')" style="background:rgba(255,75,110,0.15);border:1px solid rgba(255,75,110,0.4);color:var(--pink);padding:7px 14px;border-radius:100px;font-family:'Heebo';font-weight:700;font-size:12.5px;cursor:pointer">ביטול</button></div>`;
+  }
   el.style.display='block';
 }
 async function cancelScheduledEvent(id){
@@ -3266,6 +3275,20 @@ async function cancelScheduledEvent(id){
   if(error){ showToast('😕 לא הצלחנו לבטל. נסו שוב'); return; }
   showToast('הדייט בוטל');
   renderScheduledBanner();
+}
+async function uploadSchedLivePhoto(input,eventId){
+  const file=input.files[0]; if(!file) return;
+  showToast('מעלה תמונה...');
+  const path=`${currentUser.id}/sched-live.jpg`;
+  const {error:upErr}=await sb.storage.from('Photos').upload(path,file,{upsert:true,contentType:file.type});
+  if(upErr){ showToast('שגיאה בהעלאה: '+upErr.message); return; }
+  const {data:{publicUrl}}=sb.storage.from('Photos').getPublicUrl(path);
+  const photoUrl=`${publicUrl}?v=${Date.now()}`;
+  const {error}=await sb.from('events').update({photo_url:photoUrl}).eq('id',eventId);
+  if(error){ showToast('😕 שמירה נכשלה — נסו שוב'); return; }
+  showToast('📸 התמונה עלתה! זוגות יראו שאתם בחוץ');
+  renderScheduledBanner();
+  loadScheduledEvents();
 }
 async function saveScheduledEvent(){
   const date=document.getElementById('sched-date').value;
