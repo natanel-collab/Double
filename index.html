@@ -2933,9 +2933,18 @@ async function loadSentShakes() {
   if (!list) return;
   list.innerHTML='<div style="color:var(--text3);font-size:13px;text-align:center;padding:20px">טוען...</div>';
   const {data}=await sb.from('shakes')
-    .select('*, to_profile:to_id(id,name,partner_name,photo_url,city)')
+    .select('*')
     .eq('from_id',currentUser.id)
     .order('created_at',{ascending:false});
+  // שמות/תמונות הזוג הנשלח — דרך public_couples (טבלת profiles נעולה, embedded join מחזיר null שקט)
+  if(data?.length){
+    const toIds=[...new Set(data.map(s=>s.to_id).filter(Boolean))];
+    try{
+      const {data:profs}=await sb.from('public_couples').select('id,name,partner_name,photo_url,city').in('id',toIds);
+      const byId={}; (profs||[]).forEach(p=>byId[p.id]=p);
+      data.forEach(s=>{ s.to_profile = byId[s.to_id] || null; });
+    }catch(e){}
+  }
   if (!data?.length) {
     list.innerHTML='<div style="text-align:center;padding:40px 24px"><div style="font-size:48px;margin-bottom:12px">💞</div><div style="font-family:\'Syne\';font-size:17px;font-weight:800;margin-bottom:8px">לא שלחתם Shake עדיין</div><div style="font-size:13px;color:var(--text3)">מצאו זוג על המפה ושלחו!</div></div>';
     return;
@@ -4672,6 +4681,35 @@ function updateHeatmapIfOn() {
     Object.values(markers).forEach(m => m.setOpacity(0.15));
   }
 }
+
+// ═══════════════════════════════════
+// רענון אוטומטי בחזרה לאפליקציה
+// כשחוזרים לאפליקציה מהרקע / מחליפים אליה / הרשת חוזרת —
+// מרעננים בשקט את הכל (מפה, פיד, שייקים, התראות). שקוף למשתמש.
+// זה מה שמביא אירועים ספונטניים של זוגות אחרים בלי צורך ברענון ידני.
+// ═══════════════════════════════════
+let _lastForegroundRefresh = 0;
+function refreshOnForeground() {
+  if (!currentUser || !myProfile) return;          // רק אחרי התחברות מלאה
+  const now = Date.now();
+  if (now - _lastForegroundRefresh < 4000) return; // מגן מפני קריאות כפולות רצופות
+  _lastForegroundRefresh = now;
+  try {
+    // חיבור מחדש של הערוצים (הפונקציות כבר מנתקות קודם — בטוח)
+    subscribeRealtime();
+    subscribeNewMessages();
+    subscribeShakes();
+    // משיכת מידע טרי — loadCouples מרענן מפה+פיד+אירועים+ספירה
+    loadCouples();
+    renderScheduledBanner();
+    loadShakes();
+  } catch (e) { /* אם משהו לא מוכן עדיין — פשוט מדלגים */ }
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') refreshOnForeground();
+});
+window.addEventListener('focus', refreshOnForeground);
+window.addEventListener('online', refreshOnForeground);
 
 // ═══════════════════════════════════
 // START
