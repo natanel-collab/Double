@@ -1220,6 +1220,7 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
 
 <!-- Toast -->
 <div id="toast"></div>
+<div id="offline-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:#ff9f43;color:#1a1a2e;text-align:center;padding:9px 16px;font-family:'Heebo',sans-serif;font-weight:700;font-size:13px;box-shadow:0 2px 12px rgba(0,0,0,0.4)">📡 אין חיבור לאינטרנט — מנסים להתחבר מחדש…</div>
 
 <script>
 // ═══════════════════════════════════
@@ -4710,6 +4711,44 @@ document.addEventListener('visibilitychange', () => {
 });
 window.addEventListener('focus', refreshOnForeground);
 window.addEventListener('online', refreshOnForeground);
+
+// ═══════════════════════════════════
+// טיימר מעברי-זמן
+// כל 30 שניות: אם דייט מתוזמן עבר עכשיו מ"מתוכנן" ל"חי" (או פג) —
+// מרענן את הסיכות, הבאנר בפרופיל, והפיד. בלי שהמשתמש יגע במסך.
+// זול: renderScheduledMarkers כבר משתמש ב-diff נגד ריצוד.
+// ═══════════════════════════════════
+let _timeTickInterval = null;
+function startTimeTick() {
+  if (_timeTickInterval) return;
+  _timeTickInterval = setInterval(() => {
+    if (!currentUser || !myProfile) return;
+    try {
+      renderScheduledMarkers();                                   // סיכות דייט מתוזמן
+      if (document.getElementById('screen-profile')?.classList.contains('active')) renderScheduledBanner();
+      if (document.getElementById('screen-feed')?.classList.contains('active')) renderFeed();
+      // אירוע ספונטני שפג — איפוס אוטומטי (כמו שקורה ברינדור הפרופיל)
+      if (myProfile?.status==='hot' && myProfile?.event_expires_at && new Date(myProfile.event_expires_at)<=new Date()) {
+        renderMarkers();
+      }
+    } catch(e) {}
+  }, 30000);
+}
+startTimeTick();
+
+// ═══════════════════════════════════
+// באנר "אין חיבור"
+// כשהרשת נופלת — מציג פס כתום למעלה במקום להשאיר מסך תקוע בשקט.
+// כשהיא חוזרת — מסתיר ומרענן (refreshOnForeground כבר מחובר ל-online).
+// ═══════════════════════════════════
+function updateOfflineBanner() {
+  const b = document.getElementById('offline-banner');
+  if (!b) return;
+  b.style.display = navigator.onLine ? 'none' : 'block';
+}
+window.addEventListener('offline', updateOfflineBanner);
+window.addEventListener('online', updateOfflineBanner);
+updateOfflineBanner();
 
 // ═══════════════════════════════════
 // START
