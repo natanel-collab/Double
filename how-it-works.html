@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>איך זה עובד — Double</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800;900&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0910; --bg2:#0d0b12; --surface:rgba(255,255,255,0.04);
+  --border:rgba(255,255,255,0.08); --text:#f0f0ff; --text2:#a0a0c0; --text3:#606078;
+  --pink:#ff4b6e; --pink2:#ff6b9d; --purple:#a86bff; --teal:#5b8def; --live:#ff3b5c;
+  --green:#1dd1a1;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direction:rtl;line-height:1.7;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+
+/* ambient glows */
+body::before{content:'';position:fixed;top:-10%;right:-10%;width:500px;height:500px;background:radial-gradient(circle,rgba(255,75,110,0.15),transparent 70%);pointer-events:none;z-index:0}
+body::after{content:'';position:fixed;bottom:-10%;left:-10%;width:500px;height:500px;background:radial-gradient(circle,rgba(168,107,255,0.12),transparent 70%);pointer-events:none;z-index:0}
+
+.wrap{max-width:920px;margin:0 auto;padding:0 20px;position:relative;z-index:1}
+
+/* header */
+header{text-align:center;padding:60px 20px 40px}
+.logo{font-family:'Syne';font-size:15px;font-weight:800;letter-spacing:1px;color:var(--text2);margin-bottom:24px}
+.logo b{background:linear-gradient(120deg,var(--pink),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+h1{font-family:'Syne';font-size:clamp(34px,7vw,56px);font-weight:800;line-height:1.05;margin-bottom:16px}
+h1 .grad{background:linear-gradient(120deg,var(--pink),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.subtitle{font-size:17px;color:var(--text2);max-width:520px;margin:0 auto}
+
+/* step section */
+.step{display:grid;grid-template-columns:1fr 300px;gap:40px;align-items:center;padding:50px 0;border-top:1px solid var(--border)}
+.step:nth-child(even){grid-template-columns:300px 1fr}
+.step:nth-child(even) .phone-col{order:-1}
+@media(max-width:760px){
+  .step,.step:nth-child(even){grid-template-columns:1fr;gap:28px}
+  .step:nth-child(even) .phone-col{order:0}
+  .phone-col{justify-self:center}
+}
+.step-num{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:14px;background:linear-gradient(120deg,var(--pink),var(--purple));font-family:'Syne';font-weight:800;font-size:20px;color:#fff;margin-bottom:18px;box-shadow:0 8px 24px -6px rgba(255,75,110,0.5)}
+.step h2{font-family:'Syne';font-size:28px;font-weight:800;margin-bottom:14px;line-height:1.15}
+.step p{color:var(--text2);font-size:15px;margin-bottom:12px}
+.step .tip{display:inline-block;background:rgba(91,141,239,0.12);border:1px solid rgba(91,141,239,0.3);color:var(--teal);border-radius:10px;padding:8px 14px;font-size:13px;font-weight:600;margin-top:6px}
+
+/* phone mockup */
+.phone{width:280px;height:570px;background:linear-gradient(160deg,#15131d,#0d0b12);border-radius:38px;padding:12px;box-shadow:0 30px 70px -20px rgba(0,0,0,0.8),0 0 0 2px rgba(255,255,255,0.06);position:relative}
+.phone::before{content:'';position:absolute;top:22px;left:50%;transform:translateX(-50%);width:80px;height:5px;background:rgba(255,255,255,0.15);border-radius:10px;z-index:5}
+.screen{width:100%;height:100%;background:var(--bg);border-radius:28px;overflow:hidden;position:relative;display:flex;flex-direction:column}
+.sc-glow{position:absolute;top:-20%;right:-20%;width:200px;height:200px;background:radial-gradient(circle,rgba(255,75,110,0.25),transparent 70%);pointer-events:none}
+.sc-pad{padding:44px 18px 18px;flex:1;display:flex;flex-direction:column;position:relative;z-index:1;overflow:hidden}
+
+/* mini components inside phone */
+.mlogo{font-family:'Syne';font-size:26px;font-weight:800;text-align:center;background:linear-gradient(120deg,var(--pink),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:6px}
+.mtag{text-align:center;font-size:11px;color:var(--text3);margin-bottom:22px}
+.mheart{font-size:44px;text-align:center;margin:auto 0 18px}
+.minput{background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:12px;padding:12px;font-size:12px;color:var(--text2);margin-bottom:10px}
+.mbtn{background:linear-gradient(120deg,var(--pink),var(--pink2));border-radius:100px;padding:13px;text-align:center;font-weight:800;font-size:13px;color:#fff;margin-top:4px}
+.mbtn.soft{background:rgba(255,255,255,0.06);color:var(--text2)}
+.mlink{text-align:center;font-size:11px;color:var(--text3);margin-top:14px}
+
+/* map screen */
+.mmap{position:absolute;inset:0;background:
+  linear-gradient(rgba(11,9,16,0.3),rgba(11,9,16,0.6)),
+  repeating-linear-gradient(0deg,rgba(255,255,255,0.03) 0 1px,transparent 1px 40px),
+  repeating-linear-gradient(90deg,rgba(255,255,255,0.03) 0 1px,transparent 1px 40px),
+  radial-gradient(circle at 30% 40%,#1a1a2e,#0d0b12)}
+.mpin{position:absolute;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 4px 14px rgba(0,0,0,0.5);border:2px solid}
+.mpin.hot{background:rgba(255,75,110,0.9);border-color:#fff;animation:pulse 2s infinite}
+.mpin.self{background:rgba(168,107,255,0.9);border-color:#fff}
+.mpin.sched{background:rgba(91,141,239,0.9);border-color:#fff;font-size:14px}
+@keyframes pulse{0%,100%{box-shadow:0 4px 14px rgba(255,75,110,0.4)}50%{box-shadow:0 4px 24px rgba(255,75,110,0.9)}}
+.mcount{position:absolute;top:44px;left:50%;transform:translateX(-50%);background:rgba(13,11,18,0.9);border:1px solid var(--border);border-radius:100px;padding:6px 14px;font-size:11px;font-weight:700;white-space:nowrap;z-index:3}
+.mcount b{color:var(--pink)}
+.mfab{position:absolute;bottom:70px;left:16px;width:52px;height:52px;border-radius:50%;background:linear-gradient(120deg,var(--pink),var(--pink2));display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 6px 20px rgba(255,75,110,0.5);z-index:3}
+
+/* bottom nav */
+.mnav{position:absolute;bottom:0;left:0;right:0;height:58px;background:rgba(13,11,18,0.95);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-around;z-index:4}
+.mnav span{font-size:18px;opacity:0.4}
+.mnav span.on{opacity:1}
+
+/* couple panel */
+.mpanel{position:absolute;bottom:58px;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border);border-radius:20px 20px 0 0;padding:18px 16px;z-index:5;box-shadow:0 -10px 30px rgba(0,0,0,0.5)}
+.mrow{display:flex;gap:10px;align-items:center;margin-bottom:14px}
+.mavatar{width:46px;height:46px;border-radius:12px;background:rgba(255,75,110,0.15);border:2px solid rgba(255,75,110,0.4);display:flex;align-items:center;justify-content:center;font-size:20px}
+.mname{font-family:'Syne';font-weight:800;font-size:14px}
+.mcity{font-size:11px;color:var(--text3)}
+
+/* chooser */
+.mchoose{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:12px;text-align:center}
+.mchoose .ico{font-size:30px;margin-bottom:8px}
+.mchoose .t{font-family:'Syne';font-weight:800;font-size:15px;margin-bottom:4px}
+.mchoose .d{font-size:11px;color:var(--text3)}
+.mchoose.hot{border-color:rgba(255,75,110,0.4);background:rgba(255,75,110,0.08)}
+.mchoose.sch{border-color:rgba(91,141,239,0.4);background:rgba(91,141,239,0.08)}
+
+/* chat */
+.mbubble{max-width:75%;padding:9px 13px;border-radius:14px;font-size:11px;margin-bottom:8px;line-height:1.4}
+.mbubble.them{background:rgba(255,255,255,0.06);align-self:flex-start;border-bottom-right-radius:4px}
+.mbubble.me{background:linear-gradient(120deg,var(--pink),var(--pink2));color:#fff;align-self:flex-end;border-bottom-left-radius:4px}
+
+.badge-live{display:inline-flex;align-items:center;gap:5px;background:rgba(255,59,92,0.15);border:1px solid rgba(255,59,92,0.4);color:var(--live);padding:3px 9px;border-radius:100px;font-size:10px;font-weight:800}
+
+/* CTA footer */
+.cta{text-align:center;padding:70px 20px 90px;border-top:1px solid var(--border);margin-top:20px}
+.cta h2{font-family:'Syne';font-size:34px;font-weight:800;margin-bottom:14px}
+.cta p{color:var(--text2);margin-bottom:28px}
+.cta-btn{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(120deg,var(--pink),var(--pink2));color:#fff;text-decoration:none;padding:18px 40px;border-radius:100px;font-weight:800;font-size:17px;box-shadow:0 16px 40px -8px rgba(255,75,110,0.55);transition:transform .3s}
+.cta-btn:hover{transform:translateY(-3px)}
+
+.footer{text-align:center;padding:30px;font-size:12px;color:var(--text3)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="logo">💞 <b>Double</b></div>
+    <h1>איך <span class="grad">Double</span> עובד</h1>
+    <p class="subtitle">מוצאים זוג לדאבל דייט בכמה צעדים פשוטים. הנה כל המסלול — משנייה שנרשמתם ועד הדייט הראשון.</p>
+  </header>
+
+  <!-- STEP 1 -->
+  <section class="step">
+    <div class="text-col">
+      <div class="step-num">1</div>
+      <h2>נרשמים כזוג</h2>
+      <p>נרשמים עם אימייל וסיסמה, מאמתים את המייל, ובוחרים שם לזוג. שני בני הזוג יכולים להתחבר לאותו פרופיל דרך קוד-זוג אישי.</p>
+      <p>ברגע שהתחברתם — אתם זוג אחד באפליקציה, עם פרופיל משותף.</p>
+      <div class="tip">💡 כל אחד מבני הזוג נכנס מהטלפון שלו — פשוט מזינים את אותו קוד-זוג</div>
+    </div>
+    <div class="phone-col">
+      <div class="phone"><div class="screen"><div class="sc-glow"></div><div class="sc-pad">
+        <div class="mheart">💞</div>
+        <div class="mlogo">Double</div>
+        <div class="mtag">מחברים זוגות עם זוגות</div>
+        <div class="minput">האימייל שלכם</div>
+        <div class="minput">סיסמה</div>
+        <div class="mbtn">בואו נתחיל</div>
+        <div class="mlink">כבר יש לכם חשבון? התחברו</div>
+      </div></div></div>
+    </div>
+  </section>
+
+  <!-- STEP 2 -->
+  <section class="step">
+    <div class="text-col">
+      <div class="step-num">2</div>
+      <h2>רואים מי פנוי על המפה</h2>
+      <p>המפה החיה מראה זוגות פעילים באזורכם בזמן אמת. כל סיכה ורודה = זוג שפנוי עכשיו לדייט. סיכות טורקיז = דייטים מתוזמנים שאפשר להצטרף אליהם.</p>
+      <p>למעלה תמיד רואים כמה זוגות חמים פעילים ברגע זה.</p>
+      <div class="tip">🗺️ אפשר לסנן לפי מרחק ולפי סוג הווייב שמחפשים</div>
+    </div>
+    <div class="phone-col">
+      <div class="phone"><div class="screen">
+        <div class="mmap">
+          <div class="mcount">🔥 <b>4</b> זוגות חמים עכשיו</div>
+          <div class="mpin hot" style="top:32%;right:28%">💞</div>
+          <div class="mpin hot" style="top:48%;right:58%">💞</div>
+          <div class="mpin sched" style="top:60%;right:35%">📅</div>
+          <div class="mpin self" style="top:70%;right:62%">🏠</div>
+          <div class="mfab">🔥</div>
+          <div class="mnav"><span class="on">🗺️</span><span>📰</span><span>💞</span><span>💬</span><span>👫</span></div>
+        </div>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- STEP 3 -->
+  <section class="step">
+    <div class="text-col">
+      <div class="step-num">3</div>
+      <h2>מפרסמים מה בא לכם</h2>
+      <p>לוחצים על הכפתור 🔥 ובוחרים: <b>"פנויים עכשיו"</b> לדייט ספונטני מיידי, או <b>"לתזמן דייט"</b> לתכנן משהו לימים הקרובים — עם תאריך, שעה ועיר.</p>
+      <p>ברגע שפרסמתם, הסיכה שלכם מופיעה על המפה של כולם.</p>
+    </div>
+    <div class="phone-col">
+      <div class="phone"><div class="screen"><div class="sc-glow"></div><div class="sc-pad">
+        <div style="font-family:'Syne';font-weight:800;font-size:17px;text-align:center;margin-bottom:4px">איך בא לכם לצאת?</div>
+        <div style="font-size:11px;color:var(--text3);text-align:center;margin-bottom:20px">בחרו את סוג האירוע</div>
+        <div class="mchoose hot">
+          <div class="ico">🔥</div>
+          <div class="t">פנויים עכשיו</div>
+          <div class="d">דייט ספונטני — הזוג פעיל ל-24 שעות</div>
+        </div>
+        <div class="mchoose sch">
+          <div class="ico">📅</div>
+          <div class="t">לתזמן דייט</div>
+          <div class="d">תאריך, שעה ועיר — לימים הקרובים</div>
+        </div>
+      </div></div></div>
+    </div>
+  </section>
+
+  <!-- STEP 4 -->
+  <section class="step">
+    <div class="text-col">
+      <div class="step-num">4</div>
+      <h2>שולחים Shake לזוג שמצא חן</h2>
+      <p>לוחצים על סיכה של זוג, רואים את הפרופיל שלהם, ואם בא לכם — שולחים <b>Double Shake</b>. זו הדרך להגיד "בא לנו להכיר אתכם".</p>
+      <p>כשהזוג השני מקבל שייק — מקבלים התראה מיד, בזמן אמת.</p>
+      <div class="tip">💞 השייק הוא ברמת הזוג — שני בני הזוג רואים אותו</div>
+    </div>
+    <div class="phone-col">
+      <div class="phone"><div class="screen">
+        <div class="mmap" style="filter:brightness(0.5)">
+          <div class="mpin hot" style="top:32%;right:38%">💞</div>
+        </div>
+        <div class="mpanel">
+          <div class="mrow">
+            <div class="mavatar">💞</div>
+            <div style="flex:1">
+              <div class="mname">דנה & יואב</div>
+              <div class="mcity">📍 תל אביב · פנויים עכשיו</div>
+            </div>
+          </div>
+          <div class="mbtn">💞 שלחו Double Shake</div>
+        </div>
+        <div class="mnav"><span class="on">🗺️</span><span>📰</span><span>💞</span><span>💬</span><span>👫</span></div>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- STEP 5 -->
+  <section class="step">
+    <div class="text-col">
+      <div class="step-num">5</div>
+      <h2>מתחברים ומדברים</h2>
+      <p>כששני הזוגות שלחו שייק אחד לשני — אתם מחוברים! נפתח צ'אט קבוצתי שבו אתם יכולים לתאם את הדייט. יש גם שאלות פתיחה מוכנות אם לא יודעים איך להתחיל.</p>
+      <p>הודעות מגיעות בזמן אמת — בלי צורך לרענן.</p>
+    </div>
+    <div class="phone-col">
+      <div class="phone"><div class="screen"><div class="sc-glow"></div>
+        <div style="padding:44px 16px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
+          <span style="font-size:18px">←</span>
+          <div class="mavatar" style="width:34px;height:34px;font-size:15px">💞</div>
+          <div class="mname" style="font-size:13px">דנה & יואב</div>
+        </div>
+        <div class="sc-pad" style="padding-top:14px;justify-content:flex-end">
+          <div class="mbubble them">היי! ראינו שאתם פנויים — בא לכם לצאת הערב? 😊</div>
+          <div class="mbubble me">בטח! חשבנו על בר יין במרכז 🍷</div>
+          <div class="mbubble them">מושלם! נתראה ב-8?</div>
+          <div style="background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:100px;padding:10px 14px;font-size:11px;color:var(--text3);margin-top:6px">הקלידו הודעה...</div>
+        </div>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- STEP 6 -->
+  <section class="step">
+    <div class="text-col">
+      <div class="step-num">6</div>
+      <h2>יוצאים לדייט 🎉</h2>
+      <p>נפגשים, נהנים — ואם בא לכם, מעלים תמונה מהדייט החי. הזוגות האחרים על המפה רואים בועה קטנה עם התמונה שלכם: "🔴 חי עכשיו". הוכחה חברתית שאנשים באמת יוצאים.</p>
+      <p>בסוף הדייט לוחצים "סיום" — וזהו, ערב מוצלח.</p>
+      <div class="tip"><span class="badge-live">🔴 חי עכשיו</span> &nbsp;התמונה מופיעה מעל הסיכה שלכם במפה</div>
+    </div>
+    <div class="phone-col">
+      <div class="phone"><div class="screen">
+        <div class="mmap">
+          <div style="position:absolute;top:38%;right:40%">
+            <div style="width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,var(--pink),var(--purple));border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:24px;position:relative">
+              🍷
+              <div style="position:absolute;top:-30px;right:-6px;background:var(--live);color:#fff;font-size:8px;font-weight:800;padding:2px 6px;border-radius:6px;white-space:nowrap">🔴 חי</div>
+            </div>
+          </div>
+          <div class="mpin hot" style="top:60%;right:60%">💞</div>
+          <div class="mnav"><span class="on">🗺️</span><span>📰</span><span>💞</span><span>💬</span><span>👫</span></div>
+        </div>
+      </div></div>
+    </div>
+  </section>
+
+</div>
+
+<!-- CTA -->
+<div class="cta">
+  <div class="wrap">
+    <h2>מוכנים לצאת?</h2>
+    <p>מצאו את הזוג הבא שתכירו — זה קורה בטבעיות, בלי המבוכה.</p>
+    <a href="/index.html" class="cta-btn">📲 בואו נתחיל</a>
+  </div>
+</div>
+
+<div class="footer">
+  💞 Double · <a href="/privacy.html" style="color:var(--text3)">פרטיות</a> · <a href="/terms.html" style="color:var(--text3)">תנאי שימוש</a> · <a href="/accessibility.html" style="color:var(--text3)">נגישות</a>
+</div>
+
+</body>
+</html>
