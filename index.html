@@ -4,10 +4,10 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover"/>
   <title>Double 💞</title>
-  <meta name="theme-color" content="#0d0d18"/>
+  <meta name="theme-color" content="#fff2ec"/>
   <link rel="manifest" href="manifest.json"/>
   <meta name="apple-mobile-web-app-capable" content="yes"/>
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
   <meta name="apple-mobile-web-app-title" content="Double"/>
   <link rel="apple-touch-icon" href="icon-180.png"/>
   <link rel="icon" type="image/png" href="favicon-48.png"/>
@@ -29,15 +29,15 @@
   .amp{color:var(--pink);font-size:.78em;vertical-align:.04em;opacity:.95;font-style:normal}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#0d0d18;--bg2:#13131f;--bg3:#1a1a2e;
-  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);
-  --text:#f0f0ff;--text2:#aaaacc;--text3:#666688;
-  --pink:#ff4b6e;--pink2:#ff6b9d;--orange:#ff9f43;--blue:#54a0ff;--green:#1dd1a1;
+  --bg:#fff3ee;--bg2:#ffffff;--bg3:#fff6f2;
+  --border:rgba(42,31,46,0.08);--border2:rgba(42,31,46,0.14);
+  --text:#2a1f2e;--text2:#6d5560;--text3:#9a8590;
+  --pink:#ff4b6e;--pink2:#ff8a5b;--orange:#ff9f43;--blue:#5b8def;--green:#ff4b6e;
   --radius:16px;
   --safe-top:env(safe-area-inset-top,0px);--safe-bot:env(safe-area-inset-bottom,0px);
 }
-html,body{height:100dvh;overflow:hidden;background:#0B0B14}
-body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direction:rtl;-webkit-font-smoothing:antialiased}
+html,body{height:100dvh;overflow:hidden;background:#fff3ee}
+body{font-family:'Heebo',sans-serif;background:linear-gradient(180deg,#fff2ec,#ffe9ec);color:var(--text);direction:rtl;-webkit-font-smoothing:antialiased}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--pink);border-radius:2px}
 #app{display:flex;flex-direction:column;height:100dvh}
 .screen{display:none;flex-direction:column;flex:1;overflow:hidden}.screen.active{display:flex;animation:fadeScaleIn 0.25s ease}@keyframes fadeScaleIn{from{opacity:0;transform:scale(0.97)}to{opacity:1;transform:scale(1)}}
@@ -47,7 +47,7 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
 #screen-auth{align-items:center;justify-content:center;background:radial-gradient(ellipse at 60% 20%,rgba(255,75,110,0.18) 0%,transparent 60%),radial-gradient(ellipse at 10% 80%,rgba(84,160,255,0.12) 0%,transparent 50%),var(--bg);padding:24px}
 .auth-logo{font-family:'Syne',sans-serif;font-size:48px;font-weight:800;background:linear-gradient(135deg,var(--pink),var(--orange));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-2px;margin-bottom:6px}
 .auth-tagline{color:var(--text2);font-size:15px;margin-bottom:40px;text-align:center}
-.auth-box{background:rgba(255,255,255,0.04);border:1px solid var(--border2);border-radius:20px;padding:28px;width:100%;max-width:380px}
+.auth-box{background:#fff;border:1px solid var(--border);border-radius:20px;padding:28px;width:100%;max-width:380px;box-shadow:0 10px 34px rgba(214,110,80,0.14)}
 .auth-tabs{display:flex;gap:4px;margin-bottom:24px;background:var(--bg3);border-radius:10px;padding:4px}
 .auth-tab{flex:1;padding:9px 4px;border:none;background:none;color:var(--text3);border-radius:8px;cursor:pointer;font-family:'Heebo';font-size:13px;font-weight:600;transition:all 0.18s;white-space:nowrap}
 .auth-tab.active{background:var(--pink);color:white}
@@ -58,7 +58,7 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
 .field-input::placeholder{color:var(--text3)}
 .btn-primary{width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--pink),var(--pink2));color:white;font-family:'Heebo';font-size:16px;font-weight:700;cursor:pointer;transition:all 0.2s;margin-top:6px;box-shadow:0 4px 20px rgba(255,75,110,0.35)}
 .btn-primary:disabled{opacity:0.5;cursor:not-allowed}
-.btn-secondary{background:rgba(255,255,255,0.06);border:1px solid var(--border2);color:var(--text2);padding:12px;border-radius:12px;font-family:'Heebo';font-size:14px;font-weight:600;cursor:pointer;transition:all 0.15s;width:100%}
+.btn-secondary{background:#fff;border:1px solid var(--border2);color:var(--text2);padding:12px;border-radius:12px;font-family:'Heebo';font-size:14px;font-weight:600;cursor:pointer;transition:all 0.15s;width:100%}
 .auth-err{color:var(--pink);font-size:13px;margin-top:10px;text-align:center;min-height:20px}
 
 /* SETUP */
@@ -73,7 +73,7 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
 
 /* MAIN */
 #screen-main{position:relative}
-.app-header{display:flex;align-items:center;justify-content:space-between;padding:calc(var(--safe-top) + 14px) 18px 12px;background:rgba(13,13,24,0.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);position:relative;z-index:400;flex-shrink:0}
+.app-header{display:flex;align-items:center;justify-content:space-between;padding:calc(var(--safe-top) + 14px) 18px 12px;background:rgba(255,255,255,0.9);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);position:relative;z-index:400;flex-shrink:0}
 .header-logo{font-family:'Syne';font-weight:800;font-size:22px;letter-spacing:-0.5px}
 .header-logo span{background:linear-gradient(135deg,var(--pink),var(--orange));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .header-live{font-size:11px;color:var(--text3);margin-top:-2px}
@@ -83,14 +83,15 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
 @keyframes btnSpin{to{transform:rotate(360deg)}}
 .btn-spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:btnSpin 0.7s linear infinite;vertical-align:middle;margin-left:4px}
 .header-actions{display:flex;gap:8px;align-items:center}
-.icon-btn{background:rgba(255,255,255,0.07);border:1px solid var(--border);color:var(--text2);width:36px;height:36px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all 0.15s}
+.icon-btn{background:#fff;border:1px solid var(--border);box-shadow:0 2px 8px rgba(42,31,46,0.06);color:var(--text2);width:36px;height:36px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all 0.15s}
 .icon-btn.active{background:var(--pink);color:white;border-color:var(--pink)}
-.filter-bar{display:flex;gap:7px;padding:10px 16px;overflow-x:auto;border-bottom:1px solid var(--border);background:rgba(13,13,24,0.85);backdrop-filter:blur(12px);flex-shrink:0;z-index:399;scrollbar-width:none}
+.filter-bar{display:flex;gap:7px;padding:10px 16px;overflow-x:auto;border-bottom:1px solid var(--border);background:rgba(255,255,255,0.85);backdrop-filter:blur(12px);flex-shrink:0;z-index:399;scrollbar-width:none}
 .filter-bar::-webkit-scrollbar{display:none}
 .filter-chip{background:var(--bg3);border:1px solid var(--border);color:var(--text3);padding:6px 14px;border-radius:100px;cursor:pointer;font-size:12px;font-family:'Heebo';font-weight:600;white-space:nowrap;transition:all 0.15s}
 .filter-chip.active{background:var(--pink);color:white;border-color:var(--pink)}
 #map-container{flex:1;position:relative;overflow:hidden}
-#map{width:100%;height:100%}
+#map{width:100%;height:100%;background:#fdeef0}
+#map .leaflet-tile-pane{filter:sepia(.18) saturate(1.12) hue-rotate(-10deg) brightness(1.02)}
 .leaflet-tile{filter:none}
 .leaflet-container{background:#e8e0d8!important}
 .leaflet-popup-content-wrapper{background:var(--bg2)!important;color:var(--text)!important;border:1px solid var(--border2)!important;border-radius:14px!important;box-shadow:0 4px 20px rgba(0,0,0,0.6)!important}
@@ -146,7 +147,7 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
 .rep-pop-card .em{font-size:40px}
 .rep-pop-card h3{font-size:17px;font-weight:800;margin-top:8px}
 .rep-pop-card p{font-size:13px;color:var(--text2);margin-top:8px;line-height:1.6}
-.rep-pop-pill{display:inline-block;margin-top:12px;font-size:11px;font-weight:700;color:var(--green);background:rgba(29,209,161,.1);border:1px solid rgba(29,209,161,.28);padding:5px 11px;border-radius:100px}
+.rep-pop-pill{display:inline-block;margin-top:12px;font-size:11px;font-weight:700;color:var(--green);background:rgba(255,75,110,.1);border:1px solid rgba(255,75,110,.28);padding:5px 11px;border-radius:100px}
 .rep-pop-close{width:100%;margin-top:18px;padding:12px;border:none;border-radius:12px;background:var(--pink);color:#fff;font-family:'Heebo';font-weight:800;font-size:14px;cursor:pointer}
 .blk-warn{font-size:13px;color:var(--text2);line-height:1.6;margin:4px 0 16px}
 .blk-icon{font-size:34px;text-align:center;margin-bottom:6px}
@@ -160,10 +161,10 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
 .couple-city{color:var(--text2);font-size:13px;margin-top:4px}
 .status-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:100px;font-size:12px;font-weight:700;margin-top:10px}
 .status-dot{width:7px;height:7px;border-radius:50%}
-.info-card{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:12px}
+.info-card{background:#fff6f2;border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:12px}
 .info-card-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px}
 .people-row{display:flex;gap:8px;margin-bottom:12px}
-.person-card{flex:1;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:12px;padding:12px}
+.person-card{flex:1;background:#fff6f2;border:1px solid var(--border);border-radius:12px;padding:12px}
 .person-name{font-size:15px;font-weight:700}
 .person-role{font-size:12px;color:var(--text3);margin-top:3px}
 .tags-row{display:flex;flex-wrap:wrap;gap:6px}
@@ -182,17 +183,17 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
 .msg-wrapper.self{align-items:flex-start;align-self:flex-start}
 .msg-wrapper.other{align-items:flex-end;align-self:flex-end}
 .msg-namebadge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:2px 9px;border-radius:100px;margin-bottom:4px}
-.msg-namebadge.self{background:rgba(255,255,255,0.08);color:var(--text3)}
-.msg-namebadge.other{background:linear-gradient(135deg,rgba(255,107,107,0.25),rgba(108,92,231,0.25));color:#ffb3b3}
+.msg-namebadge.self{background:rgba(42,31,46,0.06);color:var(--text3)}
+.msg-namebadge.other{background:rgba(255,75,110,0.12);color:#e0355c}
 .msg-from{font-size:11px;color:var(--text3);margin-bottom:3px}
 .msg-bubble{padding:11px 15px;max-width:100%;font-size:14px;line-height:1.45;word-break:break-word}
-.msg-bubble.self{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.06);color:var(--text);border-radius:20px 20px 6px 20px}
-.msg-bubble.other{background:linear-gradient(135deg,#FF6B6B 0%,#6C5CE7 100%);color:white;border-radius:20px 20px 20px 6px;box-shadow:0 6px 18px rgba(108,92,231,0.35)}
+.msg-bubble.self{background:#fff;border:1px solid rgba(42,31,46,0.07);color:var(--text);border-radius:20px 20px 6px 20px;box-shadow:0 2px 8px rgba(160,70,50,0.08)}
+.msg-bubble.other{background:linear-gradient(135deg,#ff4b6e 0%,#ff8a5b 100%);color:white;border-radius:20px 20px 20px 6px;box-shadow:0 6px 18px rgba(255,75,110,0.3)}
 .msg-time{font-size:10px;color:var(--text3);margin-top:4px;padding:0 4px}
 @keyframes fadeSlideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-.ice-msg{align-self:center;max-width:90%;text-align:center;background:radial-gradient(ellipse at 50% 0%,rgba(255,200,60,0.14),transparent 70%),rgba(20,20,35,0.6);border:1px solid rgba(255,200,60,0.4);border-radius:18px;padding:14px 18px;box-shadow:0 0 24px rgba(255,200,60,0.18);animation:iceGlow 2.5s ease-in-out infinite,fadeSlideUp 0.32s ease both}
-.ice-label{font-size:11px;font-weight:700;color:#ffd24a;letter-spacing:0.5px;margin-bottom:6px}
-.ice-text{font-size:14px;color:#fff;line-height:1.5}
+.ice-msg{align-self:center;max-width:90%;text-align:center;background:radial-gradient(ellipse at 50% 0%,rgba(255,200,60,0.18),transparent 70%),rgba(255,255,255,0.88);border:1px solid rgba(255,200,60,0.4);border-radius:18px;padding:14px 18px;box-shadow:0 0 24px rgba(255,200,60,0.18);animation:iceGlow 2.5s ease-in-out infinite,fadeSlideUp 0.32s ease both}
+.ice-label{font-size:11px;font-weight:700;color:#c98a00;letter-spacing:0.5px;margin-bottom:6px}
+.ice-text{font-size:14px;color:var(--text);line-height:1.5}
 @keyframes iceGlow{0%,100%{box-shadow:0 0 24px rgba(255,200,60,0.15)}50%{box-shadow:0 0 34px rgba(255,200,60,0.3)}}
 .icebreaker-card{background:rgba(255,159,67,0.1);border:1px solid rgba(255,159,67,0.25);border-radius:14px;padding:12px 14px;margin-bottom:4px}
 .icebreaker-label{font-size:11px;color:var(--orange);font-weight:700;margin-bottom:4px}
@@ -202,10 +203,14 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
 .chat-send{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--pink),var(--pink2));border:none;color:white;cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 
 /* BOTTOM NAV */
-.bottom-nav{display:flex;background:rgba(13,13,24,0.95);backdrop-filter:blur(20px);border-top:1px solid var(--border);padding-bottom:var(--safe-bot);flex-shrink:0;z-index:350}
+.bottom-nav{display:flex;background:rgba(255,255,255,0.92);backdrop-filter:blur(20px);border-top:1px solid var(--border);padding-bottom:var(--safe-bot);flex-shrink:0;z-index:350}
 .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 4px;cursor:pointer;transition:all 0.15s;border:none;background:none;color:var(--text3);gap:4px;position:relative}
 .nav-item.active{color:var(--pink)}
-.nav-icon{font-size:22px;line-height:1}
+.nav-icon{width:26px;height:26px;display:flex;align-items:center;justify-content:center;line-height:1;font-size:22px}
+.nav-icon svg{width:25px;height:25px;fill:none;stroke:#9a8a98;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.nav-icon svg .fillp{fill:#9a8a98;stroke:none}
+.nav-item.active .nav-icon svg *{stroke:var(--pink)}
+.nav-item.active .nav-icon svg .fillp{fill:var(--pink);stroke:none}
 .nav-label{font-size:10px;font-weight:600;font-family:'Heebo'}
 .vibe-chip{background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:8px 14px;border-radius:100px;cursor:pointer;font-size:13px;transition:all 0.15s;user-select:none;display:inline-block;margin:3px}.vibe-chip.selected{background:rgba(255,75,110,0.2);border-color:rgba(255,75,110,0.5);color:var(--pink)}.nav-badge{position:absolute;top:2px;right:calc(50% - 22px);min-width:17px;height:17px;padding:0 4px;background:var(--pink);color:#fff;font-size:10px;font-weight:800;border-radius:100px;display:none;align-items:center;justify-content:center;border:2px solid var(--bg);box-sizing:border-box}
 
@@ -215,7 +220,7 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
 .modal-box{background:var(--bg2);border:1px solid rgba(255,75,110,0.3);border-radius:24px;padding:32px 24px;max-width:340px;width:100%;text-align:center}
 
 /* DISTANCE FILTER */
-#distance-filter{position:absolute;top:12px;right:12px;z-index:500;background:rgba(13,13,24,0.88);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:10px 14px;min-width:160px}
+#distance-filter{position:absolute;top:12px;right:12px;z-index:500;background:rgba(255,255,255,0.9);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:10px 14px;min-width:160px}
 
 /* LIST SCREEN */
 #list-screen{position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg2);z-index:450;flex-direction:column;display:none}
@@ -232,32 +237,25 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direc
 @keyframes pulseRing{0%{transform:scale(1);opacity:0.8}100%{transform:scale(2.2);opacity:0}}
 
 /* ═══════════════════════════════════════════
-   ✨ PREMIUM DESIGN SYSTEM v2 — OVERRIDE LAYER
+   🌅 WARM-LIGHT DESIGN SYSTEM v3 — POLISH LAYER
    Additive layer: restyles, never removes logic
    ═══════════════════════════════════════════ */
 
 :root{
-  --bg:#0B0B14;
-  --bg2:#13131F;
-  --bg3:#141423;
-  --border:rgba(255,255,255,0.08);
-  --pink:#FF6B6B;
-  --purple:#6C5CE7;
-  --grad:linear-gradient(135deg,#FF6B6B 0%,#6C5CE7 100%);
+  --grad:linear-gradient(135deg,#ff4b6e 0%,#ff8a5b 100%);
+  --card-shadow:0 3px 14px rgba(214,110,80,0.13);
 }
 
-body{background:#0B0B14}
-
-/* ── Glassmorphism: headers, panels, modals, cards ── */
+/* ── Glass panels: headers, panels, modals — white warm glass ── */
 .top-bar, .panel, .modal-box, .panel-header,
 #distance-filter, .vibes-bar, .places-bar{
   backdrop-filter:blur(16px) !important;
   -webkit-backdrop-filter:blur(16px) !important;
-  background:rgba(20,20,35,0.65) !important;
-  border-color:rgba(255,255,255,0.08) !important;
+  background:rgba(255,255,255,0.9) !important;
+  border-color:rgba(42,31,46,0.07) !important;
 }
-.panel{box-shadow:0 12px 40px 0 rgba(0,0,0,0.5) !important}
-.modal-box{box-shadow:0 12px 40px 0 rgba(0,0,0,0.5) !important;border-radius:24px !important}
+.panel{box-shadow:0 12px 40px 0 rgba(160,70,50,0.18) !important}
+.modal-box{box-shadow:0 12px 40px 0 rgba(160,70,50,0.18) !important;border-radius:24px !important}
 
 /* ── Geometry: soft rounded corners ── */
 .info-card, .person-card, .couple-hero, .feed-card,
@@ -266,10 +264,10 @@ body{background:#0B0B14}
 }
 .shake-btn, .btn-primary{border-radius:18px !important}
 
-/* ── Primary buttons: premium gradient + glow ── */
+/* ── Primary buttons: brand gradient pink→coral ── */
 .shake-btn, .btn-primary, #event-fab{
-  background:linear-gradient(135deg,#FF6B6B 0%,#6C5CE7 100%) !important;
-  box-shadow:0 8px 28px rgba(108,92,231,0.4), 0 4px 14px rgba(255,107,107,0.3) !important;
+  background:linear-gradient(135deg,#ff4b6e 0%,#ff8a5b 100%) !important;
+  box-shadow:0 8px 24px rgba(255,75,110,0.32) !important;
   border:none !important;
 }
 
@@ -281,24 +279,24 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
   transform:scale(0.96);
 }
 
-/* ── Inputs: glowing focus ── */
+/* ── Inputs: warm focus ring ── */
 .field-input, input, textarea, select{
   transition:border-color 0.25s ease, box-shadow 0.25s ease !important;
 }
 .field-input:focus, input:focus, textarea:focus{
-  border-color:rgba(108,92,231,0.6) !important;
-  box-shadow:0 0 0 3px rgba(108,92,231,0.18), 0 0 20px rgba(255,107,107,0.12) !important;
+  border-color:rgba(255,75,110,0.55) !important;
+  box-shadow:0 0 0 3px rgba(255,75,110,0.14) !important;
   outline:none !important;
 }
 
-/* ── Map markers: smooth premium pulse ── */
+/* ── Map markers: soft warm shadow ── */
 .double-marker{
-  box-shadow:0 6px 20px rgba(0,0,0,0.45) !important;
+  box-shadow:0 4px 14px rgba(170,60,50,0.3) !important;
   border-width:2px !important;
 }
 .pulse-ring{
   animation:premiumPulse 2.2s cubic-bezier(0.4,0,0.2,1) infinite !important;
-  border:2px solid rgba(255,107,107,0.55) !important;
+  border:2px solid rgba(255,75,110,0.55) !important;
 }
 @keyframes premiumPulse{
   0%{transform:scale(1);opacity:0.8}
@@ -306,28 +304,28 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
   100%{transform:scale(1.9);opacity:0}
 }
 
-/* ── Bottom nav: floating glass dock ── */
+/* ── Bottom nav: floating white glass dock ── */
 #bottom-nav{
   backdrop-filter:blur(20px) !important;
   -webkit-backdrop-filter:blur(20px) !important;
-  background:rgba(11,11,20,0.82) !important;
-  border-top:1px solid rgba(255,255,255,0.08) !important;
+  background:rgba(255,255,255,0.94) !important;
+  border-top:1px solid rgba(42,31,46,0.07) !important;
 }
-.nav-item.active .nav-icon{filter:drop-shadow(0 0 8px rgba(255,107,107,0.6))}
 
 /* ── Status badges / chips refinement ── */
 .vibe-chip.selected, [data-place].active, [data-vibe].active{
-  background:linear-gradient(135deg,rgba(255,107,107,0.25),rgba(108,92,231,0.25)) !important;
-  border-color:rgba(255,107,107,0.5) !important;
+  background:linear-gradient(135deg,rgba(255,75,110,0.16),rgba(255,138,91,0.16)) !important;
+  border-color:rgba(255,75,110,0.5) !important;
 }
 
-/* ── Toast: floating glass ── */
+/* ── Toast: floating white glass ── */
 #toast{
   backdrop-filter:blur(16px) !important;
-  background:rgba(20,20,35,0.85) !important;
-  border:1px solid rgba(255,255,255,0.1) !important;
+  background:rgba(255,255,255,0.94) !important;
+  color:var(--text) !important;
+  border:1px solid rgba(42,31,46,0.08) !important;
   border-radius:100px !important;
-  box-shadow:0 8px 30px rgba(0,0,0,0.5) !important;
+  box-shadow:0 8px 30px rgba(160,70,50,0.22) !important;
 }
 
 /* ── Scrollbars hidden for native feel ── */
@@ -339,7 +337,7 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
 .legal-footer-links a:first-child{border-left:none}
 .legal-footer-links a:hover{color:var(--text2)}
 .legal-copy{font-size:10px;color:var(--text3)}
-.check-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;padding:9px 11px;border-radius:11px;background:rgba(255,255,255,0.03);border:1px solid var(--border2);cursor:pointer}
+.check-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;padding:9px 11px;border-radius:11px;background:#fff6f2;border:1px solid var(--border2);cursor:pointer}
 .check-row input[type=checkbox]{width:18px;height:18px;border-radius:5px;accent-color:var(--pink);flex-shrink:0;margin-top:2px;cursor:pointer}
 .check-row-text{font-size:12px;color:var(--text2);line-height:1.5}
 .check-row-text a{color:var(--pink);text-decoration:underline}
@@ -354,13 +352,13 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
 @keyframes tcBlink{0%,100%{opacity:1}50%{opacity:0.3}}
 .tc-label{font-size:11px;color:var(--text3)}
 .tc-value{font-size:18px;font-weight:800;font-family:'Syne',sans-serif;background:linear-gradient(135deg,var(--pink),var(--orange));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:0.5px}
-.timer-compact-bar{height:3px;border-radius:4px;background:rgba(255,255,255,0.08);margin-bottom:10px;overflow:hidden}
+.timer-compact-bar{height:3px;border-radius:4px;background:rgba(42,31,46,0.08);margin-bottom:10px;overflow:hidden}
 .timer-compact-fill{height:100%;background:linear-gradient(90deg,var(--pink),var(--orange));border-radius:4px;transition:width 1s linear}
 </style>
 </head>
 <body>
 
-<div id="loading" style="position:fixed;inset:0;background:radial-gradient(ellipse at 50% 40%,rgba(255,75,110,0.2) 0%,transparent 65%),#0d0d18;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:0">
+<div id="loading" style="position:fixed;inset:0;background:radial-gradient(ellipse at 50% 40%,rgba(255,75,110,0.2) 0%,transparent 65%),#fff2ec;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:0">
   <div style="width:6px;height:6px;border-radius:50%;background:rgba(255,75,110,0.35);position:absolute;top:22%;left:14%;animation:ldFloat 3s ease-in-out infinite"></div>
   <div style="width:4px;height:4px;border-radius:50%;background:rgba(255,75,110,0.3);position:absolute;top:28%;right:16%;animation:ldFloat 3s ease-in-out 0.5s infinite"></div>
   <div style="width:5px;height:5px;border-radius:50%;background:rgba(255,75,110,0.25);position:absolute;bottom:26%;left:18%;animation:ldFloat 3s ease-in-out 1s infinite"></div>
@@ -368,19 +366,19 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
   <div style="animation:ldEntrance 0.8s cubic-bezier(0.34,1.4,0.64,1) forwards;display:flex;flex-direction:column;align-items:center">
     <div style="font-size:68px;margin-bottom:12px;animation:ldPulse 2s ease-in-out infinite">💞</div>
     <div class="loading-logo" style="margin-bottom:8px">Double</div>
-    <div style="font-size:14px;color:#aaaacc;margin-bottom:44px">מצאו זוגות לדאבל דייט</div>
+    <div style="font-size:14px;color:#6d5560;margin-bottom:44px">מצאו זוגות לדאבל דייט</div>
   </div>
-  <div style="width:160px;height:3px;background:rgba(255,255,255,0.1);border-radius:100px;overflow:hidden;margin-bottom:14px">
+  <div style="width:160px;height:3px;background:rgba(42,31,46,0.1);border-radius:100px;overflow:hidden;margin-bottom:14px">
     <div style="height:100%;background:linear-gradient(90deg,#ff4b6e,#ff9f43);border-radius:100px;animation:ldProgress 1.8s ease-in-out infinite"></div>
   </div>
-  <div style="font-size:13px;color:#666688;animation:ldBlink 1.5s ease-in-out infinite">מתחברים...</div>
+  <div style="font-size:13px;color:#9a8590;animation:ldBlink 1.5s ease-in-out infinite">מתחברים...</div>
 </div>
 
 <div id="app">
 
 
 <!-- ONBOARDING -->
-<div id="screen-onboarding" class="screen" style="background:radial-gradient(ellipse at 60% 20%,rgba(255,75,110,0.2) 0%,transparent 60%),#0d0d18;overflow:hidden">
+<div id="screen-onboarding" class="screen" style="background:radial-gradient(ellipse at 60% 20%,rgba(255,75,110,0.2) 0%,transparent 60%),#fff2ec;overflow:hidden">
   <div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
     <!-- Slides container -->
     <div id="onboard-slides-wrap" style="flex:1;overflow:hidden;position:relative">
@@ -411,9 +409,9 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
     <!-- Dots -->
     <div style="display:flex;justify-content:center;gap:8px;padding:16px 0">
       <div id="ob-dot-0" style="width:24px;height:8px;border-radius:100px;background:var(--pink);transition:all 0.3s"></div>
-      <div id="ob-dot-1" style="width:8px;height:8px;border-radius:100px;background:rgba(255,255,255,0.2);transition:all 0.3s"></div>
-      <div id="ob-dot-2" style="width:8px;height:8px;border-radius:100px;background:rgba(255,255,255,0.2);transition:all 0.3s"></div>
-      <div id="ob-dot-3" style="width:8px;height:8px;border-radius:100px;background:rgba(255,255,255,0.2);transition:all 0.3s"></div>
+      <div id="ob-dot-1" style="width:8px;height:8px;border-radius:100px;background:rgba(42,31,46,0.15);transition:all 0.3s"></div>
+      <div id="ob-dot-2" style="width:8px;height:8px;border-radius:100px;background:rgba(42,31,46,0.15);transition:all 0.3s"></div>
+      <div id="ob-dot-3" style="width:8px;height:8px;border-radius:100px;background:rgba(42,31,46,0.15);transition:all 0.3s"></div>
     </div>
 
     <!-- Footer -->
@@ -439,7 +437,7 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
       <button class="btn-primary" onclick="doLogin()">כניסה</button>
       <p class="auth-err" id="login-err"></p>
       <div style="text-align:center;margin-top:6px"><span onclick="showForgotPassword()" style="color:var(--pink);font-size:13px;font-weight:700;cursor:pointer">שכחתי סיסמה</span></div>
-      <div id="login-reset-row" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.08)">
+      <div id="login-reset-row" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid rgba(42,31,46,0.08)">
         <div class="field-group"><label class="field-label">אימייל לאיפוס</label><input class="field-input" type="email" id="reset-email" placeholder="your@email.com" dir="ltr"/></div>
         <button class="btn-primary" onclick="sendResetEmail()">שליחת קישור איפוס</button>
         <p class="auth-err" id="reset-msg"></p>
@@ -449,8 +447,8 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
       <div class="field-group"><label class="field-label">שם פרטי</label><input class="field-input" type="text" id="reg-name" placeholder="השם שלך"/></div>
       <div class="field-group"><label class="field-label">אימייל</label><input class="field-input" type="email" id="reg-email" placeholder="your@email.com" dir="ltr"/></div>
       <div class="field-group"><label class="field-label">סיסמה</label><input class="field-input" type="password" id="reg-pass" placeholder="לפחות 6 תווים" dir="ltr"/></div>
-      <div style="background:rgba(29,209,161,0.06);border:1px solid rgba(29,209,161,0.25);border-radius:14px;padding:12px 14px;margin-bottom:12px">
-        <div style="font-size:12px;font-weight:700;color:#1dd1a1;margin-bottom:8px">💑 קיבלתם קוד מבן/בת הזוג? (אופציונלי)</div>
+      <div style="background:rgba(255,75,110,0.06);border:1px solid rgba(255,75,110,0.25);border-radius:14px;padding:12px 14px;margin-bottom:12px">
+        <div style="font-size:12px;font-weight:700;color:#ff4b6e;margin-bottom:8px">💑 קיבלתם קוד מבן/בת הזוג? (אופציונלי)</div>
         <input class="field-input" type="text" id="reg-partner-code" placeholder="הזינו קוד שיתוף..." dir="ltr" style="text-transform:uppercase;letter-spacing:2px;text-align:center;font-weight:800;margin-bottom:4px"/>
         <div style="font-size:11px;color:var(--text3)">יחבר את שני החשבונות אוטומטית</div>
       </div>
@@ -527,11 +525,11 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
         <button class="btn-copy" onclick="copyInviteLink()">העתק</button>
       </div>
     </div>
-    <div style="background:rgba(29,209,161,0.06);border:1px solid rgba(29,209,161,0.25);border-radius:14px;padding:12px 14px;margin-top:10px">
-      <div style="font-size:12px;font-weight:700;color:#1dd1a1;margin-bottom:8px">💑 קיבלתם קוד מבן/בת הזוג?</div>
+    <div style="background:rgba(255,75,110,0.06);border:1px solid rgba(255,75,110,0.25);border-radius:14px;padding:12px 14px;margin-top:10px">
+      <div style="font-size:12px;font-weight:700;color:#ff4b6e;margin-bottom:8px">💑 קיבלתם קוד מבן/בת הזוג?</div>
       <div style="display:flex;gap:8px">
         <input class="field-input" type="text" id="setup-partner-code" placeholder="הזינו קוד..." dir="ltr" style="flex:1;text-transform:uppercase;letter-spacing:2px;text-align:center;font-weight:800"/>
-        <button onclick="connectSetupPartnerCode()" style="padding:9px 14px;background:#1dd1a1;border:none;border-radius:9px;color:#06060c;font-weight:700;font-size:12px;white-space:nowrap;cursor:pointer;font-family:'Heebo'">חבר</button>
+        <button onclick="connectSetupPartnerCode()" style="padding:9px 14px;background:#ff4b6e;border:none;border-radius:9px;color:#fff;font-weight:700;font-size:12px;white-space:nowrap;cursor:pointer;font-family:'Heebo'">חבר</button>
       </div>
     </div>
   </div>
@@ -547,14 +545,14 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
       <div class="header-live"><span class="live-dot"></span><span id="live-count">0</span> זוגות חמים עכשיו</div>
     </div>
     <div class="header-actions">
-      <button class="icon-btn" id="legend-help-btn" onclick="openLegend()" title="מקרא" style="background:rgba(168,107,255,.16);border-color:rgba(168,107,255,.4);color:#c9b6ff;font-weight:800">?</button>
+      <button class="icon-btn" id="legend-help-btn" onclick="openLegend()" title="מקרא" style="background:rgba(155,92,246,.16);border-color:rgba(155,92,246,.4);color:#c9b6ff;font-weight:800">?</button>
       <button class="icon-btn" id="places-toggle-btn" onclick="togglePlaces()" title="אטרקציות">📍</button>
       <button class="icon-btn" id="heat-toggle-btn" onclick="toggleHeatmap()" title="Heatmap">🌡️</button>
       <div id="header-avatar" onclick="navTo('profile')" style="width:36px;height:36px;border-radius:10px;background:rgba(255,75,110,0.2);border:1px solid rgba(255,75,110,0.4);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;overflow:hidden;flex-shrink:0">👫</div>
     </div>
   </div>
   <div class="filter-bar" id="filter-bar"></div>
-  <div id="places-bar" style="display:none;gap:7px;padding:8px 16px;overflow-x:auto;background:rgba(13,13,24,0.9);border-bottom:1px solid rgba(255,255,255,0.06);scrollbar-width:none;flex-shrink:0">
+  <div id="places-bar" style="display:none;gap:7px;padding:8px 16px;overflow-x:auto;background:rgba(255,255,255,0.9);border-bottom:1px solid rgba(42,31,46,0.07);scrollbar-width:none;flex-shrink:0">
     <button class="filter-chip active" data-place="all" onclick="filterPlaces('all')" style="font-size:11px;padding:5px 12px">🌟 הכל</button>
     <button class="filter-chip" data-place="restaurant" onclick="filterPlaces('restaurant')" style="font-size:11px;padding:5px 12px">🍽️ מסעדות</button>
     <button class="filter-chip" data-place="bar" onclick="filterPlaces('bar')" style="font-size:11px;padding:5px 12px">🍺 ברים</button>
@@ -576,13 +574,13 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
       </div>
     </div>
     <div class="map-fab">
-      <button class="fab-btn" id="event-fab" onclick="openEventChooser()" style="background:linear-gradient(135deg,#1dd1a1,#00b894);box-shadow:0 4px 24px rgba(29,209,161,0.35)">➕ אירוע</button>
+      <button class="fab-btn" id="event-fab" onclick="openEventChooser()" style="background:linear-gradient(135deg,#ff4b6e,#ff8a5b);box-shadow:0 4px 24px rgba(255,75,110,0.35)">➕ אירוע</button>
       <button class="fab-btn roulette" onclick="spinRoulette()">🎰 רולטה</button>
     </div>
   </div>
   <!-- List View -->
   <div id="list-screen">
-    <div style="display:flex;align-items:center;gap:12px;padding:calc(var(--safe-top) + 14px) 18px 12px;background:rgba(13,13,24,0.95);border-bottom:1px solid var(--border);flex-shrink:0">
+    <div style="display:flex;align-items:center;gap:12px;padding:calc(var(--safe-top) + 14px) 18px 12px;background:rgba(255,255,255,0.92);border-bottom:1px solid var(--border);flex-shrink:0">
       <button class="icon-btn" onclick="closeListView()">←</button>
       <div style="font-family:'Syne';font-weight:800;font-size:18px">זוגות זמינים</div>
       <div id="list-count" style="margin-right:auto;font-size:12px;color:var(--text3)"></div>
@@ -657,8 +655,8 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
   <!-- טאבים -->
   <div style="display:flex;gap:6px;margin-bottom:20px">
     <button id="shakes-tab-in" onclick="switchShakesTab('in')" style="flex:1;padding:9px 4px;border-radius:12px;background:rgba(255,75,110,0.15);border:1px solid rgba(255,75,110,0.4);color:var(--pink);font-family:'Heebo';font-size:12px;font-weight:700;cursor:pointer">📥 קיבלתי</button>
-    <button id="shakes-tab-out" onclick="switchShakesTab('out')" style="flex:1;padding:9px 4px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid var(--border2);color:var(--text3);font-family:'Heebo';font-size:12px;font-weight:600;cursor:pointer">📤 שלחתי</button>
-    <button id="shakes-tab-connected" onclick="switchShakesTab('connected')" style="flex:1;padding:9px 4px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid var(--border2);color:var(--text3);font-family:'Heebo';font-size:12px;font-weight:600;cursor:pointer">💞 מחוברים</button>
+    <button id="shakes-tab-out" onclick="switchShakesTab('out')" style="flex:1;padding:9px 4px;border-radius:12px;background:#fff6f2;border:1px solid var(--border2);color:var(--text3);font-family:'Heebo';font-size:12px;font-weight:600;cursor:pointer">📤 שלחתי</button>
+    <button id="shakes-tab-connected" onclick="switchShakesTab('connected')" style="flex:1;padding:9px 4px;border-radius:12px;background:#fff6f2;border:1px solid var(--border2);color:var(--text3);font-family:'Heebo';font-size:12px;font-weight:600;cursor:pointer">💞 מחוברים</button>
   </div>
   <div id="shakes-list"></div>
   <div id="shakes-sent-list" style="display:none"></div>
@@ -689,15 +687,15 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
       <input type="file" accept="image/*" style="display:none" onchange="uploadEventPhoto(this)"/>
       📸 הוסיפו תמונה מהדייט (אופציונלי)
     </label>
-    <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.04);border-radius:10px;padding:8px 12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;background:#fff6f2;border-radius:10px;padding:8px 12px">
       <span style="font-size:12px;color:var(--text3)">⏳ נותרו</span>
       <span id="active-event-countdown" style="font-size:13px;font-weight:700;color:var(--orange);font-family:'Syne',sans-serif"></span>
     </div>
-    <div style="height:4px;border-radius:4px;background:rgba(255,255,255,0.08);margin-top:10px;overflow:hidden">
+    <div style="height:4px;border-radius:4px;background:rgba(42,31,46,0.08);margin-top:10px;overflow:hidden">
       <div id="active-event-progress" style="height:100%;background:linear-gradient(90deg,var(--pink),var(--orange));width:0%;border-radius:4px;transition:width 1s linear"></div>
     </div>
   </div>
-  <button id="add-event-profile-btn" onclick="openEventChooser()" style="width:100%;padding:13px;border:2px dashed rgba(29,209,161,0.4);border-radius:14px;background:rgba(29,209,161,0.06);color:#1dd1a1;font-family:'Heebo';font-weight:700;font-size:15px;cursor:pointer;margin-bottom:20px">➕ הוסף אירוע חדש למפה</button>
+  <button id="add-event-profile-btn" onclick="openEventChooser()" style="width:100%;padding:13px;border:2px dashed rgba(255,75,110,0.4);border-radius:14px;background:rgba(255,75,110,0.06);color:#ff4b6e;font-family:'Heebo';font-weight:700;font-size:15px;cursor:pointer;margin-bottom:20px">➕ הוסף אירוע חדש למפה</button>
   <div id="sched-banner" style="display:none"></div>
   <div style="background:linear-gradient(135deg,rgba(255,75,110,0.12),rgba(255,159,67,0.08));border:1px solid rgba(255,75,110,0.2);border-radius:20px;padding:24px 20px;text-align:center;margin-bottom:20px">
     <div style="position:relative;display:inline-block;margin-bottom:14px">
@@ -765,17 +763,17 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
       </div>
     </div>
     <!-- חיבור עם קוד שקיבלתם — מוצג רק אם עדיין לא מחוברים -->
-    <div id="profile-connect-code-section" style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.08)">
+    <div id="profile-connect-code-section" style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(42,31,46,0.08)">
       <p style="font-size:12px;color:var(--text2);margin-bottom:8px;font-weight:700">💑 קיבלתם קוד מבן/בת הזוג?</p>
       <div class="invite-link-row">
         <input class="invite-link-input" type="text" id="profile-partner-code-input" placeholder="הזינו קוד..." dir="ltr" style="text-transform:uppercase;letter-spacing:2px;text-align:center;font-weight:800"/>
-        <button class="btn-copy" style="background:var(--green);color:#06060c" onclick="connectFromProfile()">חבר ✓</button>
+        <button class="btn-copy" style="background:var(--green);color:#fff" onclick="connectFromProfile()">חבר ✓</button>
       </div>
       <p style="font-size:11px;color:var(--text3);margin-top:4px;text-align:center" id="profile-connect-err"></p>
     </div>
   </div>
   <!-- Share button -->
-  <button onclick="shareApp()" style="width:100%;padding:13px;border:1px solid rgba(255,255,255,0.15);border-radius:12px;background:rgba(255,255,255,0.05);color:var(--text2);font-family:'Heebo';font-weight:600;font-size:15px;cursor:pointer;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:8px">
+  <button onclick="shareApp()" style="width:100%;padding:13px;border:1px solid rgba(42,31,46,0.12);border-radius:12px;background:#fff;color:var(--text2);font-family:'Heebo';font-weight:600;font-size:15px;cursor:pointer;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:8px">
     📤 שתפו Double עם חברים
   </button>
 
@@ -807,21 +805,21 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
 <!-- Bottom Nav -->
 <div class="bottom-nav" id="bottom-nav" style="display:none">
   <button class="nav-item active" data-nav="main" onclick="navTo('main')">
-    <div class="nav-icon">🗺️</div><div class="nav-label">בית</div>
+    <div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M12 21c4.5-4.2 7-7.4 7-10.6A7 7 0 0 0 5 10.4C5 13.6 7.5 16.8 12 21Z"/><circle cx="12" cy="10.3" r="2.4"/></svg></div><div class="nav-label">בית</div>
   </button>
   <button class="nav-item" data-nav="feed" onclick="navTo('feed')">
-    <div class="nav-icon">✨</div><div class="nav-label">פיד</div>
+    <div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M12 3c.4 3.9 1.8 5.3 5.7 5.7-3.9.4-5.3 1.8-5.7 5.7-.4-3.9-1.8-5.3-5.7-5.7C10.2 8.3 11.6 6.9 12 3Z"/><circle class="fillp" cx="18.5" cy="17.5" r="1.5"/></svg></div><div class="nav-label">פיד</div>
   </button>
   <button class="nav-item" data-nav="shakes" onclick="navTo('shakes')">
-    <div class="nav-icon">💞</div><div class="nav-label">שייקים</div>
+    <div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M8.2 6.2c-1 0-2 .5-2.5 1.4-.7 1.2-.4 2.6.6 3.7l3.9 4 1.2-1.3"/><path d="M15.8 17.8c1 0 2-.5 2.5-1.4.7-1.2.4-2.6-.6-3.7l-3.9-4-1.2 1.3"/></svg></div><div class="nav-label">שייקים</div>
     <div class="nav-badge" id="shake-badge" style="display:none"></div>
   </button>
   <button class="nav-item" data-nav="chats" onclick="navTo('chats')">
-    <div class="nav-icon">💬</div><div class="nav-label">צ&apos;אטים</div>
+    <div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M4 11.5c0-3.6 3.4-6.3 8-6.3s8 2.7 8 6.3-3.4 6.3-8 6.3c-.9 0-1.8-.1-2.6-.3L5 19l1-3.1c-1.3-1.1-2-2.6-2-4.4Z"/><circle class="fillp" cx="9" cy="11.5" r="1"/><circle class="fillp" cx="12" cy="11.5" r="1"/><circle class="fillp" cx="15" cy="11.5" r="1"/></svg></div><div class="nav-label">צ&apos;אטים</div>
     <div class="nav-badge" id="chats-badge"></div>
   </button>
   <button class="nav-item" data-nav="profile" onclick="navTo('profile')">
-    <div class="nav-icon" id="nav-profile-icon">👫</div><div class="nav-label">פרופיל</div>
+    <div class="nav-icon" id="nav-profile-icon"><svg viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="2.8"/><path d="M4.2 18c.4-2.6 2.4-4.3 4.8-4.3s4.4 1.7 4.8 4.3"/><path d="M15.5 6.2a2.8 2.8 0 0 1 0 5.3M16.8 13.9c1.9.4 3.3 1.9 3.6 4.1" opacity=".55"/></svg></div><div class="nav-label">פרופיל</div>
   </button>
 </div>
 
@@ -962,13 +960,13 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
 <style>
   #settings-overlay .safety-sheet{padding:8px 18px calc(var(--safe-bot) + 22px);max-height:88%;overflow-y:auto}
   #legend-overlay .safety-sheet{padding:8px 16px calc(var(--safe-bot) + 22px);max-height:90%;overflow-y:auto}
-  .lg-cat{font-size:12px;font-weight:800;color:#9b8fc9;letter-spacing:.3px;margin:16px 4px 8px}
-  .lg-item{display:flex;gap:11px;align-items:flex-start;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:13px;padding:10px 12px;margin-bottom:7px}
-  .lg-ic{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;border:2px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06)}
+  .lg-cat{font-size:12px;font-weight:800;color:#9a8590;letter-spacing:.3px;margin:16px 4px 8px}
+  .lg-item{display:flex;gap:11px;align-items:flex-start;background:#fff6f2;border:1px solid rgba(42,31,46,.06);border-radius:13px;padding:10px 12px;margin-bottom:7px}
+  .lg-ic{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;border:2px solid rgba(42,31,46,.1);background:#fff}
   .lg-ic.pink{background:rgba(255,75,110,.18);border-color:#ff4b6e}
   .lg-ic.blue{background:rgba(91,141,239,.18);border-color:#5b8def}
-  .lg-ic.purp{background:rgba(108,92,231,.2);border-color:#a86bff}
-  .lg-ic.green{background:rgba(29,209,161,.15);border-color:#1dd1a1}
+  .lg-ic.purp{background:rgba(155,92,246,.16);border-color:#9b5cf6}
+  .lg-ic.green{background:rgba(255,138,91,.16);border-color:#ff8a5b}
   .lg-ic.gold{background:rgba(255,193,90,.15);border-color:#ffc15a}
   .lg-nm{font-weight:800;font-size:14px}
   .lg-ds{font-size:12px;color:#a8a1b6;margin-top:2px;line-height:1.45}
@@ -1107,7 +1105,7 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
       </div>
       <input class="field-input" id="event-city-search" placeholder="חפשו עיר, שכונה..." style="display:none" oninput="searchCity(this.value)"/>
       <div id="city-results" style="margin-top:6px"></div>
-      <div id="selected-location" style="background:rgba(29,209,161,0.1);border:1px solid rgba(29,209,161,0.3);border-radius:10px;padding:10px 14px;font-size:13px;color:#1dd1a1;display:flex;align-items:center;gap:6px">
+      <div id="selected-location" style="background:rgba(255,75,110,0.1);border:1px solid rgba(255,75,110,0.3);border-radius:10px;padding:10px 14px;font-size:13px;color:#ff4b6e;display:flex;align-items:center;gap:6px">
         ✅ <span id="selected-location-text">מיקום נוכחי</span>
       </div>
     </div>
@@ -1134,12 +1132,12 @@ button:active, .nav-item:active, .vibe-chip:active, .chat-row-inner:active{
     <div style="margin-bottom:12px">
       <label class="field-label" style="display:block;margin-bottom:6px">מיקום</label>
       <div style="display:flex;gap:8px;margin-bottom:8px">
-        <button class="vibe-chip selected" id="sched-loc-auto-btn" onclick="schedSelectAuto()" style="flex:1;text-align:center;background:rgba(91,141,239,0.2);border-color:rgba(91,141,239,0.5);color:#9db8ff">📍 מיקום נוכחי</button>
+        <button class="vibe-chip selected" id="sched-loc-auto-btn" onclick="schedSelectAuto()" style="flex:1;text-align:center;background:rgba(91,141,239,0.2);border-color:rgba(91,141,239,0.5);color:#3f6bb5">📍 מיקום נוכחי</button>
         <button class="vibe-chip" id="sched-loc-manual-btn" onclick="schedSelectManual()" style="flex:1;text-align:center">🔍 חיפוש עיר</button>
       </div>
       <input class="field-input" id="sched-city-search" placeholder="חפשו עיר, שכונה..." style="display:none" oninput="schedSearchCity(this.value)"/>
       <div id="sched-city-results" style="margin-top:6px"></div>
-      <div id="sched-selected-location" style="background:rgba(91,141,239,0.1);border:1px solid rgba(91,141,239,0.3);border-radius:10px;padding:9px 14px;font-size:13px;color:#9db8ff;display:flex;align-items:center;gap:6px">
+      <div id="sched-selected-location" style="background:rgba(91,141,239,0.1);border:1px solid rgba(91,141,239,0.3);border-radius:10px;padding:9px 14px;font-size:13px;color:#3f6bb5;display:flex;align-items:center;gap:6px">
         ✅ <span id="sched-selected-location-text">מיקום נוכחי</span>
       </div>
     </div>
@@ -1418,7 +1416,7 @@ async function sendResetEmail() {
   const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin});
   btn.disabled=false; btn.textContent='שליחת קישור איפוס';
   if (error) {msg.style.color='var(--pink)';msg.textContent='שגיאה — נסו שוב';return;}
-  msg.style.color='#1dd1a1'; msg.textContent='📧 שלחנו קישור לאיפוס — בדקו את המייל';
+  msg.style.color='#ff4b6e'; msg.textContent='📧 שלחנו קישור לאיפוס — בדקו את המייל';
 }
 async function submitNewPassword() {
   const p1=document.getElementById('new-pass').value;
@@ -1443,7 +1441,7 @@ async function resendVerify() {
   const {error}=await sb.auth.resend({type:'signup',email});
   btn.disabled=false; btn.textContent='שליחת המייל שוב';
   if (error) {msg.style.color='var(--pink)';msg.textContent='שגיאה — נסו שוב בעוד רגע';return;}
-  msg.style.color='#1dd1a1'; msg.textContent='📧 המייל נשלח שוב';
+  msg.style.color='#ff4b6e'; msg.textContent='📧 המייל נשלח שוב';
 }
 async function doRegister() {
   const name=document.getElementById('reg-name').value.trim();
@@ -1667,7 +1665,7 @@ async function saveSetup() {
 // ═══════════════════════════════════
 async function initMap() {
   mapInstance = L.map('map',{zoomControl:false,attributionControl:false}).setView([31.5,35.0],8);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:18}).addTo(mapInstance);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{maxZoom:18}).addTo(mapInstance);
   L.control.zoom({position:'bottomright'}).addTo(mapInstance);
   mapInstance.on('moveend', onMapMoveEnd);
   startNearbyCheck();
@@ -1807,12 +1805,12 @@ function renderScheduledMarkers(){
       existing.remove(); delete eventMarkers[ev.id];   // נערך — בנה מחדש
     }
     const emoji=vibeEmoji(ev.vibe);
-    const grad=isSelf ? '#6c5ce7,#a86bff' : '#5b8def,#a86bff';
-    const selfGlow=isSelf ? 'box-shadow:0 0 0 3px rgba(108,92,231,0.45),0 0 18px rgba(108,92,231,0.6);' : '';
-    const selfTag=isSelf ? `<div style="position:absolute;top:-22px;right:50%;transform:translateX(50%);background:#6c5ce7;color:white;font-size:9px;font-weight:800;padding:2px 8px;border-radius:100px;white-space:nowrap;font-family:'Heebo'">⭐ זה אתם</div>` : '';
+    const grad=isSelf ? '#9b5cf6,#c39bff' : '#5b8def,#8db8ff';
+    const selfGlow=isSelf ? 'box-shadow:0 0 0 3px rgba(155,92,246,0.35),0 4px 14px rgba(155,92,246,0.35);' : '';
+    const selfTag=isSelf ? `<div style="position:absolute;top:-22px;right:50%;transform:translateX(50%);background:#9b5cf6;color:white;font-size:9px;font-weight:800;padding:2px 8px;border-radius:100px;white-space:nowrap;font-family:'Heebo'">⭐ זה אתם</div>` : '';
     const markerEl=L.divIcon({
       className:'',
-      html:`<div style="position:relative;width:46px;height:46px;display:flex;align-items:center;justify-content:center"><div class="double-marker" style="font-size:18px;position:relative;background:linear-gradient(135deg,${grad});border-color:#fff;${selfGlow}">${selfTag}${liveBubble(evPhoto)}<span>📅</span><span style="position:absolute;bottom:-3px;right:-3px;font-size:12px;background:#0e0b15;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center">${emoji}</span></div></div>`,
+      html:`<div style="position:relative;width:46px;height:46px;display:flex;align-items:center;justify-content:center"><div class="double-marker" style="font-size:18px;position:relative;background:linear-gradient(135deg,${grad});border-color:#fff;${selfGlow}">${selfTag}${liveBubble(evPhoto)}<span>📅</span><span style="position:absolute;bottom:-3px;right:-3px;font-size:12px;background:#fff;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center">${emoji}</span></div></div>`,
       iconSize:[46,46],iconAnchor:[23,23],
     });
     const m=L.marker([ev.lat,ev.lng],{icon:markerEl}).addTo(mapInstance).on('click',()=>openScheduledCard(ev,prof,isSelf));
@@ -1835,22 +1833,22 @@ function openScheduledCard(ev, prof, isSelf){
   const active=new Date(ev.starts_at)<=new Date();
   const vibeLabel=(VIBES_LIST.find(v=>v.id===ev.vibe)||{}).label||'';
   const names=isSelf ? 'אתם 💜' : (prof ? `${prof.name||''}${prof.partner_name?' ❤️ '+prof.partner_name:''}` : 'זוג');
-  const accent=isSelf ? 'rgba(108,92,231,0.4)' : 'rgba(91,141,239,0.3)';
+  const accent=isSelf ? 'rgba(155,92,246,0.4)' : 'rgba(91,141,239,0.3)';
   const badge=isSelf
-    ? `<div style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#c3b6ff;background:rgba(108,92,231,0.18);border:1px solid rgba(108,92,231,0.45);padding:4px 12px;border-radius:100px;margin-bottom:12px">⭐ הדייט שלכם</div>`
-    : `<div style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#9db8ff;background:rgba(91,141,239,0.14);border:1px solid rgba(91,141,239,0.4);padding:4px 12px;border-radius:100px;margin-bottom:12px">📅 ${active?'דייט פעיל':'דייט מתוכנן'}</div>`;
+    ? `<div style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#7a4bd8;background:rgba(155,92,246,0.18);border:1px solid rgba(155,92,246,0.45);padding:4px 12px;border-radius:100px;margin-bottom:12px">⭐ הדייט שלכם</div>`
+    : `<div style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#3f6bb5;background:rgba(91,141,239,0.14);border:1px solid rgba(91,141,239,0.4);padding:4px 12px;border-radius:100px;margin-bottom:12px">📅 ${active?'דייט פעיל':'דייט מתוכנן'}</div>`;
   const actionBtn=isSelf
-    ? `<button onclick="schedCardCancel()" style="width:100%;margin-top:18px;padding:14px;border:1px solid rgba(255,75,110,0.4);border-radius:14px;background:transparent;color:#ff8ba1;font-weight:800;font-size:15px;font-family:'Heebo'">💔 ביטול הדייט</button>`
-    : (prof?`<button onclick="schedCardShake()" style="width:100%;margin-top:18px;padding:14px;border:none;border-radius:14px;background:linear-gradient(135deg,#ff4b6e,#a86bff);color:#fff;font-weight:800;font-size:15px;font-family:'Heebo'">💞 שלחו Shake לדייט</button>`:'');
+    ? `<button onclick="schedCardCancel()" style="width:100%;margin-top:18px;padding:14px;border:1px solid rgba(255,75,110,0.4);border-radius:14px;background:transparent;color:#e0355c;font-weight:800;font-size:15px;font-family:'Heebo'">💔 ביטול הדייט</button>`
+    : (prof?`<button onclick="schedCardShake()" style="width:100%;margin-top:18px;padding:14px;border:none;border-radius:14px;background:linear-gradient(135deg,#5b8def,#8db8ff);color:#fff;font-weight:800;font-size:15px;font-family:'Heebo'">💞 שלחו Shake לדייט</button>`:'');
   const ov=document.createElement('div');
   ov.id='sched-card-overlay';
   ov.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.55);display:flex;align-items:flex-end;justify-content:center';
   ov.onclick=(e)=>{ if(e.target===ov) ov.remove(); };
-  ov.innerHTML=`<div style="width:100%;max-width:460px;background:linear-gradient(180deg,#1b1726,#13101b);border:1px solid ${accent};border-bottom:none;border-radius:26px 26px 0 0;padding:22px 18px calc(22px + env(safe-area-inset-bottom));font-family:'Heebo';text-align:right">
-    <div style="width:38px;height:4px;border-radius:100px;background:rgba(255,255,255,0.18);margin:0 auto 16px"></div>
+  ov.innerHTML=`<div style="width:100%;max-width:460px;background:#fff;border:1px solid ${accent};border-bottom:none;border-radius:26px 26px 0 0;padding:22px 18px calc(22px + env(safe-area-inset-bottom));font-family:'Heebo';text-align:right">
+    <div style="width:38px;height:4px;border-radius:100px;background:rgba(42,31,46,0.15);margin:0 auto 16px"></div>
     ${badge}
-    <div style="font-size:20px;font-weight:800;color:#f4f2f8">${names}</div>
-    <div style="font-size:14px;color:#9db8ff;margin-top:9px">🗓️ ${when}</div>
+    <div style="font-size:20px;font-weight:800;color:#2a1f2e">${names}</div>
+    <div style="font-size:14px;color:#3f6bb5;margin-top:9px">🗓️ ${when}</div>
     ${vibeLabel?`<div style="font-size:13.5px;color:var(--text2);margin-top:5px">${vibeLabel}</div>`:''}
     ${ev.city?`<div style="font-size:13.5px;color:var(--text2);margin-top:5px">📍 ${ev.city}${ev.date_type?' · '+ev.date_type:''}</div>`:''}
     ${actionBtn}
@@ -1918,7 +1916,7 @@ function renderMarkers() {
     fab.textContent='🔴 אירוע פעיל'; fab.style.background='linear-gradient(135deg,#ff4b6e,#ff6b9d)';
     fab.onclick=openEventChooser;
   } else if (fab) {
-    fab.textContent='➕ אירוע'; fab.style.background='linear-gradient(135deg,#1dd1a1,#00b894)';
+    fab.textContent='➕ אירוע'; fab.style.background='linear-gradient(135deg,#ff4b6e,#ff8a5b)';
     fab.onclick=openEventChooser;
   }
 
@@ -1930,15 +1928,15 @@ function renderMarkers() {
     const isSelf=couple.id===currentUser.id;
     const liveP=(!isSelf && status==='hot' && couple.event_photo_url)?couple.event_photo_url:'';
     // fix: use data attribute for emoji
-    const verifiedDot = couple.partner_confirmed ? '<div style="position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;border-radius:50%;background:#1dd1a1;border:2px solid white;display:flex;align-items:center;justify-content:center;font-size:8px;color:white">✓</div>' : '';
+    const verifiedDot = couple.partner_confirmed ? '<div style="position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;border-radius:50%;background:#ff4b6e;border:2px solid white;display:flex;align-items:center;justify-content:center;font-size:8px;color:white">✓</div>' : '';
     let markerEl;
     if (isSelf) {
       markerEl = L.divIcon({
         className:'',
         html:`<div style="position:relative;width:52px;height:52px;display:flex;align-items:center;justify-content:center">
-          <div style="position:absolute;top:-24px;right:50%;transform:translateX(50%);background:#6c5ce7;color:white;font-size:10px;font-weight:800;padding:2px 9px;border-radius:100px;white-space:nowrap;font-family:'Heebo'">⭐ זה אתם</div>
-          <div style="position:absolute;inset:-6px;border:2px solid rgba(108,92,231,0.5);border-radius:50%;animation:selfPulse 2s infinite"></div>
-          <div class="double-marker ${status}" style="width:52px;height:52px;font-size:22px;background:linear-gradient(135deg,rgba(108,92,231,0.45),rgba(255,75,110,0.45));border-color:#fff;border-width:3px;box-shadow:0 0 0 3px rgba(108,92,231,0.45),0 0 18px rgba(108,92,231,0.6)">${status==='hot'?'<div class="pulse-ring"></div>':''}<span>${emoji}</span>${verifiedDot}</div>
+          <div style="position:absolute;top:-24px;right:50%;transform:translateX(50%);background:#9b5cf6;color:white;font-size:10px;font-weight:800;padding:2px 9px;border-radius:100px;white-space:nowrap;font-family:'Heebo'">⭐ זה אתם</div>
+          <div style="position:absolute;inset:-6px;border:2px solid rgba(155,92,246,0.5);border-radius:50%;animation:selfPulse 2s infinite"></div>
+          <div class="double-marker ${status}" style="width:52px;height:52px;font-size:22px;background:linear-gradient(135deg,rgba(155,92,246,0.45),rgba(255,75,110,0.45));border-color:#fff;border-width:3px;box-shadow:0 0 0 3px rgba(155,92,246,0.35),0 4px 14px rgba(155,92,246,0.35)">${status==='hot'?'<div class="pulse-ring"></div>':''}<span>${emoji}</span>${verifiedDot}</div>
         </div>`,
         iconSize:[52,52],iconAnchor:[26,26],
       });
@@ -2107,12 +2105,12 @@ function openCouplePanel(couple) {
       <div class="couple-name">${escapeHtml(couple.name)} <span class="amp">♥</span> ${escapeHtml(couple.partner_name||'?')}</div>
       <div class="couple-city">${escapeHtml(couple.city||'ישראל')}</div>
       <div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:10px">
-        ${isSelfPanel?`<div style="display:inline-flex;align-items:center;gap:4px;background:rgba(108,92,231,0.18);border:1px solid rgba(108,92,231,0.45);color:#b8aaff;padding:4px 12px;border-radius:100px;font-size:11px;font-weight:800">⭐ זה אתם</div>`:''}
+        ${isSelfPanel?`<div style="display:inline-flex;align-items:center;gap:4px;background:rgba(155,92,246,0.18);border:1px solid rgba(155,92,246,0.45);color:#7a4bd8;padding:4px 12px;border-radius:100px;font-size:11px;font-weight:800">⭐ זה אתם</div>`:''}
         <div class="status-badge" style="background:${meta.color}22;color:${meta.color}">
           <div class="status-dot" style="background:${meta.color}"></div>
           ${meta.label}
         </div>
-        ${couple.partner_confirmed?`<div style="display:inline-flex;align-items:center;gap:4px;background:rgba(29,209,161,0.12);border:1px solid rgba(29,209,161,0.3);color:#1dd1a1;padding:4px 10px;border-radius:100px;font-size:11px;font-weight:700">✅ מאומת</div>`:''}
+        ${couple.partner_confirmed?`<div style="display:inline-flex;align-items:center;gap:4px;background:rgba(255,75,110,0.12);border:1px solid rgba(255,75,110,0.3);color:#ff4b6e;padding:4px 10px;border-radius:100px;font-size:11px;font-weight:700">✅ מאומת</div>`:''}
       </div>
     </div>
     ${couple.lat && couple.lng ? `<div style="margin-bottom:12px"><button onclick="navigateToCouple(${couple.lat},${couple.lng})" style="width:100%;padding:11px;border:1px solid rgba(84,160,255,0.3);border-radius:12px;background:rgba(84,160,255,0.08);color:#54a0ff;font-family:'Heebo';font-weight:600;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">🗺️ נווט למיקום הדייט</button></div>` : ''}
@@ -2134,10 +2132,10 @@ function openCouplePanel(couple) {
     ${couple.vibes?.length?`<div class="info-card"><div class="info-card-label">תחומי עניין</div><div class="tags-row" style="margin-top:8px">${(couple.vibes||[]).map(v=>`<span class="tag">${escapeHtml(v)}</span>`).join('')}</div></div>`:''}
     ${(couple.together_since||couple.has_kids||couple.looking_for||couple.bio)?`<div class="info-card">
       <div class="info-card-label">על הזוג</div>
-      ${couple.bio?`<div style="font-size:14px;color:var(--text2);font-style:italic;padding:8px 10px;background:rgba(255,255,255,0.03);border-radius:8px;border-right:3px solid var(--pink);margin-bottom:8px">"${escapeHtml(couple.bio)}"</div>`:''}
+      ${couple.bio?`<div style="font-size:14px;color:var(--text2);font-style:italic;padding:8px 10px;background:#fff6f2;border-radius:8px;border-right:3px solid var(--pink);margin-bottom:8px">"${escapeHtml(couple.bio)}"</div>`:''}
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
         ${couple.together_since?`<span style="background:rgba(255,159,67,0.12);color:#ff9f43;padding:4px 12px;border-radius:100px;font-size:12px;border:1px solid rgba(255,159,67,0.25)">❤️ ביחד ${escapeHtml(couple.together_since)}</span>`:''}
-        ${couple.has_kids?`<span style="background:rgba(29,209,161,0.12);color:#1dd1a1;padding:4px 12px;border-radius:100px;font-size:12px;border:1px solid rgba(29,209,161,0.25)">${escapeHtml(couple.has_kids)}</span>`:''}
+        ${couple.has_kids?`<span style="background:rgba(255,75,110,0.12);color:#ff4b6e;padding:4px 12px;border-radius:100px;font-size:12px;border:1px solid rgba(255,75,110,0.25)">${escapeHtml(couple.has_kids)}</span>`:''}
         ${couple.looking_for?`<span style="background:rgba(84,160,255,0.12);color:#54a0ff;padding:4px 12px;border-radius:100px;font-size:12px;border:1px solid rgba(84,160,255,0.25)">🔍 ${escapeHtml(couple.looking_for)}</span>`:''}
       </div>
     </div>`:''}
@@ -2159,8 +2157,8 @@ function openCouplePanel(couple) {
     if (isOwn) {
       panelFooter.style.display = 'block';
       panelFooter.innerHTML = `
-        <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(108,92,231,0.18);border:1px solid rgba(108,92,231,0.45);color:#b8aaff;padding:8px 16px;border-radius:100px;font-size:13px;font-weight:800;width:100%;justify-content:center;box-sizing:border-box">⭐ זה אתם</div>
-        <button onclick="closePanel();openEventModal(true)" style="width:100%;padding:12px;border:1px solid rgba(108,92,231,0.4);border-radius:12px;background:rgba(108,92,231,0.1);color:#b8aaff;font-family:'Heebo';font-weight:700;font-size:14px;cursor:pointer;margin-top:8px">✏️ ערוך את האירוע שלי</button>`;
+        <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(155,92,246,0.18);border:1px solid rgba(155,92,246,0.45);color:#7a4bd8;padding:8px 16px;border-radius:100px;font-size:13px;font-weight:800;width:100%;justify-content:center;box-sizing:border-box">⭐ זה אתם</div>
+        <button onclick="closePanel();openEventModal(true)" style="width:100%;padding:12px;border:1px solid rgba(155,92,246,0.4);border-radius:12px;background:rgba(155,92,246,0.1);color:#7a4bd8;font-family:'Heebo';font-weight:700;font-size:14px;cursor:pointer;margin-top:8px">✏️ ערוך את האירוע שלי</button>`;
     } else {
       panelFooter.style.display = 'block';
       panelFooter.innerHTML = `
@@ -2607,7 +2605,7 @@ async function loadChats() {
       :`<div style="width:54px;height:54px;border-radius:50%;background:rgba(255,75,110,0.15);border:2px solid rgba(255,75,110,0.3);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${vibeEmoji((profile.vibes||[])[0])}</div>`;
     const time=new Date(lastMsg.created_at).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
     const isMine=lastMsg.sender_id===currentUser.id;
-    return `<div style="width:100%;display:flex;gap:8px;align-items:center;padding:14px 16px;background:var(--bg2);border:1px solid rgba(255,255,255,0.08);border-radius:16px;margin-bottom:10px;box-sizing:border-box">
+    return `<div style="width:100%;display:flex;gap:8px;align-items:center;padding:14px 16px;background:var(--bg2);border:1px solid rgba(42,31,46,0.08);border-radius:16px;margin-bottom:10px;box-sizing:border-box">
       <div onclick="openChatById('${profile.id}')" style="flex:1;min-width:0;display:flex;gap:12px;align-items:center;cursor:pointer">${photoEl}<div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><span style="font-family:'Syne';font-weight:700;font-size:15px">${escapeHtml(profile.name)} <span class="amp">♥</span> ${escapeHtml(profile.partner_name||'?')}</span><span style="font-size:11px;color:var(--text3)">${time}</span></div><div style="font-size:13px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${isMine?'אתם: ':''}${escapeHtml(lastMsg.text)}</div></div><div style="font-size:18px;flex-shrink:0">›</div></div>
       <button onclick="event.stopPropagation();deleteChat('${profile.id}','${roomId}')" style="background:rgba(255,75,110,0.12);border:1px solid rgba(255,75,110,0.3);color:var(--pink);border-radius:10px;width:38px;height:38px;flex-shrink:0;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center">🗑️</button>
     </div>`;
@@ -2675,7 +2673,7 @@ function renderFeed(searchQ) {
     const filterMsg = feedVibeFilter!=='all'
       ? `<div style="font-size:13px;color:var(--text2);margin-top:8px">💡 נסו לסנן ב"הכל" — ייתכן שזוגות פעילים לא הגדירו את תחום העניין הזה</div>`
       : '';
-    list.innerHTML=`<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:20px;overflow:hidden">
+    list.innerHTML=`<div style="background:#fff;border:1px solid rgba(42,31,46,0.07);border-radius:20px;overflow:hidden">
   <div style="padding:36px 24px 24px;text-align:center;background:radial-gradient(ellipse at 50% 0%,rgba(255,75,110,0.12),transparent 70%)">
     <div style="font-size:64px;margin-bottom:14px;display:block;animation:emptyFloat 3s ease-in-out infinite">💞</div>
     <div style="font-family:'Syne';font-size:20px;font-weight:800;margin-bottom:10px">אין זוגות פעילים עכשיו</div>
@@ -2684,9 +2682,9 @@ function renderFeed(searchQ) {
     <button onclick="navTo('main');openEventChooser()" style="display:inline-flex;align-items:center;gap:8px;padding:13px 24px;border:none;border-radius:100px;background:linear-gradient(135deg,#ff4b6e,#ff6b9d);color:white;font-family:'Heebo';font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 20px rgba(255,75,110,0.35)">🔥 פרסמו אירוע עכשיו</button>
   </div>
   <div style="padding:0 16px 16px;display:flex;flex-direction:column;gap:8px">
-    <div style="display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,0.03);border-radius:12px;padding:12px 14px"><div style="font-size:18px;flex-shrink:0">📍</div><div style="font-size:13px;color:var(--text2);line-height:1.5"><strong>פרסמו מיקום</strong> — ספרו לזוגות אחרים איפה אתם ומה אתם מחפשים</div></div>
-    <div style="display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,0.03);border-radius:12px;padding:12px 14px"><div style="font-size:18px;flex-shrink:0">🔔</div><div style="font-size:13px;color:var(--text2);line-height:1.5"><strong>חזרו מאוחר יותר</strong> — הפיד מתעדכן בזמן אמת</div></div>
-    <div style="display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,0.03);border-radius:12px;padding:12px 14px"><div style="font-size:18px;flex-shrink:0">📤</div><div style="font-size:13px;color:var(--text2);line-height:1.5"><strong>שתפו עם חברים</strong> — ככל שיש יותר זוגות, יותר כיף!</div></div>
+    <div style="display:flex;align-items:flex-start;gap:10px;background:#fff6f2;border-radius:12px;padding:12px 14px"><div style="font-size:18px;flex-shrink:0">📍</div><div style="font-size:13px;color:var(--text2);line-height:1.5"><strong>פרסמו מיקום</strong> — ספרו לזוגות אחרים איפה אתם ומה אתם מחפשים</div></div>
+    <div style="display:flex;align-items:flex-start;gap:10px;background:#fff6f2;border-radius:12px;padding:12px 14px"><div style="font-size:18px;flex-shrink:0">🔔</div><div style="font-size:13px;color:var(--text2);line-height:1.5"><strong>חזרו מאוחר יותר</strong> — הפיד מתעדכן בזמן אמת</div></div>
+    <div style="display:flex;align-items:flex-start;gap:10px;background:#fff6f2;border-radius:12px;padding:12px 14px"><div style="font-size:18px;flex-shrink:0">📤</div><div style="font-size:13px;color:var(--text2);line-height:1.5"><strong>שתפו עם חברים</strong> — ככל שיש יותר זוגות, יותר כיף!</div></div>
   </div>
 </div>`;
     return;
@@ -2695,7 +2693,7 @@ function renderFeed(searchQ) {
 
   // --- קטע: פעילים עכשיו ---
   if (couples.length) {
-    html += `<div style="display:flex;align-items:center;gap:9px;margin:2px 2px 12px;font-family:'Syne';font-weight:800;font-size:15px;color:#ff8ba1">🔥 פעילים עכשיו <span style="font-family:'Heebo';font-size:11px;font-weight:700;color:var(--text3);background:rgba(255,255,255,0.06);padding:2px 9px;border-radius:100px">${couples.length}</span></div>`;
+    html += `<div style="display:flex;align-items:center;gap:9px;margin:2px 2px 12px;font-family:'Syne';font-weight:800;font-size:15px;color:#e0355c">🔥 פעילים עכשיו <span style="font-family:'Heebo';font-size:11px;font-weight:700;color:var(--text3);background:rgba(42,31,46,0.06);padding:2px 9px;border-radius:100px">${couples.length}</span></div>`;
     html += couples.map(c=>{
       const meta=STATUS_META[effectiveStatus(c)];
       const emoji=vibeEmoji((c.vibes||[])[0]);
@@ -2703,13 +2701,13 @@ function renderFeed(searchQ) {
         ?`<img src="${escapeHtml(c.photo_url)}" style="width:54px;height:54px;border-radius:50%;object-fit:cover;border:2px solid ${meta.color}55;flex-shrink:0"/>`
         :`<div style="width:54px;height:54px;border-radius:50%;background:${meta.color}18;border:2px solid ${meta.color}44;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">${emoji}</div>`;
       const tags=(c.vibes||[]).slice(0,3).map(v=>`<span class="tag">${escapeHtml(v)}</span>`).join('');
-      return `<div onclick="openCouplePanel(${JSON.stringify(c).replace(/"/g,'&quot;')})" style="background:rgba(255,255,255,0.04);border:1px solid ${meta.color}22;border-radius:18px;padding:16px;margin-bottom:12px;cursor:pointer" onmouseenter="this.style.background='${meta.color}12'" onmouseleave="this.style.background='rgba(255,255,255,0.04)'"><div style="display:flex;gap:12px;align-items:center;margin-bottom:${c.status_text||tags?'12px':'0'}">${photoEl}<div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span style="font-family:'Syne';font-weight:800;font-size:16px">${escapeHtml(c.name)} <span class="amp">♥</span> ${escapeHtml(c.partner_name||'?')}</span><div style="background:${meta.color}22;color:${meta.color};padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;white-space:nowrap">${meta.label}</div></div><div style="color:var(--text3);font-size:12px;margin-top:2px">${escapeHtml(c.city||'ישראל')}</div></div></div>${c.status_text?`<div style="color:var(--text2);font-size:14px;line-height:1.5;margin-bottom:10px;padding:10px 14px;background:rgba(255,255,255,0.04);border-radius:10px">"${escapeHtml(c.status_text)}"</div>`:''}${tags?`<div class="tags-row">${tags}</div>`:''}</div>`;
+      return `<div onclick="openCouplePanel(${JSON.stringify(c).replace(/"/g,'&quot;')})" style="background:#fff;border:1px solid ${meta.color}33;border-radius:18px;padding:16px;margin-bottom:12px;cursor:pointer" onmouseenter="this.style.background='${meta.color}12'" onmouseleave="this.style.background='#fff'"><div style="display:flex;gap:12px;align-items:center;margin-bottom:${c.status_text||tags?'12px':'0'}">${photoEl}<div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span style="font-family:'Syne';font-weight:800;font-size:16px">${escapeHtml(c.name)} <span class="amp">♥</span> ${escapeHtml(c.partner_name||'?')}</span><div style="background:${meta.color}22;color:${meta.color};padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;white-space:nowrap">${meta.label}</div></div><div style="color:var(--text3);font-size:12px;margin-top:2px">${escapeHtml(c.city||'ישראל')}</div></div></div>${c.status_text?`<div style="color:var(--text2);font-size:14px;line-height:1.5;margin-bottom:10px;padding:10px 14px;background:#fff6f2;border-radius:10px">"${escapeHtml(c.status_text)}"</div>`:''}${tags?`<div class="tags-row">${tags}</div>`:''}</div>`;
     }).join('');
   }
 
   // --- קטע: דייטים מתוכננים ---
   if (sched.length) {
-    html += `<div style="display:flex;align-items:center;gap:9px;margin:${couples.length?'20px':'2px'} 2px 12px;font-family:'Syne';font-weight:800;font-size:15px;color:#9db8ff">📅 דייטים מתוכננים <span style="font-family:'Heebo';font-size:11px;font-weight:700;color:var(--text3);background:rgba(255,255,255,0.06);padding:2px 9px;border-radius:100px">${sched.length}</span></div>`;
+    html += `<div style="display:flex;align-items:center;gap:9px;margin:${couples.length?'20px':'2px'} 2px 12px;font-family:'Syne';font-weight:800;font-size:15px;color:#3f6bb5">📅 דייטים מתוכננים <span style="font-family:'Heebo';font-size:11px;font-weight:700;color:var(--text3);background:rgba(42,31,46,0.06);padding:2px 9px;border-radius:100px">${sched.length}</span></div>`;
     html += sched.map(ev=>{
       const prof=_schedProfById[ev.couple_id];
       const emoji=vibeEmoji(ev.vibe);
@@ -2718,9 +2716,9 @@ function renderFeed(searchQ) {
       const city=prof.city||ev.city||'ישראל';
       const photoEl=prof.photo_url
         ?`<img src="${escapeHtml(prof.photo_url)}" style="width:54px;height:54px;border-radius:50%;object-fit:cover;border:2px solid rgba(91,141,239,0.4);flex-shrink:0"/>`
-        :`<div style="width:54px;height:54px;border-radius:50%;background:rgba(91,141,239,0.14);border:2px solid rgba(91,141,239,0.4);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;position:relative">${emoji}<span style="position:absolute;bottom:-3px;right:-3px;font-size:13px;background:#0e0b15;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center">📅</span></div>`;
+        :`<div style="width:54px;height:54px;border-radius:50%;background:rgba(91,141,239,0.14);border:2px solid rgba(91,141,239,0.4);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;position:relative">${emoji}<span style="position:absolute;bottom:-3px;right:-3px;font-size:13px;background:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center">📅</span></div>`;
       const metaLine=[vibeLabel, ev.date_type?escapeHtml(ev.date_type):''].filter(Boolean).join(' · ');
-      return `<div onclick="openSchedFromFeed('${ev.id}')" style="background:linear-gradient(180deg,rgba(91,141,239,0.07),rgba(168,107,255,0.04));border:1px solid rgba(91,141,239,0.28);border-radius:18px;padding:16px;margin-bottom:12px;cursor:pointer"><div style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:800;color:#9db8ff;background:rgba(91,141,239,0.16);border:1px solid rgba(91,141,239,0.4);padding:3px 11px;border-radius:100px;margin-bottom:11px">📅 דייט מתוכנן</div><div style="display:flex;gap:12px;align-items:center">${photoEl}<div style="flex:1;min-width:0"><div style="font-family:'Syne';font-weight:800;font-size:16px">${escapeHtml(prof.name||'')} <span class="amp">♥</span> ${escapeHtml(prof.partner_name||'?')}</div><div style="color:var(--text3);font-size:12px;margin-top:2px">${escapeHtml(city)}</div></div></div><div style="display:flex;align-items:center;gap:7px;margin-top:11px;font-size:13.5px;color:#9db8ff;font-weight:700">🗓️ ${escapeHtml(when)}</div>${metaLine?`<div style="font-size:12.5px;color:var(--text2);margin-top:5px">${metaLine}</div>`:''}<button onclick="event.stopPropagation();schedShakeFromFeed('${ev.id}')" style="width:100%;margin-top:14px;padding:12px;border:none;border-radius:13px;background:linear-gradient(135deg,#ff4b6e,#a86bff);color:#fff;font-weight:800;font-size:14px;font-family:'Heebo'">💞 שלחו Shake לדייט</button></div>`;
+      return `<div onclick="openSchedFromFeed('${ev.id}')" style="background:linear-gradient(180deg,rgba(91,141,239,0.07),rgba(155,92,246,0.04));border:1px solid rgba(91,141,239,0.28);border-radius:18px;padding:16px;margin-bottom:12px;cursor:pointer"><div style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:800;color:#3f6bb5;background:rgba(91,141,239,0.16);border:1px solid rgba(91,141,239,0.4);padding:3px 11px;border-radius:100px;margin-bottom:11px">📅 דייט מתוכנן</div><div style="display:flex;gap:12px;align-items:center">${photoEl}<div style="flex:1;min-width:0"><div style="font-family:'Syne';font-weight:800;font-size:16px">${escapeHtml(prof.name||'')} <span class="amp">♥</span> ${escapeHtml(prof.partner_name||'?')}</div><div style="color:var(--text3);font-size:12px;margin-top:2px">${escapeHtml(city)}</div></div></div><div style="display:flex;align-items:center;gap:7px;margin-top:11px;font-size:13.5px;color:#3f6bb5;font-weight:700">🗓️ ${escapeHtml(when)}</div>${metaLine?`<div style="font-size:12.5px;color:var(--text2);margin-top:5px">${metaLine}</div>`:''}<button onclick="event.stopPropagation();schedShakeFromFeed('${ev.id}')" style="width:100%;margin-top:14px;padding:12px;border:none;border-radius:13px;background:linear-gradient(135deg,#5b8def,#8db8ff);color:#fff;font-weight:800;font-size:14px;font-family:'Heebo'">💞 שלחו Shake לדייט</button></div>`;
     }).join('');
   }
 
@@ -2794,7 +2792,7 @@ function schedShakeChip(ev){
   const timeStr=d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
   const vibeLabel=(VIBES_LIST.find(v=>v.id===ev.vibe)||{}).label||'';
   const exact=`${dateStr} · ${timeStr}${vibeLabel?' · '+vibeLabel:''}`;
-  return `<div style="display:flex;align-items:center;gap:9px;background:linear-gradient(135deg,rgba(91,141,239,0.16),rgba(168,107,255,0.10));border:1px solid rgba(91,141,239,0.35);border-radius:12px;padding:9px 12px;margin-top:10px">
+  return `<div style="display:flex;align-items:center;gap:9px;background:linear-gradient(135deg,rgba(91,141,239,0.16),rgba(155,92,246,0.10));border:1px solid rgba(91,141,239,0.35);border-radius:12px;padding:9px 12px;margin-top:10px">
     <span style="font-size:18px">📅</span>
     <div style="flex:1"><div style="font-weight:800;font-size:14px;color:#bcd0ff">Shake לדייט ${near}</div><div style="font-size:11.5px;color:var(--text3);margin-top:1px">${escapeHtml(exact)}</div></div>
   </div>`;
@@ -2836,7 +2834,7 @@ async function loadShakes() {
     const photoEl=p?.photo_url
       ?`<img src="${escapeHtml(p.photo_url)}" style="width:56px;height:56px;border-radius:14px;object-fit:cover;flex-shrink:0;border:2px solid var(--pink)"/>`
       :`<div style="width:56px;height:56px;border-radius:14px;background:rgba(255,75,110,0.15);border:2px solid rgba(255,75,110,0.3);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">💞</div>`;
-    return `<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,75,110,0.2);border-radius:18px;padding:16px;margin-bottom:12px"><div style="display:flex;gap:12px;align-items:center">${photoEl}<div style="flex:1"><div style="font-family:'Syne';font-weight:800;font-size:16px">${escapeHtml(p?.name||'?')} <span class="amp">♥</span> ${escapeHtml(p?.partner_name||'?')}</div><div style="color:var(--text3);font-size:12px;margin-top:2px">${escapeHtml(p?.city||'ישראל')}</div>${p?.status_text?`<div style="color:var(--text2);font-size:13px;margin-top:4px">"${escapeHtml(p.status_text)}"</div>`:''}</div></div>${schedShakeChip(s.event)}<div style="display:flex;gap:8px;margin-top:14px"><button onclick="respondShake(${s.id},'accepted',${JSON.stringify(p?.name||'').replace(/"/g,'&quot;')})" style="flex:1;padding:12px;background:linear-gradient(135deg,var(--pink),var(--pink2));border:none;color:white;border-radius:12px;font-family:'Heebo';font-weight:700;font-size:14px;cursor:pointer">💞 קבלו!</button><button onclick="respondShake(${s.id},'declined','')" style="flex:1;padding:12px;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text2);border-radius:12px;font-family:'Heebo';font-weight:600;font-size:14px;cursor:pointer">לא תודה</button></div></div>`;
+    return `<div style="background:#fff;border:1px solid rgba(255,75,110,0.2);border-radius:18px;padding:16px;margin-bottom:12px"><div style="display:flex;gap:12px;align-items:center">${photoEl}<div style="flex:1"><div style="font-family:'Syne';font-weight:800;font-size:16px">${escapeHtml(p?.name||'?')} <span class="amp">♥</span> ${escapeHtml(p?.partner_name||'?')}</div><div style="color:var(--text3);font-size:12px;margin-top:2px">${escapeHtml(p?.city||'ישראל')}</div>${p?.status_text?`<div style="color:var(--text2);font-size:13px;margin-top:4px">"${escapeHtml(p.status_text)}"</div>`:''}</div></div>${schedShakeChip(s.event)}<div style="display:flex;gap:8px;margin-top:14px"><button onclick="respondShake(${s.id},'accepted',${JSON.stringify(p?.name||'').replace(/"/g,'&quot;')})" style="flex:1;padding:12px;background:linear-gradient(135deg,var(--pink),var(--pink2));border:none;color:white;border-radius:12px;font-family:'Heebo';font-weight:700;font-size:14px;cursor:pointer">💞 קבלו!</button><button onclick="respondShake(${s.id},'declined','')" style="flex:1;padding:12px;background:#fff;border:1px solid var(--border2);color:var(--text2);border-radius:12px;font-family:'Heebo';font-weight:600;font-size:14px;cursor:pointer">לא תודה</button></div></div>`;
   }).join('');
 }
 
@@ -2872,17 +2870,17 @@ async function loadConnectedShakes() {
   list.innerHTML=couples.map(c=>{
     const photoEl=c.photo_url
       ?`<img src="${escapeHtml(c.photo_url)}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--green)"/>`
-      :`<div style="width:52px;height:52px;border-radius:50%;background:rgba(29,209,161,0.12);border:2px solid var(--green);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">💞</div>`;
+      :`<div style="width:52px;height:52px;border-radius:50%;background:rgba(255,75,110,0.12);border:2px solid var(--green);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">💞</div>`;
     const cJson=JSON.stringify(c).replace(/"/g,"&quot;").replace(/'/g,"&#39;");
-    return `<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(29,209,161,0.2);border-radius:16px;padding:14px;margin-bottom:10px">
+    return `<div style="background:#fff;border:1px solid rgba(255,75,110,0.2);border-radius:16px;padding:14px;margin-bottom:10px">
       <div onclick='openProfileFromConnected(${cJson})' style="display:flex;gap:12px;align-items:center;cursor:pointer;border-radius:12px;padding:6px;margin:-6px">${photoEl}
         <div style="flex:1;min-width:0">
           <div style="font-family:'Syne';font-weight:800;font-size:15px;display:flex;align-items:center;gap:6px">${escapeHtml(c.name||'?')} <span class="amp">♥</span> ${escapeHtml(c.partner_name||'?')} <span style="color:var(--text3);font-size:16px">›</span></div>
           <div style="color:var(--text3);font-size:12px;margin-top:2px">${escapeHtml(c.city||'ישראל')}</div>
-          <div style="display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;background:rgba(29,209,161,0.15);color:var(--green);border:1px solid rgba(29,209,161,0.3);margin-top:4px">✅ מחוברים</div>
+          <div style="display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;background:rgba(255,75,110,0.15);color:var(--green);border:1px solid rgba(255,75,110,0.3);margin-top:4px">✅ מחוברים</div>
         </div>
       </div>
-      <button onclick='openChatWithCouple(${cJson})' style="width:100%;margin-top:12px;padding:10px;border:none;border-radius:11px;background:linear-gradient(135deg,var(--green),#00b894);color:#06060c;font-family:'Heebo';font-weight:800;font-size:13px;cursor:pointer">💬 פתחו צ'אט</button>
+      <button onclick='openChatWithCouple(${cJson})' style="width:100%;margin-top:12px;padding:10px;border:none;border-radius:11px;background:linear-gradient(135deg,var(--green),#ff8a5b);color:#fff;font-family:'Heebo';font-weight:800;font-size:13px;cursor:pointer">💬 פתחו צ'אט</button>
     </div>`;
   }).join('');
 }
@@ -2915,7 +2913,7 @@ function switchShakesTab(tab) {
   const listOut=document.getElementById('shakes-sent-list');
   const listConn=document.getElementById('shakes-connected-list');
   const activeStyle='background:rgba(255,75,110,0.15);border:1px solid rgba(255,75,110,0.4);color:var(--pink);font-weight:700';
-  const inactiveStyle='background:rgba(255,255,255,0.04);border:1px solid var(--border2);color:var(--text3);font-weight:600';
+  const inactiveStyle='background:#fff6f2;border:1px solid var(--border2);color:var(--text3);font-weight:600';
   // איפוס כל הטאבים
   tabIn.style.cssText+=';'+inactiveStyle;
   tabOut.style.cssText+=';'+inactiveStyle;
@@ -2961,7 +2959,7 @@ async function loadSentShakes() {
   list.innerHTML=data.map(s=>{
     const p=s.to_profile;
     const statusLabel=s.status==='accepted'
-      ?`<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;background:rgba(29,209,161,0.15);color:var(--green);border:1px solid rgba(29,209,161,0.3)">✅ מחוברים</span>`
+      ?`<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;background:rgba(255,75,110,0.15);color:var(--green);border:1px solid rgba(255,75,110,0.3)">✅ מחוברים</span>`
       :s.status==='declined'
         ?`<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;background:rgba(255,75,110,0.15);color:var(--pink);border:1px solid rgba(255,75,110,0.3)">❌ נדחה</span>`
         :`<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;background:rgba(255,159,67,0.15);color:var(--orange);border:1px solid rgba(255,159,67,0.3)">⏳ ממתין</span>`;
@@ -2971,7 +2969,7 @@ async function loadSentShakes() {
     const cancelBtn=s.status!=='declined'
       ?`<button onclick="cancelSentShake('${s.id}',${JSON.stringify(p||{}).replace(/"/g,'&quot;')})" style="width:100%;margin-top:10px;padding:9px;border:1px solid rgba(255,75,110,0.3);border-radius:10px;background:transparent;color:rgba(255,75,110,0.7);font-family:'Heebo';font-weight:600;font-size:12px;cursor:pointer">💔 ביטול שייק → שמירה כחבר</button>`
       :'';
-    return `<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,75,110,0.15);border-radius:16px;padding:14px;margin-bottom:10px">
+    return `<div style="background:#fff;border:1px solid rgba(255,75,110,0.15);border-radius:16px;padding:14px;margin-bottom:10px">
       <div style="display:flex;gap:12px;align-items:center">${photoEl}
         <div style="flex:1">
           <div style="font-family:'Syne';font-weight:800;font-size:14px">${escapeHtml(p?.name||'?')} & ${escapeHtml(p?.partner_name||'?')}</div>
@@ -3152,7 +3150,7 @@ async function cancelActiveEvent(expired) {
   myProfile={...myProfile,...resetData};
   stopEventCountdown();
   const fab=document.getElementById('event-fab');
-  if (fab) {fab.textContent='➕ אירוע';fab.style.background='linear-gradient(135deg,#1dd1a1,#00b894)';fab.onclick=openEventChooser;}
+  if (fab) {fab.textContent='➕ אירוע';fab.style.background='linear-gradient(135deg,#ff4b6e,#ff8a5b)';fab.onclick=openEventChooser;}
   const card=document.getElementById('active-event-card');
   if (card) card.style.display='none';
   const addBtn=document.getElementById('add-event-profile-btn');
@@ -3174,20 +3172,20 @@ function openEventChooser() {
   ov.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.55);display:flex;align-items:flex-end;justify-content:center';
   ov.onclick=(e)=>{ if(e.target===ov) ov.remove(); };
   ov.innerHTML=`
-    <div style="width:100%;max-width:460px;background:linear-gradient(180deg,#1b1726,#13101b);border:1px solid rgba(255,255,255,0.12);border-bottom:none;border-radius:26px 26px 0 0;padding:22px 18px calc(22px + env(safe-area-inset-bottom))">
-      <div style="width:38px;height:4px;border-radius:100px;background:rgba(255,255,255,0.18);margin:0 auto 18px"></div>
-      <div style="font-size:18px;font-weight:800;text-align:center;color:#f4f2f8;font-family:'Heebo'">איך בא לכם לצאת?</div>
-      <div style="font-size:12.5px;color:#79738a;text-align:center;margin:4px 0 20px;font-family:'Heebo'">בחרו את סוג האירוע</div>
+    <div style="width:100%;max-width:460px;background:#fff;border:1px solid rgba(42,31,46,0.08);border-bottom:none;border-radius:26px 26px 0 0;padding:22px 18px calc(22px + env(safe-area-inset-bottom))">
+      <div style="width:38px;height:4px;border-radius:100px;background:rgba(42,31,46,0.15);margin:0 auto 18px"></div>
+      <div style="font-size:18px;font-weight:800;text-align:center;color:#2a1f2e;font-family:'Heebo'">איך בא לכם לצאת?</div>
+      <div style="font-size:12.5px;color:#9a8590;text-align:center;margin:4px 0 20px;font-family:'Heebo'">בחרו את סוג האירוע</div>
       <div style="display:flex;gap:12px">
         <div onclick="chooseSpontaneous()" style="flex:1;border-radius:18px;padding:20px 14px;text-align:center;border:1.5px solid rgba(255,75,110,0.5);background:linear-gradient(160deg,rgba(255,75,110,0.13),transparent);cursor:pointer">
           <div style="font-size:30px">⚡</div>
-          <div style="font-weight:800;font-size:15.5px;margin-top:8px;color:#f4f2f8;font-family:'Heebo'">פנויים עכשיו</div>
-          <div style="font-size:11.5px;color:#b6b0c4;margin-top:5px;line-height:1.45;font-family:'Heebo'">חלון 24 שעות, מתחיל מיד</div>
+          <div style="font-weight:800;font-size:15.5px;margin-top:8px;color:#2a1f2e;font-family:'Heebo'">פנויים עכשיו</div>
+          <div style="font-size:11.5px;color:#6d5560;margin-top:5px;line-height:1.45;font-family:'Heebo'">חלון 24 שעות, מתחיל מיד</div>
         </div>
         <div onclick="chooseScheduled()" style="flex:1;border-radius:18px;padding:20px 14px;text-align:center;border:1.5px solid rgba(91,141,239,0.5);background:linear-gradient(160deg,rgba(91,141,239,0.13),transparent);cursor:pointer">
           <div style="font-size:30px">📅</div>
-          <div style="font-weight:800;font-size:15.5px;margin-top:8px;color:#f4f2f8;font-family:'Heebo'">לתזמן דייט</div>
-          <div style="font-size:11.5px;color:#b6b0c4;margin-top:5px;line-height:1.45;font-family:'Heebo'">תאריך ושעה, עד שבוע קדימה</div>
+          <div style="font-weight:800;font-size:15.5px;margin-top:8px;color:#2a1f2e;font-family:'Heebo'">לתזמן דייט</div>
+          <div style="font-size:11.5px;color:#6d5560;margin-top:5px;line-height:1.45;font-family:'Heebo'">תאריך ושעה, עד שבוע קדימה</div>
         </div>
       </div>
     </div>`;
@@ -3302,11 +3300,11 @@ async function renderScheduledBanner(){
   const live=new Date(ev.starts_at)<=new Date();
   if(live){
     const photoBlock = ev.photo_url
-      ? `<div style="margin-top:12px;border-radius:12px;overflow:hidden;position:relative"><img src="${escapeHtml(ev.photo_url)}" style="width:100%;max-height:150px;object-fit:cover;display:block"/><span style="position:absolute;top:8px;right:10px;font-size:10px;font-weight:800;color:#fff;background:#ff3b5c;padding:2px 9px;border-radius:100px">חי עכשיו</span></div><label style="display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;font-size:12.5px;color:#9db8ff;font-weight:700;margin-top:8px"><input type="file" accept="image/*" style="display:none" onchange="uploadSchedLivePhoto(this,'${ev.id}')"/>📷 החלף תמונה</label>`
+      ? `<div style="margin-top:12px;border-radius:12px;overflow:hidden;position:relative"><img src="${escapeHtml(ev.photo_url)}" style="width:100%;max-height:150px;object-fit:cover;display:block"/><span style="position:absolute;top:8px;right:10px;font-size:10px;font-weight:800;color:#fff;background:#ff3b5c;padding:2px 9px;border-radius:100px">חי עכשיו</span></div><label style="display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;font-size:12.5px;color:#3f6bb5;font-weight:700;margin-top:8px"><input type="file" accept="image/*" style="display:none" onchange="uploadSchedLivePhoto(this,'${ev.id}')"/>📷 החלף תמונה</label>`
       : `<label style="display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;width:100%;margin-top:12px;padding:12px;border:2px dashed rgba(255,59,92,0.5);border-radius:13px;background:rgba(255,59,92,0.07);color:#ff9bae;font-weight:800;font-size:14px"><input type="file" accept="image/*" style="display:none" onchange="uploadSchedLivePhoto(this,'${ev.id}')"/>📸 העלו תמונה מהדייט</label>`;
-    el.innerHTML=`<div style="background:linear-gradient(135deg,rgba(255,59,92,0.12),rgba(168,107,255,0.08));border:1px solid rgba(255,59,92,0.45);border-radius:16px;padding:14px 16px;margin-bottom:20px"><div style="display:flex;align-items:center;gap:12px"><div style="font-size:22px">🔥</div><div style="flex:1;text-align:right"><span style="display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:800;color:#fff;background:#ff3b5c;padding:2px 9px;border-radius:100px;margin-bottom:4px">🔴 חי עכשיו</span><div style="font-weight:700;font-size:14px;color:#ff9bae">אתם בדייט!</div><div style="font-size:12px;color:var(--text2);margin-top:2px">שתפו רגע — זוגות יראו שאתם בחוץ</div></div><button onclick="endScheduledEvent('${ev.id}')" style="background:rgba(255,75,110,0.15);border:1px solid rgba(255,75,110,0.4);color:var(--pink);padding:6px 12px;border-radius:100px;font-family:'Heebo';font-weight:700;font-size:12px;cursor:pointer">סיום</button></div>${photoBlock}</div>`;
+    el.innerHTML=`<div style="background:linear-gradient(135deg,rgba(255,59,92,0.12),rgba(155,92,246,0.08));border:1px solid rgba(255,59,92,0.45);border-radius:16px;padding:14px 16px;margin-bottom:20px"><div style="display:flex;align-items:center;gap:12px"><div style="font-size:22px">🔥</div><div style="flex:1;text-align:right"><span style="display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:800;color:#fff;background:#ff3b5c;padding:2px 9px;border-radius:100px;margin-bottom:4px">🔴 חי עכשיו</span><div style="font-weight:700;font-size:14px;color:#ff9bae">אתם בדייט!</div><div style="font-size:12px;color:var(--text2);margin-top:2px">שתפו רגע — זוגות יראו שאתם בחוץ</div></div><button onclick="endScheduledEvent('${ev.id}')" style="background:rgba(255,75,110,0.15);border:1px solid rgba(255,75,110,0.4);color:var(--pink);padding:6px 12px;border-radius:100px;font-family:'Heebo';font-weight:700;font-size:12px;cursor:pointer">סיום</button></div>${photoBlock}</div>`;
   } else {
-    el.innerHTML=`<div style="background:linear-gradient(135deg,rgba(91,141,239,0.14),rgba(168,107,255,0.08));border:1px solid rgba(91,141,239,0.3);border-radius:16px;padding:14px 16px;margin-bottom:20px;display:flex;align-items:center;gap:12px"><div style="font-size:22px">📅</div><div style="flex:1;text-align:right"><div style="font-weight:700;font-size:14px;color:#9db8ff">דייט מתוזמן</div><div style="font-size:12.5px;color:var(--text2);margin-top:2px">${when}${ev.city?' · '+ev.city:''}</div></div><div style="display:flex;flex-direction:column;gap:7px"><button onclick='openScheduledModal(${JSON.stringify(ev).replace(/'/g,"&#39;")})' style="background:rgba(91,141,239,0.15);border:1px solid rgba(91,141,239,0.5);color:#9db8ff;padding:7px 14px;border-radius:100px;font-family:'Heebo';font-weight:700;font-size:12.5px;cursor:pointer;white-space:nowrap">✏️ ערוך</button><button onclick="cancelScheduledEvent('${ev.id}')" style="background:rgba(255,75,110,0.15);border:1px solid rgba(255,75,110,0.4);color:var(--pink);padding:7px 14px;border-radius:100px;font-family:'Heebo';font-weight:700;font-size:12.5px;cursor:pointer;white-space:nowrap">ביטול</button></div></div>`;
+    el.innerHTML=`<div style="background:linear-gradient(135deg,rgba(91,141,239,0.14),rgba(155,92,246,0.08));border:1px solid rgba(91,141,239,0.3);border-radius:16px;padding:14px 16px;margin-bottom:20px;display:flex;align-items:center;gap:12px"><div style="font-size:22px">📅</div><div style="flex:1;text-align:right"><div style="font-weight:700;font-size:14px;color:#3f6bb5">דייט מתוזמן</div><div style="font-size:12.5px;color:var(--text2);margin-top:2px">${when}${ev.city?' · '+ev.city:''}</div></div><div style="display:flex;flex-direction:column;gap:7px"><button onclick='openScheduledModal(${JSON.stringify(ev).replace(/'/g,"&#39;")})' style="background:rgba(91,141,239,0.15);border:1px solid rgba(91,141,239,0.5);color:#3f6bb5;padding:7px 14px;border-radius:100px;font-family:'Heebo';font-weight:700;font-size:12.5px;cursor:pointer;white-space:nowrap">✏️ ערוך</button><button onclick="cancelScheduledEvent('${ev.id}')" style="background:rgba(255,75,110,0.15);border:1px solid rgba(255,75,110,0.4);color:var(--pink);padding:7px 14px;border-radius:100px;font-family:'Heebo';font-weight:700;font-size:12.5px;cursor:pointer;white-space:nowrap">ביטול</button></div></div>`;
   }
   el.style.display='block';
 }
@@ -3594,7 +3592,7 @@ function filterList(vibe) {
     const photoEl=cc.photo_url
       ?`<img src="${escapeHtml(cc.photo_url)}" style="width:58px;height:58px;border-radius:14px;object-fit:cover;border:2px solid ${meta.color}55;flex-shrink:0"/>`
       :`<div style="width:58px;height:58px;border-radius:14px;background:${meta.color}18;border:2px solid ${meta.color}44;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0">${emoji}</div>`;
-    return `<div onclick="closeListView();openCouplePanel(${JSON.stringify(cc).replace(/"/g,'&quot;')})" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:18px;padding:16px;margin-bottom:10px;cursor:pointer;display:flex;gap:14px;align-items:flex-start" onmouseenter="this.style.background='rgba(255,75,110,0.08)'" onmouseleave="this.style.background='rgba(255,255,255,0.04)'">${photoEl}<div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:4px"><span style="font-family:'Syne';font-weight:800;font-size:16px">${escapeHtml(cc.name)} <span class="amp">♥</span> ${escapeHtml(cc.partner_name||'?')}</span><div style="background:${meta.color}22;color:${meta.color};padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;white-space:nowrap">${meta.label}</div></div><div style="color:var(--text3);font-size:12px;margin-bottom:6px">${escapeHtml(cc.city||'ישראל')}</div>${cc.status_text?`<div style="color:var(--text2);font-size:13px;line-height:1.4;margin-bottom:8px">"${escapeHtml(cc.status_text)}"</div>`:''}<div style="display:flex;flex-wrap:wrap;gap:5px">${(cc.vibes||[]).map(v=>`<span class="tag">${escapeHtml(v)}</span>`).join('')}</div></div></div>`;
+    return `<div onclick="closeListView();openCouplePanel(${JSON.stringify(cc).replace(/"/g,'&quot;')})" style="background:#fff;border:1px solid rgba(42,31,46,0.08);border-radius:18px;padding:16px;margin-bottom:10px;cursor:pointer;display:flex;gap:14px;align-items:flex-start" onmouseenter="this.style.background='rgba(255,75,110,0.08)'" onmouseleave="this.style.background='#fff'">${photoEl}<div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:4px"><span style="font-family:'Syne';font-weight:800;font-size:16px">${escapeHtml(cc.name)} <span class="amp">♥</span> ${escapeHtml(cc.partner_name||'?')}</span><div style="background:${meta.color}22;color:${meta.color};padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;white-space:nowrap">${meta.label}</div></div><div style="color:var(--text3);font-size:12px;margin-bottom:6px">${escapeHtml(cc.city||'ישראל')}</div>${cc.status_text?`<div style="color:var(--text2);font-size:13px;line-height:1.4;margin-bottom:8px">"${escapeHtml(cc.status_text)}"</div>`:''}<div style="display:flex;flex-wrap:wrap;gap:5px">${(cc.vibes||[]).map(v=>`<span class="tag">${escapeHtml(v)}</span>`).join('')}</div></div></div>`;
   }).join('');
 }
 
@@ -3638,7 +3636,7 @@ async function openProfile() {
 
   }
   const partnerStatus=document.getElementById('partner-link-status');
-  if (partnerStatus) partnerStatus.innerHTML=myProfile?.partner_id&&myProfile?.partner_confirmed?'<span style="display:inline-flex;align-items:center;gap:6px;background:rgba(29,209,161,0.12);border:1px solid rgba(29,209,161,0.3);color:#1dd1a1;padding:6px 14px;border-radius:100px;font-size:13px;font-weight:700">✅ זוג מאומת</span>':'<span style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,159,67,0.12);border:1px solid rgba(255,159,67,0.3);color:#ff9f43;padding:6px 14px;border-radius:100px;font-size:13px;font-weight:700">⏳ ממתין לחיבור בן/בת הזוג</span>';
+  if (partnerStatus) partnerStatus.innerHTML=myProfile?.partner_id&&myProfile?.partner_confirmed?'<span style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,75,110,0.12);border:1px solid rgba(255,75,110,0.3);color:#ff4b6e;padding:6px 14px;border-radius:100px;font-size:13px;font-weight:700">✅ זוג מאומת</span>':'<span style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,159,67,0.12);border:1px solid rgba(255,159,67,0.3);color:#ff9f43;padding:6px 14px;border-radius:100px;font-size:13px;font-weight:700">⏳ ממתין לחיבור בן/בת הזוג</span>';
   const connectSection=document.getElementById('profile-connect-code-section');
   if (connectSection) connectSection.style.display=myProfile?.partner_confirmed?'none':'';
   // event card
@@ -3885,7 +3883,7 @@ function updateProfileNavIcon() {
     if (navIcon) navIcon.innerHTML=`<img src="${escapeHtml(myProfile.photo_url)}" style="width:26px;height:26px;border-radius:8px;object-fit:cover;border:2px solid var(--pink)"/>`;
     if (headerAvatar) headerAvatar.innerHTML=`<img src="${escapeHtml(myProfile.photo_url)}" style="width:100%;height:100%;object-fit:cover"/>`;
   } else {
-    if (navIcon) navIcon.textContent='👫';
+    if (navIcon) navIcon.innerHTML='<svg viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="2.8"/><path d="M4.2 18c.4-2.6 2.4-4.3 4.8-4.3s4.4 1.7 4.8 4.3"/><path d="M15.5 6.2a2.8 2.8 0 0 1 0 5.3M16.8 13.9c1.9.4 3.3 1.9 3.6 4.1" opacity=".55"/></svg>';
     if (headerAvatar) headerAvatar.textContent=myProfile?.name?myProfile.name[0]:'👫';
   }
 }
@@ -3953,7 +3951,7 @@ function _obGoTo(n) {
     const dot = document.getElementById('ob-dot-' + i);
     if (!dot) continue;
     dot.style.width = i === _obCur ? '24px' : '8px';
-    dot.style.background = i === _obCur ? 'var(--pink)' : 'rgba(255,255,255,0.2)';
+    dot.style.background = i === _obCur ? 'var(--pink)' : 'rgba(42,31,46,0.15)';
   }
   document.getElementById('onboard-next-btn').textContent = _obCur === _obTotal - 1 ? 'בואו נתחיל! 🚀' : 'המשך →';
 }
@@ -4098,7 +4096,7 @@ async function loadReviewsReceived() {
   }
   list.innerHTML = data.map(r => {
     const p = r.from_profile;
-    return `<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,215,0,0.2);border-radius:14px;padding:14px;margin-bottom:10px">
+    return `<div style="background:#fff;border:1px solid rgba(255,215,0,0.25);border-radius:14px;padding:14px;margin-bottom:10px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
         <div style="font-size:20px">⭐</div>
         <span style="font-weight:700;font-size:14px;flex:1">${escapeHtml(p?.name || '?')} <span class="amp">♥</span> ${escapeHtml(p?.partner_name || '?')}</span>
@@ -4167,8 +4165,8 @@ async function loadFriends() {
       :`<div style="width:44px;height:44px;border-radius:50%;background:rgba(255,75,110,0.15);border:2px solid rgba(255,75,110,0.3);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">💞</div>`;
     const sourceTag=f.source==='heart'
       ?`<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:100px;background:rgba(255,159,67,0.15);color:#ff9f43;border:1px solid rgba(255,159,67,0.3)">❤️ מועדף</span>`
-      :`<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:100px;background:rgba(29,209,161,0.15);color:var(--green);border:1px solid rgba(29,209,161,0.3)">💞 שייק</span>`;
-    return `<div style="display:flex;align-items:center;gap:12px;padding:11px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,75,110,0.15);border-radius:14px;margin-bottom:8px;cursor:pointer" onclick="openFriendPanel(${JSON.stringify(f).replace(/"/g,'&quot;')})">
+      :`<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:100px;background:rgba(255,75,110,0.15);color:var(--green);border:1px solid rgba(255,75,110,0.3)">💞 שייק</span>`;
+    return `<div style="display:flex;align-items:center;gap:12px;padding:11px 14px;background:#fff;border:1px solid rgba(255,75,110,0.15);border-radius:14px;margin-bottom:8px;cursor:pointer" onclick="openFriendPanel(${JSON.stringify(f).replace(/"/g,'&quot;')})">
       ${photo}
       <div style="flex:1;min-width:0">
         <div style="font-family:'Syne';font-weight:800;font-size:14px">${escapeHtml(f.name)} & ${escapeHtml(f.partner_name||'?')}</div>
@@ -4207,7 +4205,7 @@ async function loadDateHistory() {
   }
   list.innerHTML = data.map(d => {
     const dateStr = new Date(d.date).toLocaleDateString('he-IL', { day:'numeric', month:'long', year:'numeric' });
-    return `<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,75,110,0.15);border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px">
+    return `<div style="background:#fff;border:1px solid rgba(255,75,110,0.15);border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px">
       <div style="font-size:22px">📅</div>
       <div style="flex:1">
         <div style="font-size:14px;font-weight:600">${escapeHtml(d.note || 'דייט')}</div>
@@ -4295,23 +4293,23 @@ function openFullProfile() {
       ${effectiveStatus(c)==='hot' ? `<div style="display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:100px;font-size:12px;font-weight:700;background:${meta.color}22;color:${meta.color}"><div style="width:7px;height:7px;border-radius:50%;background:${meta.color}"></div>${meta.label}</div>` : ''}
     </div>
 
-    ${c.bio ? `<div class="info-card"><div class="info-card-label">על הזוג</div><div style="font-size:14px;color:var(--text2);font-style:italic;padding:10px 14px;background:rgba(255,255,255,0.03);border-radius:8px;border-right:3px solid var(--pink);line-height:1.6">"${escapeHtml(c.bio)}"</div></div>` : ''}
+    ${c.bio ? `<div class="info-card"><div class="info-card-label">על הזוג</div><div style="font-size:14px;color:var(--text2);font-style:italic;padding:10px 14px;background:#fff6f2;border-radius:8px;border-right:3px solid var(--pink);line-height:1.6">"${escapeHtml(c.bio)}"</div></div>` : ''}
 
     <div class="info-card">
       <div class="info-card-label">הזוג</div>
       <div style="display:flex;gap:8px;margin-bottom:10px">
-        <div style="flex:1;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center">
+        <div style="flex:1;background:#fff6f2;border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center">
           <div style="font-size:15px;font-weight:700;margin-bottom:3px">${escapeHtml(c.name)}</div>
           <div style="font-size:12px;color:var(--text3)">${escapeHtml([c.role_him, c.age_him?'גיל '+c.age_him:''].filter(Boolean).join(' · '))||'—'}</div>
         </div>
-        <div style="flex:1;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center">
+        <div style="flex:1;background:#fff6f2;border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center">
           <div style="font-size:15px;font-weight:700;margin-bottom:3px">${escapeHtml(c.partner_name||'?')}</div>
           <div style="font-size:12px;color:var(--text3)">${escapeHtml([c.role_her, c.age_her?'גיל '+c.age_her:''].filter(Boolean).join(' · '))||'—'}</div>
         </div>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:6px">
         ${c.together_since?`<span style="background:rgba(255,159,67,0.12);color:#ff9f43;padding:5px 12px;border-radius:100px;font-size:12px;border:1px solid rgba(255,159,67,0.25)">❤️ ביחד ${escapeHtml(c.together_since)}</span>`:''}
-        ${c.has_kids?`<span style="background:rgba(29,209,161,0.12);color:#1dd1a1;padding:5px 12px;border-radius:100px;font-size:12px;border:1px solid rgba(29,209,161,0.25)">${escapeHtml(c.has_kids)}</span>`:''}
+        ${c.has_kids?`<span style="background:rgba(255,75,110,0.12);color:#ff4b6e;padding:5px 12px;border-radius:100px;font-size:12px;border:1px solid rgba(255,75,110,0.25)">${escapeHtml(c.has_kids)}</span>`:''}
         ${c.looking_for?`<span style="background:rgba(84,160,255,0.12);color:#54a0ff;padding:5px 12px;border-radius:100px;font-size:12px;border:1px solid rgba(84,160,255,0.25)">🔍 ${escapeHtml(c.looking_for)}</span>`:''}
       </div>
     </div>
@@ -4456,7 +4454,7 @@ const PLACE_TYPES = {
   restaurant: { emoji: '🍽️', label: 'מסעדה',  color: '#ff9f43', query: 'amenity=restaurant' },
   bar:        { emoji: '🍺', label: 'בר',      color: '#ff4b6e', query: 'amenity=bar' },
   cafe:       { emoji: '☕', label: 'קפה',     color: '#a29bfe', query: 'amenity=cafe' },
-  park:       { emoji: '🌳', label: 'פארק',    color: '#1dd1a1', query: 'leisure=park' },
+  park:       { emoji: '🌳', label: 'פארק',    color: '#ff4b6e', query: 'leisure=park' },
   beach:      { emoji: '🏖️', label: 'חוף',     color: '#54a0ff', query: 'natural=beach' },
   theatre:    { emoji: '🎭', label: 'תרבות',   color: '#fd79a8', query: 'amenity=theatre' },
 };
@@ -4494,7 +4492,7 @@ async function loadPlaces() {
     restaurant: { amenity: 'restaurant', emoji: '🍽️', color: '#ff9f43' },
     bar:        { amenity: 'bar',        emoji: '🍺', color: '#ff4b6e' },
     cafe:       { amenity: 'cafe',       emoji: '☕', color: '#a29bfe' },
-    park:       { leisure: 'park',       emoji: '🌳', color: '#1dd1a1' },
+    park:       { leisure: 'park',       emoji: '🌳', color: '#ff4b6e' },
     beach:      { natural: 'beach',      emoji: '🏖️', color: '#54a0ff' },
     theatre:    { amenity: 'theatre',    emoji: '🎭', color: '#fd79a8' },
   };
